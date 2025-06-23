@@ -1,0 +1,41 @@
+{% extends "global/Page.html" %}
+{% block title %}Bewerberübersicht{% endblock %}
+
+{% block content %}
+<h2>Bewerberauswahl</h2>
+
+<!-- Buttons als GET-Links -->
+<div>
+ {% for a in applicants %}
+  <a href="?selected_applicant={{ a }}">
+    <button {% if a == selected %}style="background-color:#cce6ff;"{% endif %}>
+      Applicant {{ forloop.counter }}
+    </button>
+  </a>
+{% endfor %}
+
+</div>
+
+<hr>
+
+<h3>Informationen zu Applicant {{ selected_upper }}</h3>
+
+<div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 20px;">
+    Hier können kurze Angaben über den Bewerber {{ selected_upper }} stehen.
+</div>
+
+<div style="display: flex; gap: 40px;">
+    <div>
+        <h4>CV</h4>
+        <p>{{ pdf_paths.cv }}</p>
+    </div>
+    <div>
+        <h4>Cover Letter</h4>
+        <p>{{ pdf_paths.cover_letter }}</p>
+    </div>
+    <div>
+        <h4>Job Reference</h4>
+        <p>{{ pdf_paths.job_reference }}</p>
+    </div>
+</div>
+{% endblock %}
