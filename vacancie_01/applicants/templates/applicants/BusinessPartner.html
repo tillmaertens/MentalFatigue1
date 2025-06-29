@@ -1,0 +1,109 @@
+{% block title %}Business Partner{% endblock %}
+
+{% block content %}
+
+<style>
+    body {
+        background-color: #FFFFFF;
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 20px;
+        margin: 0;
+    }
+
+    .business-partner-container {
+        display: flex;
+        height: auto;
+        gap: 20px;
+    }
+
+    /* Left side - Video meeting placeholder */
+    .left-panel {
+        flex: 1;
+        background-color: #f0f0f0;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        color: #666;
+    }
+
+    /* Right side - Preference Profile */
+    .right-panel {
+        flex: 1;
+        padding: 20px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+    }
+
+    .preference-header {
+        font-size: 20px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 20px;
+        text-align: center;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+    }
+
+    .pdf-button {
+        background-color: #007bff;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-bottom: 20px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        transition: background-color 0.3s;
+    }
+
+    .pdf-button:hover {
+        background-color: #0056b3;
+    }
+
+
+</style>
+
+
+
+<div class="business-partner-container">
+    <!-- Left Panel - Video Meeting -->
+    <div class="left-panel">
+        <div>📹 Video Meeting Placeholder</div>
+    </div>
+
+    <!-- Right Panel - Preference Profile -->
+    <div class="right-panel">
+        <div class="preference-header">Preference Profile</div>
+
+        <!-- PDF Button for Requirements Catalog -->
+        <button type="button" class="pdf-button" onclick="openPDF(event, 'Anforderungskatalog_1.pdf')">
+            Anforderungskatalog
+        </button>
+    </div>
+</div>
+
+<script>
+    // Function to open PDF files
+    function openPDF(event, pdfPath) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const fullPath = '/static/applicants/' + pdfPath;
+        const newWindow = window.open(fullPath, '_blank', 'noopener,noreferrer');
+
+        if (newWindow) {
+            newWindow.focus();
+        }
+
+        return false;
+    }
+</script>
+
+{% endblock %}
