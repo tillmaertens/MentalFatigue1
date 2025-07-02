@@ -1,7 +1,8 @@
 from otree.api import *
+import json
 
 doc = """
-Applicants Selection Interface - allows selection between different applicant profiles
+Applicants Selection Interface
 """
 
 
@@ -31,11 +32,10 @@ class Applicant:
         }
 
 
-# Functions before class definition
 def create_applicants():
+    """Create applicant objects"""
     applicants = []
 
-    # Create applicant objects
     applicant_a = Applicant(
         applicant_id='a',
         name='Applicant A',
@@ -54,15 +54,12 @@ def create_applicants():
         description='Project manager with expertise in agile methodologies and team leadership.'
     )
 
-    # Add objects to list
-    applicants.append(applicant_a)
-    applicants.append(applicant_b)
-    applicants.append(applicant_c)
-
+    applicants.extend([applicant_a, applicant_b, applicant_c])
     return applicants
 
 
 def get_applicants_data():
+    """Get applicants data for templates"""
     applicant_objects = create_applicants()
     return [applicant.to_dict() for applicant in applicant_objects]
 
@@ -75,23 +72,70 @@ class C(BaseConstants):
     # Data for templates
     APPLICANTS = get_applicants_data()
 
+    # Evaluation settings
+    MIN_SCORE = 0
+    MAX_SCORE = 8
+
+    # Relevance factors for Nutzwertanalyse
+    RELEVANCE_FACTORS = {
+        'low': 1,
+        'normal': 2,
+        'high': 3
+    }
+
 
 class Subsession(BaseSubsession):
-    pass
+    """Subsession model"""
+
+    def creating_session(self):
+        """Initialize session data"""
+        pass
 
 
 class Group(BaseGroup):
-    pass
+    """Group model - simplified without metadata complexity"""
+
+    # Store simple evaluation data as JSON
+    evaluation_data = models.LongStringField(
+        initial='{}',
+        doc="JSON string containing evaluation criteria and user scores"
+    )
+
+    def get_evaluation_data(self):
+        """Get evaluation data as Python dictionary"""
+        try:
+            return json.loads(self.evaluation_data) if self.evaluation_data else {}
+        except json.JSONDecodeError:
+            return {}
+
+    def set_evaluation_data(self, data_dict):
+        """Set evaluation data from Python dictionary"""
+        self.evaluation_data = json.dumps(data_dict)
 
 
 class Player(BasePlayer):
-    # Field to store which player role was selected
+    """Player model for individual data"""
+
+    # Role selection
     selected_player = models.StringField(
         choices=['Recruiter', 'HR-Coordinator', 'Business-Partner'],
-        blank=True
+        blank=True,
+        doc="Selected player role"
     )
 
-    # Data tracking fields
-    page_start_time = models.FloatField(blank=True)
-    applicants_viewed = models.LongStringField(blank=True)
-    time_spent_per_applicant = models.LongStringField(blank=True)
+    # Activity tracking
+    page_start_time = models.FloatField(
+        blank=True,
+        doc="Timestamp when page was loaded"
+    )
+
+    # HR Coordinator specific fields
+    criteria_added = models.IntegerField(
+        initial=0,
+        doc="Number of criteria added by this player"
+    )
+
+    scores_entered = models.IntegerField(
+        initial=0,
+        doc="Number of scores entered by this player"
+    )
