@@ -1,0 +1,138 @@
+{% block title %}Role Selection{% endblock %}
+
+{% block content %}
+
+    <style>
+        body {
+            background-color: #FFFFFF;
+            font-family: Arial, Helvetica, sans-serif;
+            padding: 20px;
+        }
+
+        h2.otree-title,
+        .otree-title {
+            text-align: center !important;
+            margin: 0 auto 20px auto !important;
+            max-width: 700px !important;
+            color: #333 !important;
+            background: none !important;
+            padding: 0 !important;
+        }
+
+
+        .content-container {
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+            top: 10px;
+        }
+
+        .content-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .session-info, .page {
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        .session-info {
+            background-color: #e3f2fd;
+            text-align: center;
+        }
+
+        .page {
+            background-color: #f0f0f0;
+        }
+
+        .tab-container {
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .tab {
+            background-color: lightblue;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+            transition: background-color 0.3s;
+            font-size: 15px;
+            border: none;
+        }
+
+        .tab:hover {
+            background-color: #87CEEB;
+        }
+
+        .tab.selected {
+            background-color: #4682B4;
+            color: white;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+    </style>
+
+    <!-- Session Info -->
+    {% if session_number %}
+        <div class="content-container">
+            <div class="session-info">
+                <h2>Session {{ session_number }} of {{ total_sessions }}</h2>
+                <p>Select your role for this 10-minute collaborative session</p>
+            </div>
+
+            <!-- Player Selection Page -->
+            <div class="page">
+                <div class="tab-container">
+                    <button type="button" class="tab" onclick="selectPlayer(event, 'Recruiter')">Recruiter</button>
+                    <button type="button" class="tab" onclick="selectPlayer(event, 'HR-Coordinator')">HR-Coordinator
+                    </button>
+                    <button type="button" class="tab" onclick="selectPlayer(event, 'Business-Partner')">
+                        Business-Partner
+                    </button>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <script>
+        // Function to select a player and navigate to profile page
+        function selectPlayer(event, playerId) {
+            event.preventDefault();
+
+            // Remove selection from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('selected');
+            });
+
+            // Add selection to clicked tab
+            event.target.classList.add('selected');
+
+            // Create a form and submit it to proceed to next page
+            var form = document.createElement('form');
+            form.method = 'post';
+            form.action = '';
+
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'selected_role';
+            input.value = playerId;
+
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+
+{% endblock %}

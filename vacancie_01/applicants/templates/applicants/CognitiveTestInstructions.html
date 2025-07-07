@@ -1,0 +1,50 @@
+{% block title %}Cognitive Test Instructions - Session {{ session_number }}{% endblock %}
+
+{% block content %}
+
+<style>
+    body {
+        background-color: #FFFFFF;
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 20px;
+        max-width: 700px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    /* makes Otree timer box transparent */
+    .otree-timer,
+    .alert-warning {
+        background-color: transparent !important;
+        border: none !important;
+        color: #666 !important;
+        font-size: 14px !important;
+        text-align: center !important;
+    }
+
+    .instructions {
+        background-color: #d1ecf1;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        border-left: 4px solid #17a2b8;
+        text-align: left;
+    }
+
+</style>
+
+<div class="instructions">
+    <h3> Stroop Test Instructions</h3>
+    <ul style="text-align: left;">
+        <li><strong>You will see words displayed in different colors</strong></li>
+        <li><strong>Click the button that matches the COLOR of the word, not the word itself</strong></li>
+        <li>For example: If you see <span style="color: blue; font-weight: bold;">RED</span> (word "RED" in blue color), click the BLUE button</li>
+        <li>Test duration: 60 seconds</li>
+    </ul>
+</div>
+
+
+
+{% next_button "Start Cognitive Test" %}
+
+{% endblock %}

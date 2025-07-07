@@ -1,0 +1,117 @@
+{% block title %}Cognitive Test Results - Session {{ session_number }}{% endblock %}
+
+{% block content %}
+
+<style>
+    body {
+        background-color: #FFFFFF;
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 20px;
+        max-width: 700px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    /* makes Otree timer box transparent */
+    .otree-timer,
+    .alert-warning {
+        background-color: transparent !important;
+        border: none !important;
+        color: #666 !important;
+        font-size: 14px !important;
+        text-align: center !important;
+    }
+
+    .results-container {
+        background-color: #d4edda;
+        padding: 30px;
+        border-radius: 10px;
+        margin: 20px 0;
+        border: 2px solid #28a745;
+    }
+
+    .stat-item {
+        padding: 15px;
+        background-color: white;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        margin: 10px;
+        display: inline-block;
+        min-width: 140px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #666;
+        text-transform: uppercase;
+    }
+
+    .test-summary {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        border: 1px solid #dee2e6;
+    }
+
+</style>
+
+<div class="results-container">
+    <h3> Cognitive Test Complete!</h3>
+    
+    <div class="test-summary">
+        <h4> Your Performance Summary</h4>
+        
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0;">
+            <div class="stat-item">
+                <span class="stat-value">{{ score }}</span>
+                <div class="stat-label">Correct Answers</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ errors }}</span>
+                <div class="stat-label">Errors</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="accuracy">0%</span>
+                <div class="stat-label">Accuracy</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ reaction_time }}ms</span>
+                <div class="stat-label">Avg. Reaction Time</div>
+            </div>
+        </div>
+        
+        <div id="performanceBadge"></div>
+    </div>
+</div>
+
+{% next_button %}
+
+<script>
+// Calculate performance metrics
+document.addEventListener('DOMContentLoaded', function() {
+    const score = {{ score }};
+    const totalItems = {{ total_items }};
+    const reactionTime = {{ reaction_time }};
+    
+    // Calculate accuracy
+    const accuracy = totalItems > 0 ? Math.round((score / totalItems) * 100) : 0;
+    document.getElementById('accuracy').textContent = accuracy + '%';
+    
+
+    // Show performance badge
+    const badge = document.getElementById('performanceBadge');
+    badge.className = 'performance-badge ' + performanceClass;
+    badge.textContent = performanceText;
+});
+</script>
+
+{% endblock %}
