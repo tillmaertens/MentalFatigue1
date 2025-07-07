@@ -1,0 +1,242 @@
+{% block title %}Session {{ session_number }} Results{% endblock %}
+
+{% block content %}
+
+<style>
+    body {
+        background-color: #FFFFFF;
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 20px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .session-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .result-card {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 20px;
+    }
+
+    .card-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 15px;
+        text-align: center;
+        padding: 10px;
+        background-color: #e9ecef;
+        border-radius: 5px;
+    }
+
+    .performance-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin: 15px 0;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 15px;
+        background-color: white;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+        display: block;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+        margin-top: 5px;
+    }
+
+    .session-progress {
+        background-color: #e3f2fd;
+        border: 2px solid #2196f3;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: center;
+    }
+
+    .progress-bar {
+        background-color: #e9ecef;
+        border-radius: 10px;
+        height: 20px;
+        margin: 15px 0;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        background: linear-gradient(90deg, #007bff, #28a745);
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.5s ease;
+        width: 0%;
+    }
+
+    .next-session-info {
+        background-color: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: center;
+    }
+
+    .final-session {
+        background-color: #d4edda;
+        border: 2px solid #28a745;
+    }
+
+    h1, h2 {
+        margin: 0;
+    }
+
+    .role-badge {
+        display: inline-block;
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        margin: 5px 0;
+    }
+</style>
+
+<div class="session-header">
+    <h1>Session {{ session_number }} Complete! </h1>
+    <div class="role-badge">Role: {{ current_performance.role_played }}</div>
+    <p>Great work on this collaborative session!</p>
+</div>
+
+<div class="results-grid">
+
+    <!-- Performance Summary -->
+    <div class="result-card">
+        <div class="card-title"> Your Performance</div>
+        <div class="performance-stats">
+            <div class="stat-item">
+                <span class="stat-value">{{ current_performance.criteria_added }}</span>
+                <div class="stat-label">Criteria Added</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ current_performance.scores_entered }}</span>
+                <div class="stat-label">Scores Entered</div>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 15px; color: #666;">
+            <em>Role: {{ current_performance.role_played }}</em>
+        </div>
+    </div>
+
+    <!-- Simple Session Info -->
+    <div class="result-card">
+        <div class="card-title"> Session Progress</div>
+        <div class="performance-stats">
+            <div class="stat-item">
+                <span class="stat-value">{{ session_number }}</span>
+                <div class="stat-label">Current Session</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ total_sessions }}</span>
+                <div class="stat-label">Total Sessions</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Session Progress -->
+<div class="session-progress">
+    <h3> Overall Progress</h3>
+    <p><strong>Session {{ session_number }}</strong> of <strong>{{ total_sessions }}</strong> completed</p>
+
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <p id="remainingSessions">Loading...</p>
+</div>
+
+<!-- Next Session or Final -->
+{% if is_final_session %}
+<div class="next-session-info final-session">
+    <h3> Experiment Complete!</h3>
+    <p>You have completed all {{ total_sessions }} sessions.</p>
+    <p>Thank you for your participation in this mental fatigue study!</p>
+    <p><em>Click continue to see your final results...</em></p>
+</div>
+{% else %}
+<div class="next-session-info">
+    <h3> Next Session</h3>
+    <p>Get ready for <strong>Session <span id="nextSession">...</span></strong></p>
+    <p>You'll select a new role and participate in another 10-minute collaborative session.</p>
+    <p><em>Take a moment to rest before continuing...</em></p>
+</div>
+{% endif %}
+
+<div style="text-align: center; margin-top: 30px;">
+    {% if is_final_session %}
+        {% next_button "View Final Results" %}
+    {% else %}
+        {% next_button "Continue to Next Session" %}
+    {% endif %}
+</div>
+
+<script>
+// Simple JavaScript without complex calculations
+document.addEventListener('DOMContentLoaded', function() {
+    const currentSession = {{ session_number }};
+    const totalSessions = {{ total_sessions }};
+
+    // Calculate progress percentage
+    const percentage = Math.round((currentSession / totalSessions) * 100);
+
+    // Update progress bar
+    const progressFill = document.getElementById('progressFill');
+    if (progressFill) {
+        setTimeout(function() {
+            progressFill.style.width = percentage + '%';
+        }, 500);
+    }
+
+    // Update remaining sessions text
+    const remainingSessions = totalSessions - currentSession;
+    const remainingElement = document.getElementById('remainingSessions');
+    if (remainingElement) {
+        remainingElement.textContent = remainingSessions + ' sessions remaining';
+    }
+
+    // Update next session number
+    const nextSession = currentSession + 1;
+    const nextElement = document.getElementById('nextSession');
+    if (nextElement) {
+        nextElement.textContent = nextSession;
+    }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,204 @@
+{% block title %}Cognitive Test - Session {{ session_number }}{% endblock %}
+
+{% block content %}
+
+<style>
+    body {
+        background-color: #FFFFFF;
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 20px;
+        max-width: 700px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    /* makes Otree timer box transparent */
+    .otree-timer,
+    .alert-warning {
+        background-color: transparent !important;
+        border: none !important;
+        color: #666 !important;
+        font-size: 14px !important;
+        text-align: center !important;
+    }
+
+    .test-header {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+    }
+
+    #testItem {
+        font-size: 48px;
+        font-weight: bold;
+        margin: 40px 0;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .color-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 30px 0;
+        flex-wrap: wrap;
+    }
+
+    .color-btn {
+        padding: 15px 25px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.1s;
+        min-width: 80px;
+    }
+
+    .color-btn:hover {
+        transform: scale(1.05);
+    }
+
+    .color-btn:active {
+        transform: scale(0.95);
+    }
+
+    .red-btn { background: #ff0000; color: white; }
+    .blue-btn { background: #0000ff; color: white; }
+    .green-btn { background: #00ff00; color: black; }
+    .yellow-btn { background: #ffff00; color: black; }
+</style>
+
+<!-- Test Header -->
+<div class="test-header">
+    <h3> Stroop Test Active</h3>
+    <p>Item: <span id="currentItem">1</span> / <span id="totalItems">15</span></p>
+</div>
+
+<!-- Test Interface -->
+<div id="testContainer">
+    <div id="testItem"></div>
+
+    <div class="color-buttons">
+        <button type="button" class="color-btn red-btn" onclick="selectColor('red')">RED</button>
+        <button type="button" class="color-btn blue-btn" onclick="selectColor('blue')">BLUE</button>
+        <button type="button" class="color-btn green-btn" onclick="selectColor('green')">GREEN</button>
+        <button type="button" class="color-btn yellow-btn" onclick="selectColor('yellow')">YELLOW</button>
+    </div>
+</div>
+
+<!-- Hidden form fields -->
+<input type="hidden" name="cognitive_test_score" id="cognitive_test_score" value="0">
+<input type="hidden" name="cognitive_test_reaction_time" id="cognitive_test_reaction_time" value="0">
+<input type="hidden" name="cognitive_test_errors" id="cognitive_test_errors" value="0">
+
+<script>
+// Test configuration
+const testItems = {{ test_items|safe }};
+
+// Test state
+let currentItemIndex = 0;
+let score = 0;
+let errors = 0;
+let reactionTimes = [];
+let testStartTime = 0;
+let itemStartTime = 0;
+let testActive = false;
+
+// Start test automatically when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    startTest();
+});
+
+function startTest() {
+    // Initialize test
+    testStartTime = Date.now();
+    testActive = true;
+
+    // Update displays
+    document.getElementById('totalItems').textContent = testItems.length;
+
+    // Show first item
+    showNextItem();
+}
+
+function showNextItem() {
+    if (currentItemIndex >= testItems.length || !testActive) {
+        // Test beendet - alle Items fertig
+        saveResultsAndSubmit();
+        return;
+    }
+
+    const item = testItems[currentItemIndex];
+    const testElement = document.getElementById('testItem');
+
+    // Display word in specified color
+    testElement.textContent = item.word.toUpperCase();
+    testElement.style.color = item.color;
+
+    // Update progress
+    document.getElementById('currentItem').textContent = currentItemIndex + 1;
+
+    // Record start time for this item
+    itemStartTime = Date.now();
+}
+
+function selectColor(selectedColor) {
+    if (!testActive) return;
+
+    // Calculate reaction time
+    const reactionTime = Date.now() - itemStartTime;
+    reactionTimes.push(reactionTime);
+
+    // Check if correct
+    const currentItem = testItems[currentItemIndex];
+    const correctColor = currentItem.correct_answer;
+
+    if (selectedColor === correctColor) {
+        score++;
+    } else {
+        errors++;
+    }
+
+    // Move to next item
+    currentItemIndex++;
+    showNextItem();
+}
+
+function saveResultsAndSubmit() {
+    testActive = false;
+
+    // Calculate average reaction time
+    const avgReactionTime = reactionTimes.length > 0
+        ? reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length
+        : 0;
+
+    // Store results in hidden form fields
+    document.getElementById('cognitive_test_score').value = score;
+    document.getElementById('cognitive_test_reaction_time').value = Math.round(avgReactionTime);
+    document.getElementById('cognitive_test_errors').value = errors;
+
+    // Submit immediately to results page
+    document.querySelector('form').submit();
+}
+
+// Handle timeout - save current results
+window.addEventListener('beforeunload', function() {
+    if (testActive) {
+        // Quick save before page unload
+        const avgReactionTime = reactionTimes.length > 0
+            ? reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length
+            : 0;
+
+        document.getElementById('cognitive_test_score').value = score;
+        document.getElementById('cognitive_test_reaction_time').value = Math.round(avgReactionTime);
+        document.getElementById('cognitive_test_errors').value = errors;
+    }
+});
+</script>
+
+{% endblock %}

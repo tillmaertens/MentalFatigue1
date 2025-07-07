@@ -1,0 +1,26 @@
+{% block title %}Consent Form{% endblock %}
+
+{% block content %}
+    <div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+        <h2>Mental Fatigue Experiment - Consent Form</h2>
+
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+            <h3>Experiment Overview</h3>
+            <p>You will participate in a digital coworking simulation with 6 sessions of 10 minutes each.</p>
+            <p>We will measure various aspects of mental fatigue and performance.</p>
+
+            <h3>What we collect:</h3>
+            <ul>
+                <li>Task performance data</li>
+                <li>Self-assessment questionnaires</li>
+                <li>Reaction times</li>
+                <li>Mouse movement patterns</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <p><strong>Do you consent to participate in this experiment?</strong></p>
+            {% next_button %}
+        </div>
+    </div>
+{% endblock %}
