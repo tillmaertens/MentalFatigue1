@@ -1,3 +1,5 @@
+# Your original settings with minimal research-focused additions
+
 SESSION_CONFIGS = [
     dict(
         name='applicants_study',
@@ -13,8 +15,17 @@ SESSION_CONFIG_DEFAULTS = dict(
     doc="",
 )
 
-PARTICIPANT_FIELDS = []
-SESSION_FIELDS = []
+# These fields help track data across rounds for your fatigue analysis
+PARTICIPANT_FIELDS = [
+    'baseline_cognitive_score',  # For comparing cognitive decline
+    'experiment_start_time',     # For overall experiment duration
+    'total_sessions_completed'   # For completion tracking
+]
+
+SESSION_FIELDS = [
+    'experiment_date',           # For research record keeping
+    'completion_rate'            # For session success tracking
+]
 
 SECRET_KEY = '12345678abcde'
 LANGUAGE_CODE = 'en-us'

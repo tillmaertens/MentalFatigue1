@@ -42,22 +42,28 @@
             flex-direction: column;
         }
 
-        /* Job Description Button */
+        /* Job Description and Pie Chart Section */
         .job-description-section {
-            text-align: center;
             margin-bottom: 20px;
+        }
+
+        .job-description-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
         }
 
         .job-description-button {
             background-color: #f5f5f5;
             color: #555;
-            padding: 25px 40px;
+            padding: 15px 25px;
             border: 2px solid #ddd;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             transition: all 0.3s ease;
+            flex-shrink: 0;
         }
 
         .job-description-button:hover {
@@ -66,6 +72,86 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
+        /* Pie Chart Styles */
+        .pie-chart-section {
+            flex: 1;
+            text-align: center;
+        }
+
+        .pie-chart-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .pie-chart-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        #pieChart {
+            max-width: 200px;
+            max-height: 200px;
+        }
+
+        .chart-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .no-data-message {
+            color: #666;
+            font-style: italic;
+            font-size: 12px;
+            padding: 20px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            text-align: center;
+        }
+
+        /* Real-time indicator */
+        .update-indicator {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #28a745;
+            display: none;
+        }
+
+        .update-indicator.updating {
+            display: block;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
 
         /* Evaluation Form Styles */
         .evaluation-container {
@@ -101,6 +187,98 @@
         .add-criteria-btn:hover {
             background-color: #0056b3;
         }
+
+        /* Filter Selection Styles */
+        .filter-selection {
+            display: none;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .filter-selection.show {
+            display: block;
+        }
+
+        .filter-categories {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-category-btn {
+            background-color: #e9ecef;
+            color: #495057;
+            border: 1px solid #ced4da;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .filter-category-btn:hover {
+            background-color: #dee2e6;
+        }
+
+        .filter-category-btn.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .filter-requirements {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 200px;
+            width: max-content;
+            max-width: 400px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 5px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .filter-requirements.show {
+            display: block;
+        }
+
+        .requirement-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 8px;
+            margin-bottom: 2px;
+            background-color: white;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 12px;
+            min-width: max-content;
+        }
+
+        .requirement-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .requirement-name {
+            font-weight: normal;
+            flex: 1;
+            margin-right: 10px;
+        }
+
 
         .table-container {
             flex: 1;
@@ -165,16 +343,17 @@
             background-color: #f8f9fa;
         }
 
-        .score-input {
+        .score-select {
             width: 50px;
             border: 1px solid #ccc;
             border-radius: 3px;
             padding: 5px;
             text-align: center;
-            font-size: 14px;
+            font-size: 12px;
+            background-color: white;
         }
 
-        .score-input:focus {
+        .score-select:focus {
             outline: 2px solid #007bff;
             border-color: #007bff;
         }
@@ -206,7 +385,6 @@
         .delete-btn:hover {
             background-color: #c82333;
         }
-
     </style>
 
     <!-- Skip Button -->
@@ -217,43 +395,51 @@
         </button>
     </div>
 
-    <script>
-        function skipSession() {
-            if (confirm('Skip this session?')) {
-                // Submit the form immediately
-                document.querySelector('form').submit();
-            }
-        }
-    </script>
-
     <!-- Session Info Bar -->
     <div style="background: #e3f2fd; padding: 10px; text-align: center; margin-bottom: 20px; border-radius: 5px;">
         <strong>Session {{ session_number }} of 6</strong>
-
     </div>
-
 
     <div class="hr-coordinator-container">
         <!-- Left Panel - Video Meeting -->
         <div class="left-panel">
-            <div> Video Meeting Placeholder</div>
+            <div>Video Meeting Placeholder</div>
         </div>
 
         <!-- Right Panel - HR Coordinator Information -->
         <div class="right-panel">
-
-            <!-- Job Description Button -->
+            <!-- Job Description and Pie Chart Section -->
             <div class="job-description-section">
-                <button type="button" class="job-description-button" onclick="openPDF(event, 'JobDescription.pdf')">
-                    📄 Job Description
-                </button>
+                <div class="job-description-container">
+                    <button type="button" class="job-description-button" onclick="openPDF(event, 'JobDescription.pdf')">
+                        Job Description
+                    </button>
+
+                    <div class="pie-chart-section">
+                        <div class="pie-chart-title">Current Evaluation</div>
+                        <div class="pie-chart-container">
+                            <canvas id="pieChart" width="200" height="200"></canvas>
+                            <div id="noDataMessage" class="no-data-message">
+                                Add criteria and scores to see results
+                            </div>
+                        </div>
+                        <div class="chart-legend" id="chartLegend"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- Evaluation Form -->
             <div class="evaluation-container">
                 <div class="evaluation-header">
                     <div class="evaluation-controls">
-                        <button type="button" class="add-criteria-btn" onclick="addCriteria()">+ Add Criteria</button>
+                        <button type="button" class="add-criteria-btn" onclick="showFilterSelection(event); return false;">+ Add Criteria</button>
+                    </div>
+                </div>
+
+                <!-- Filter Selection Panel -->
+                <div id="filterSelection" class="filter-selection">
+                    <div class="filter-categories" id="filterCategories">
+                        <!-- Categories will be populated by JavaScript -->
                     </div>
                 </div>
 
@@ -278,31 +464,177 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
         // Simple backend data
         const applicantsData = {{ applicants|safe }};
         const minScore = 0;
         const maxScore = 8;
+        const criteriaData = {{ criteria_data|safe }};
+        const categories = {{ categories|safe }};
+        const criteriaByCategory = {{ criteria_by_category|safe }};
 
         let criteriaCount = 0;
         let saveTimeouts = {}; // Store timeouts for debouncing
+        let currentSelectedCategory = null;
+        let pieChart = null;
+        let lastDataString = '';
+
+        // Applicant colors for pie chart
+        const applicantColors = {
+            'a': '#FF6384',
+            'b': '#36A2EB',
+            'c': '#FFCE56'
+        };
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function () {
-            console.log('HR Coordinator loaded - Simple Version');
+            console.log('HR Coordinator loaded');
             console.log('Applicants data:', applicantsData);
+            console.log('Criteria data:', criteriaData);
+            console.log('Categories:', categories);
 
             // Clear any old data to start fresh
             localStorage.removeItem('nutzwertResults');
             localStorage.removeItem('evaluationData');
             console.log('Cleared localStorage for fresh start');
 
-            // Add initial empty row
-            addCriteria();
+            // Initialize filter categories
+            initializeFilterCategories();
+
+            // Initialize pie chart
+            initializePieChart();
+
+            // Check for existing data immediately
+            updatePieChartFromLocalStorage();
+
+            // Start real-time updates
+            startRealTimeUpdates();
+
+            // Do NOT add initial empty row - start with empty table
         });
 
-        function addCriteria() {
-            addCriteriaRow('', {}, 'normal');
+        function initializeFilterCategories() {
+            const categoriesContainer = document.getElementById('filterCategories');
+            categoriesContainer.innerHTML = '';
+
+            categories.forEach(category => {
+                const categoryWrapper = document.createElement('div');
+                categoryWrapper.style.position = 'relative';
+                categoryWrapper.style.display = 'inline-block';
+
+                const categoryBtn = document.createElement('button');
+                categoryBtn.type = 'button';
+                categoryBtn.className = 'filter-category-btn';
+                categoryBtn.textContent = category;
+                categoryBtn.onclick = (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    selectCategory(category, categoryBtn);
+                    return false;
+                };
+
+                const requirementsDropdown = document.createElement('div');
+                requirementsDropdown.className = 'filter-requirements';
+                requirementsDropdown.id = `requirements-${category}`;
+
+                categoryWrapper.appendChild(categoryBtn);
+                categoryWrapper.appendChild(requirementsDropdown);
+                categoriesContainer.appendChild(categoryWrapper);
+            });
+        }
+
+        function showFilterSelection(event) {
+            const filterSelection = document.getElementById('filterSelection');
+            filterSelection.classList.add('show');
+
+            // Prevent any form submission
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            return false;
+        }
+
+        function hideFilterSelection() {
+            const filterSelection = document.getElementById('filterSelection');
+            filterSelection.classList.remove('show');
+
+            // Clear active category selection and hide all dropdowns
+            document.querySelectorAll('.filter-category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.querySelectorAll('.filter-requirements').forEach(dropdown => {
+                dropdown.classList.remove('show');
+            });
+        }
+
+        function selectCategory(category, categoryBtn) {
+            // Hide all other dropdowns
+            document.querySelectorAll('.filter-requirements').forEach(dropdown => {
+                dropdown.classList.remove('show');
+            });
+
+            // Remove active class from all buttons
+            document.querySelectorAll('.filter-category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Toggle the selected category
+            const requirementsDropdown = document.getElementById(`requirements-${category}`);
+            if (requirementsDropdown.classList.contains('show')) {
+                requirementsDropdown.classList.remove('show');
+            } else {
+                categoryBtn.classList.add('active');
+                showRequirementsForCategory(category, requirementsDropdown);
+            }
+        }
+
+        function showRequirementsForCategory(category, requirementsContainer) {
+            requirementsContainer.innerHTML = '';
+
+            const categoryRequirements = criteriaByCategory[category] || [];
+
+            categoryRequirements.forEach(requirement => {
+                const requirementDiv = document.createElement('div');
+                requirementDiv.className = 'requirement-item';
+                requirementDiv.onclick = (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    selectRequirement(event, requirement);
+                    return false;
+                };
+
+                requirementDiv.innerHTML = `
+                    <span class="requirement-name">${requirement.name}</span>
+                `;
+
+                requirementsContainer.appendChild(requirementDiv);
+            });
+
+            requirementsContainer.classList.add('show');
+        }
+
+        function selectRequirement(event, requirement) {
+            // Prevent any default behavior or form submission
+            event.preventDefault();
+            event.stopPropagation();
+
+            // Add the selected requirement as a new criteria row
+            addCriteriaRow(requirement.name, {}, 'normal');
+
+            // Hide the filter selection
+            hideFilterSelection();
+
+            // Return false to prevent navigation
+            return false;
+        }
+
+        function skipSession() {
+            if (confirm('Skip this session?')) {
+                document.querySelector('form').submit();
+            }
         }
 
         function addCriteriaRow(criterionText = '', scores = {}, relevance = 'normal') {
@@ -318,7 +650,7 @@
                 relevanceOptions += `<option value="${option}" ${selected}>${option}</option>`;
             });
 
-            // Build the row HTML dynamically - with debounced saving
+            // Build the row HTML
             let rowHTML = `
             <td>
                 <input type="text" class="criteria-input" placeholder="Enter criteria..."
@@ -328,16 +660,23 @@
             </td>
         `;
 
-            // Add score input for each applicant
+            // Add score dropdown for each applicant
             applicantsData.forEach(applicant => {
                 const score = scores[applicant.id] || '';
+
+                // Build score dropdown options (1-8 only, no 0)
+                let scoreOptions = '<option value="">-</option>';
+                for (let i = 1; i <= 8; i++) {
+                    const selected = score == i ? 'selected' : '';
+                    scoreOptions += `<option value="${i}" ${selected}>${i}</option>`;
+                }
+
                 rowHTML += `
                 <td>
-                    <input type="number" class="score-input" min="${minScore}" max="${maxScore}"
-                           placeholder="${minScore}-${maxScore}" value="${score}"
-                           id="score-${applicant.id}-${criteriaCount}"
-                           oninput="debouncedSaveScore('${applicant.id}', ${criteriaCount})"
-                           onchange="saveScore('${applicant.id}', ${criteriaCount})">
+                    <select class="score-select" id="score-${applicant.id}-${criteriaCount}"
+                            onchange="saveScore('${applicant.id}', ${criteriaCount})">
+                        ${scoreOptions}
+                    </select>
                 </td>
             `;
             });
@@ -370,6 +709,8 @@
             }
         }
 
+
+
         function deleteCriteria(id) {
             const row = document.getElementById(`criteria-${id}`);
             const criteriaInput = document.getElementById(`criteria-name-${id}`);
@@ -394,45 +735,24 @@
             }
         }
 
+        function saveRelevance(criteriaId) {
+            updateCriterionData(criteriaId);
+        }
+
         // Debounced saving functions
         function debouncedSaveCriterion(id) {
-            // Clear existing timeout
             if (saveTimeouts[`criteria-${id}`]) {
                 clearTimeout(saveTimeouts[`criteria-${id}`]);
             }
 
-            // Set new timeout - save after 1.5 seconds of no typing
             saveTimeouts[`criteria-${id}`] = setTimeout(() => {
                 saveCriterion(id);
                 delete saveTimeouts[`criteria-${id}`];
             }, 1500);
         }
 
-        function debouncedSaveScore(applicantId, criteriaId) {
-            const timeoutKey = `score-${applicantId}-${criteriaId}`;
-
-            // Clear existing timeout
-            if (saveTimeouts[timeoutKey]) {
-                clearTimeout(saveTimeouts[timeoutKey]);
-            }
-
-            // Set new timeout - save after 1 second of no typing
-            saveTimeouts[timeoutKey] = setTimeout(() => {
-                saveScore(applicantId, criteriaId);
-                delete saveTimeouts[timeoutKey];
-            }, 1000);
-        }
-
         function saveCriterion(id) {
             updateCriterionData(id);
-        }
-
-        function saveScore(applicantId, criteriaId) {
-            updateCriterionData(criteriaId);
-        }
-
-        function saveRelevance(criteriaId) {
-            updateCriterionData(criteriaId);
         }
 
         function updateCriterionData(criteriaId) {
@@ -446,11 +766,22 @@
                 return;
             }
 
+            // Track criteria added - send to backend
+            fetch('/update_criteria_count/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'criteria_count': 1
+                })
+            });
+
             // Collect all user-entered scores for this criterion
             const applicantScores = {};
             applicantsData.forEach(applicant => {
-                const scoreInput = document.getElementById(`score-${applicant.id}-${criteriaId}`);
-                const score = scoreInput.value;
+                const scoreSelect = document.getElementById(`score-${applicant.id}-${criteriaId}`);
+                const score = scoreSelect.value;
                 if (score) {
                     applicantScores[applicant.id] = parseInt(score);
                 }
@@ -471,9 +802,12 @@
             };
             saveLocalEvaluationData(evaluationData);
 
-            // Update pie chart immediately
-            updatePieChartData(evaluationData);
+            // Calculate and update pie chart immediately
+            const results = getResultsFromEvaluationData(evaluationData);
+            localStorage.setItem('nutzwertResults', JSON.stringify(results));
+            updatePieChartDisplay(results);
 
+            console.log('Updated pie chart immediately with scores:', results);
         }
 
         function getLocalEvaluationData() {
@@ -521,6 +855,182 @@
 
             console.log('Updated pie chart with USER SCORES:', results);
             localStorage.setItem('nutzwertResults', JSON.stringify(results));
+
+            // Update pie chart display immediately
+            updatePieChartDisplay(results);
+        }
+
+        function initializePieChart() {
+            const canvas = document.getElementById('pieChart');
+            const ctx = canvas.getContext('2d');
+
+            pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false // We'll create a custom legend
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const percentage = context.dataset.data.reduce((a, b) => a + b, 0) > 0
+                                        ? ((value / context.dataset.data.reduce((a, b) => a + b, 0)) * 100).toFixed(1)
+                                        : 0;
+                                    return `${label}: ${value} points (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updatePieChartDisplay(nutzwertResults) {
+            const canvas = document.getElementById('pieChart');
+            const noDataMessage = document.getElementById('noDataMessage');
+            const chartLegend = document.getElementById('chartLegend');
+
+            if (!nutzwertResults || !nutzwertResults.applicant_totals) {
+                // No data available
+                canvas.style.display = 'none';
+                noDataMessage.style.display = 'block';
+                chartLegend.innerHTML = '';
+                return;
+            }
+
+            const totals = nutzwertResults.applicant_totals;
+            const percentages = nutzwertResults.applicant_percentages || {};
+
+            // Check if we have any data
+            const hasData = Object.values(totals).some(value => value > 0);
+
+            if (!hasData) {
+                canvas.style.display = 'none';
+                noDataMessage.style.display = 'block';
+                chartLegend.innerHTML = '';
+                return;
+            }
+
+            // Show chart and hide no-data message
+            canvas.style.display = 'block';
+            noDataMessage.style.display = 'none';
+
+            // Prepare data for chart
+            const labels = [];
+            const data = [];
+            const colors = [];
+
+            applicantsData.forEach(applicant => {
+                const applicantId = applicant.id;
+                const total = totals[applicantId] || 0;
+
+                if (total >= 0) { // Include all values, even 0
+                    labels.push(applicant.name);
+                    data.push(total);
+                    colors.push(applicantColors[applicantId] || '#999');
+                }
+            });
+
+            // Update chart
+            pieChart.data.labels = labels;
+            pieChart.data.datasets[0].data = data;
+            pieChart.data.datasets[0].backgroundColor = colors;
+            pieChart.update();
+
+            // Update custom legend
+            updateLegend(labels, colors, totals, percentages);
+        }
+
+        function updateLegend(labels, colors, totals, percentages) {
+            const chartLegend = document.getElementById('chartLegend');
+            chartLegend.innerHTML = '';
+
+            labels.forEach((label, index) => {
+                const applicantId = applicantsData.find(a => a.name === label)?.id;
+                const total = totals[applicantId] || 0;
+                const percentage = percentages[applicantId] || 0;
+
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                    <div class="legend-color" style="background-color: ${colors[index]}"></div>
+                    <span><strong>${label}</strong>: ${total} pts (${percentage}%)</span>
+                `;
+                chartLegend.appendChild(legendItem);
+            });
+        }
+
+        function getResultsFromEvaluationData(evaluationData) {
+            const results = {
+                applicant_totals: {a: 0, b: 0, c: 0},
+                applicant_percentages: {a: 0, b: 0, c: 0}
+            };
+
+            // Relevance factors
+            const relevanceFactors = {low: 1, normal: 2, high: 3};
+
+            // Calculate using USER-ENTERED SCORES only
+            Object.keys(evaluationData).forEach(criterionName => {
+                const criterionData = evaluationData[criterionName];
+                const relevanceFactor = relevanceFactors[criterionData.relevance] || 2;
+
+                // Use USER-ENTERED scores (not metadata)
+                ['a', 'b', 'c'].forEach(applicantId => {
+                    const userScore = criterionData.scores[applicantId] || 0;
+                    const nutzwert = userScore * relevanceFactor;
+                    results.applicant_totals[applicantId] += nutzwert;
+                });
+            });
+
+            // Calculate percentages
+            const totalPoints = Object.values(results.applicant_totals).reduce((sum, val) => sum + val, 0);
+            if (totalPoints > 0) {
+                ['a', 'b', 'c'].forEach(applicantId => {
+                    results.applicant_percentages[applicantId] =
+                        Math.round((results.applicant_totals[applicantId] / totalPoints) * 100);
+                });
+            }
+
+            return results;
+        }
+
+        function startRealTimeUpdates() {
+            // Update pie chart every time data changes
+            setInterval(function () {
+                updatePieChartFromLocalStorage();
+            }, 1000);
+        }
+
+        function updatePieChartFromLocalStorage() {
+            try {
+                const storedResults = localStorage.getItem('nutzwertResults');
+                if (storedResults) {
+                    const nutzwertResults = JSON.parse(storedResults);
+
+                    // Check if data has changed
+                    const dataString = JSON.stringify(nutzwertResults);
+                    if (dataString !== lastDataString) {
+                        updatePieChartDisplay(nutzwertResults);
+                        lastDataString = dataString;
+                    }
+                }
+            } catch (error) {
+                console.error('Error reading data from localStorage:', error);
+            }
         }
 
         function openPDF(event, pdfPath) {

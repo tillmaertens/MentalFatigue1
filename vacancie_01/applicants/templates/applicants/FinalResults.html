@@ -1,24 +1,38 @@
 {% block title %}Final Results - Mental Fatigue Experiment{% endblock %}
 
 {% block content %}
-
 <style>
     body {
         background-color: #FFFFFF;
-        font-family: Arial, Helvetica, sans-serif;
+        font-family: Arial, sans-serif;
         padding: 20px;
         max-width: 1000px;
         margin: 0 auto;
+        color: #333;
     }
 
     .completion-header {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        color: white;
+        background-color: #f8f9fa;
         padding: 40px;
-        border-radius: 15px;
+        border-radius: 5px;
         text-align: center;
         margin-bottom: 30px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border: 1px solid #dee2e6;
+    }
+
+    .completion-header h1 {
+        color: #333;
+        margin: 0 0 15px 0;
+    }
+
+    .completion-badge {
+        background-color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 16px;
+        margin: 10px 0;
+        display: inline-block;
+        border: 1px solid #e9ecef;
     }
 
     .summary-stats {
@@ -30,16 +44,10 @@
 
     .stat-card {
         background-color: #f8f9fa;
-        border: 2px solid #e9ecef;
-        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
         padding: 25px;
         text-align: center;
-        transition: transform 0.3s ease;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     .stat-value {
@@ -59,19 +67,19 @@
 
     .sessions-table {
         background-color: white;
-        border-radius: 10px;
+        border-radius: 5px;
         overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 1px solid #dee2e6;
         margin: 30px 0;
     }
 
     .table-header {
-        background-color: #007bff;
-        color: white;
+        background-color: #f8f9fa;
         padding: 20px;
         text-align: center;
         font-size: 20px;
         font-weight: bold;
+        border-bottom: 1px solid #dee2e6;
     }
 
     .session-row {
@@ -86,15 +94,10 @@
         background-color: #f8f9fa;
     }
 
-    .session-row:hover {
-        background-color: #e3f2fd;
-    }
-
     .row-header {
-        background-color: #6c757d;
-        color: white;
+        background-color: #e9ecef;
         font-weight: bold;
-        grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr;
+        border-bottom: 2px solid #dee2e6;
     }
 
     .role-badge {
@@ -104,11 +107,9 @@
         font-size: 12px;
         font-weight: bold;
         text-align: center;
+        background-color: #007bff;
+        color: white;
     }
-
-    .role-recruiter { background-color: #17a2b8; color: white; }
-    .role-hr { background-color: #28a745; color: white; }
-    .role-business { background-color: #ffc107; color: black; }
 
     .trend-analysis {
         display: grid;
@@ -119,8 +120,8 @@
 
     .trend-card {
         background-color: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
         padding: 20px;
     }
 
@@ -137,63 +138,82 @@
         font-weight: bold;
         text-align: center;
         padding: 15px;
-        border-radius: 8px;
+        border-radius: 5px;
         margin: 10px 0;
+        background-color: white;
+        border: 1px solid #e9ecef;
     }
 
     .trend-positive {
-        background-color: #d4edda;
-        color: #155724;
+        color: #28a745;
     }
 
     .trend-negative {
-        background-color: #f8d7da;
-        color: #721c24;
+        color: #dc3545;
     }
 
     .trend-stable {
-        background-color: #fff3cd;
-        color: #856404;
+        color: #6c757d;
     }
 
     .debriefing {
-        background-color: #e8f5e8;
-        border: 2px solid #28a745;
-        border-radius: 10px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
         padding: 30px;
         margin: 30px 0;
     }
 
+    .debriefing h3 {
+        color: #333;
+        margin-top: 0;
+    }
+
+    .debriefing ul {
+        margin: 15px 0;
+        padding-left: 20px;
+    }
+
+    .debriefing li {
+        margin: 8px 0;
+        color: #555;
+    }
+
     .thank-you {
-        background-color: #e3f2fd;
-        border: 2px solid #2196f3;
-        border-radius: 10px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
         padding: 30px;
         margin: 30px 0;
         text-align: center;
     }
 
-    h1, h2, h3 {
+    .thank-you h2 {
+        color: #333;
         margin-top: 0;
     }
 
-    .completion-badge {
+    .thank-you ul {
+        text-align: left;
         display: inline-block;
-        background-color: rgba(255, 255, 255, 0.2);
-        padding: 10px 20px;
-        border-radius: 25px;
-        font-size: 16px;
-        margin: 10px 0;
+        margin: 20px 0;
+    }
+
+    .experiment-info {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: white;
+        border-radius: 5px;
+        border: 1px solid #e9ecef;
     }
 </style>
 
 <div class="completion-header">
-    <h1> Experiment Complete!</h1>
+    <h1>Experiment Complete</h1>
     <div class="completion-badge">Mental Fatigue Study - All {{ total_sessions_completed }} Sessions Completed</div>
     <p>Thank you for your participation in this comprehensive study</p>
 </div>
 
-<!-- Summary Statistics -->
 <div class="summary-stats">
     <div class="stat-card">
         <span class="stat-value">{{ total_sessions_completed }}</span>
@@ -213,10 +233,9 @@
     </div>
 </div>
 
-<!-- Session Details Table -->
 <div class="sessions-table">
     <div class="table-header">
-         Session-by-Session Results
+        Session-by-Session Results
     </div>
 
     <div class="session-row row-header">
@@ -232,13 +251,7 @@
     <div class="session-row">
         <div><strong>{{ session.session }}</strong></div>
         <div>
-            <span class="role-badge
-                {% if session.role == 'Recruiter' %}role-recruiter
-                {% elif session.role == 'HR-Coordinator' %}role-hr
-                {% elif session.role == 'Business-Partner' %}role-business
-                {% endif %}">
-                {{ session.role }}
-            </span>
+            <span class="role-badge">{{ session.role }}</span>
         </div>
         <div class="session-data" data-fatigue="{{ session.fatigue_level }}">{{ session.fatigue_level }}/10</div>
         <div class="session-data" data-effort="{{ session.mental_effort }}">{{ session.mental_effort }}/10</div>
@@ -248,25 +261,24 @@
     {% endfor %}
 </div>
 
-<!-- Trend Analysis -->
 <div class="trend-analysis">
     <div class="trend-card">
-        <div class="trend-title"> Fatigue Progression</div>
+        <div class="trend-title">Fatigue Progression</div>
         {% if fatigue_increase > 1 %}
         <div class="trend-indicator trend-negative">
-            ️ Significant Increase<br>
+            Significant Increase<br>
             <small id="fatigueIncrease1">+{{ fatigue_increase }} points</small>
         </div>
         <p>Your fatigue levels increased noticeably over the sessions, which is expected in sustained cognitive tasks.</p>
         {% elif fatigue_increase > -1 %}
         <div class="trend-indicator trend-stable">
-            ️ Stable<br>
+            Stable<br>
             <small id="fatigueIncrease2">{{ fatigue_increase }} points</small>
         </div>
         <p>Your fatigue levels remained relatively stable throughout the experiment.</p>
         {% else %}
         <div class="trend-indicator trend-positive">
-            ️ Decreased<br>
+            Decreased<br>
             <small id="fatigueIncrease3">{{ fatigue_increase }} points</small>
         </div>
         <p>Interestingly, your fatigue levels decreased over time, possibly due to task adaptation.</p>
@@ -274,22 +286,22 @@
     </div>
 
     <div class="trend-card">
-        <div class="trend-title"> Cognitive Performance</div>
+        <div class="trend-title">Cognitive Performance</div>
         {% if cognitive_decline > 1 %}
         <div class="trend-indicator trend-negative">
-            ️ Performance Decline<br>
+            Performance Decline<br>
             <small id="cognitiveDecline1">-{{ cognitive_decline }} points</small>
         </div>
         <p>Your cognitive performance declined over sessions, indicating mental fatigue effects.</p>
         {% elif cognitive_decline > -1 %}
         <div class="trend-indicator trend-stable">
-             Stable Performance<br>
+            Stable Performance<br>
             <small id="cognitiveDecline2">{{ cognitive_decline }} points</small>
         </div>
         <p>Your cognitive performance remained consistent throughout the experiment.</p>
         {% else %}
         <div class="trend-indicator trend-positive">
-            ️ Performance Improved<br>
+            Performance Improved<br>
             <small id="cognitiveDecline3">+{{ cognitive_decline }} points</small>
         </div>
         <p>Your cognitive performance improved over time, showing learning effects.</p>
@@ -297,9 +309,8 @@
     </div>
 </div>
 
-<!-- Research Context -->
 <div class="debriefing">
-    <h3> About This Research</h3>
+    <h3>About This Research</h3>
     <p><strong>Purpose:</strong> This study investigated how mental fatigue develops during extended collaborative work sessions and how it affects cognitive performance.</p>
 
     <p><strong>Your Contribution:</strong> Your data will help researchers understand:</p>
@@ -318,13 +329,12 @@
     </ul>
 </div>
 
-<!-- Thank You -->
 <div class="thank-you">
-    <h2> Thank You!</h2>
+    <h2>Thank You</h2>
     <p><strong>Your participation is invaluable for advancing our understanding of mental fatigue in digital work environments.</strong></p>
 
     <p>The data you provided will contribute to:</p>
-    <ul style="text-align: left; display: inline-block;">
+    <ul>
         <li>Designing better break schedules for knowledge workers</li>
         <li>Developing fatigue-aware collaboration tools</li>
         <li>Understanding optimal task rotation strategies</li>
@@ -333,41 +343,35 @@
 
     <p><em>If you have any questions about this research, please contact the research team.</em></p>
 
-    <div style="margin-top: 30px;">
+    <div class="experiment-info">
         <strong>Experiment ID:</strong> {{ player.participant.code }}<br>
         <strong>Completion Date:</strong> <span id="completionDate"></span>
     </div>
 </div>
 
 <script>
-// Format numbers and display current date
 document.addEventListener('DOMContentLoaded', function() {
-    // Format floating point numbers to 1 decimal place
     const avgFatigue = {{ average_fatigue }};
     const fatigueIncrease = {{ fatigue_increase }};
     const cognitiveDecline = {{ cognitive_decline }};
 
-    // Update average fatigue
     const avgElement = document.getElementById('avgFatigue');
     if (avgElement) {
         avgElement.textContent = avgFatigue.toFixed(1);
     }
 
-    // Update fatigue change with + sign if positive
     const fatigueElement = document.getElementById('fatigueChange');
     if (fatigueElement) {
         const formattedFatigue = fatigueIncrease.toFixed(1);
         fatigueElement.textContent = fatigueIncrease > 0 ? '+' + formattedFatigue : formattedFatigue;
     }
 
-    // Update cognitive change with - sign if positive (decline)
     const cognitiveElement = document.getElementById('cognitiveChange');
     if (cognitiveElement) {
         const formattedCognitive = cognitiveDecline.toFixed(1);
         cognitiveElement.textContent = cognitiveDecline > 0 ? '-' + formattedCognitive : formattedCognitive;
     }
 
-    // Update trend descriptions
     const fatigue1 = document.getElementById('fatigueIncrease1');
     if (fatigue1) fatigue1.textContent = '+' + fatigueIncrease.toFixed(1) + ' points';
 
@@ -386,17 +390,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const cognitive3 = document.getElementById('cognitiveDecline3');
     if (cognitive3) cognitive3.textContent = '+' + Math.abs(cognitiveDecline).toFixed(1) + ' points';
 
-    // Fix session data display - replace empty/null values with "-"
     const sessionDataElements = document.querySelectorAll('.session-data');
     sessionDataElements.forEach(function(element) {
         const text = element.textContent.trim();
-        // Check if it contains "null", "None", "undefined" or just "/10"
         if (text === 'null/10' || text === 'None/10' || text === '/10' || text === 'undefined/10' || text.startsWith('null') || text.startsWith('None')) {
             element.textContent = '-';
         }
     });
 
-    // Display current date
     const now = new Date();
     const dateString = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
     const dateElement = document.getElementById('completionDate');

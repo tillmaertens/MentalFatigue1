@@ -95,10 +95,13 @@
             <!-- Player Selection Page -->
             <div class="page">
                 <div class="tab-container">
-                    <button type="button" class="tab" onclick="selectPlayer(event, 'Recruiter')">Recruiter</button>
-                    <button type="button" class="tab" onclick="selectPlayer(event, 'HR-Coordinator')">HR-Coordinator
+                    <button type="button" class="tab" onclick="selectPlayer(event, '{{ C.RECRUITER_ROLE }}')">
+                        Recruiter
                     </button>
-                    <button type="button" class="tab" onclick="selectPlayer(event, 'Business-Partner')">
+                    <button type="button" class="tab" onclick="selectPlayer(event, '{{ C.HR_COORDINATOR_ROLE }}')">
+                        HR-Coordinator
+                    </button>
+                    <button type="button" class="tab" onclick="selectPlayer(event, '{{ C.BUSINESS_PARTNER_ROLE }}')">
                         Business-Partner
                     </button>
                 </div>

@@ -1,5 +1,5 @@
 from otree.api import *
-from .models import C
+from .models import C, ensure_all_roles_assigned
 import time
 import random
 
@@ -10,21 +10,21 @@ class Consent(Page):
     """Consent form for mental fatigue experiment"""
 
     def is_displayed(self):
-        return self.round_number == 1
+        return self.player.round_number == 1
 
 
 class BaselineCognitiveTestInstructions(Page):
     """Baseline cognitive test instructions"""
 
     template_name = 'applicants/CognitiveTestInstructions.html'
-    timeout_seconds = 60
+    timeout_seconds = 20
 
     def is_displayed(self):
-        return self.round_number == 1
+        return self.player.round_number == 1
 
     def vars_for_template(self):
         return {
-            'session_number': self.round_number
+            'session_number': self.player.round_number
         }
 
 
@@ -34,32 +34,56 @@ class BaselineCognitiveTest(Page):
     template_name = 'applicants/CognitiveTest.html'
     form_model = 'player'
     form_fields = ['cognitive_test_score', 'cognitive_test_reaction_time', 'cognitive_test_errors']
-    timeout_seconds = 60
+    timeout_seconds = 30
 
     def is_displayed(self):
-        return self.round_number == 1
+        return self.player.round_number == 1
 
     def vars_for_template(self):
-        return CognitiveTest.vars_for_template(self)
+        # Generate random Stroop test items for baseline
+        test_items = []
+        color_mapping = {
+            '#ff0000': 'red',
+            '#0000ff': 'blue',
+            '#00ff00': 'green',
+            '#ffff00': 'yellow'
+        }
+
+        for i in range(20):  # 20 items
+            word = random.choice(C.STROOP_WORDS)
+            color_hex = random.choice(C.STROOP_COLORS)
+            color_name = color_mapping[color_hex]
+
+            test_items.append({
+                'word': word,
+                'color': color_hex,
+                'correct_answer': color_name
+            })
+
+        return {
+            'test_items': test_items,
+            'test_duration': 30,
+            'session_number': self.player.round_number
+        }
 
 
 class BaselineCognitiveTestResults(Page):
     """Show baseline cognitive test results"""
 
     template_name = 'applicants/CognitiveTestResults.html'
-    timeout_seconds = 60
+    timeout_seconds = 20
+
+    def is_displayed(self):
+        return self.player.round_number == 1
 
     def vars_for_template(self):
         return {
-            'session_number': self.round_number,
+            'session_number': self.player.round_number,
             'score': self.player.cognitive_test_score or 0,
             'reaction_time': self.player.cognitive_test_reaction_time or 0,
             'errors': self.player.cognitive_test_errors or 0,
-            'total_items': 15
+            'total_items': 20
         }
-
-    def is_displayed(self):
-        return self.round_number == 1  # Nur Runde 1
 
 
 class RoleSelection(Page):
@@ -70,31 +94,20 @@ class RoleSelection(Page):
 
     def vars_for_template(self):
         return {
-            'session_number': self.round_number,
+            'session_number': self.player.round_number,
             'total_sessions': C.NUM_ROUNDS
         }
 
-    def before_next_page(self, timeout_happened=False):
+    def before_next_page(self):
         self.player.session_start_timestamp = time.time()
 
 
 class WaitForRoles(WaitPage):
     """Wait for all players to select roles"""
 
-    def after_all_players_arrive(self):
-        group = self.group
-
-        # Check if all roles are covered
-        selected_roles = [p.selected_role for p in group.get_players()]
-        required_roles = ['Recruiter', 'HR-Coordinator', 'Business-Partner']
-
-        # If roles are missing, assign them randomly
-        missing_roles = [role for role in required_roles if role not in selected_roles]
-        unassigned_players = [p for p in group.get_players() if not p.selected_role]
-
-        for i, player in enumerate(unassigned_players):
-            if i < len(missing_roles):
-                player.selected_role = missing_roles[i]
+    def after_all_players_arrive(group):
+        # Use utility function to ensure all roles are assigned
+        ensure_all_roles_assigned(group)
 
 
 # ===== MAIN TASK PAGES =====
@@ -103,23 +116,23 @@ class Recruiter(Page):
     """Recruiter interface with tracking"""
 
     def is_displayed(self):
-        return self.player.selected_role == 'Recruiter'
+        return self.player.is_recruiter()  # Cleaner than checking string
 
     timeout_seconds = C.SESSION_DURATION_SECONDS
 
     def vars_for_template(self):
         return {
             'applicants': C.APPLICANTS,
-            'session_number': self.round_number,
+            'session_number': self.player.round_number,
             'remaining_time': C.SESSION_DURATION_SECONDS
         }
 
 
 class HRCoordinator(Page):
-    """HR Coordinator interface with tracking"""
+    """HR Coordinator interface with metadata-based criteria"""
 
     def is_displayed(self):
-        return self.player.selected_role == 'HR-Coordinator'
+        return self.player.is_hr_coordinator()
 
     timeout_seconds = C.SESSION_DURATION_SECONDS
 
@@ -128,23 +141,26 @@ class HRCoordinator(Page):
             'applicants': C.APPLICANTS,
             'min_score': C.MIN_SCORE,
             'max_score': C.MAX_SCORE,
-            'session_number': self.round_number,
-            'remaining_time': C.SESSION_DURATION_SECONDS
+            'session_number': self.player.round_number,
+            'remaining_time': C.SESSION_DURATION_SECONDS,
+            'criteria_data': C.CRITERIA_DATA,
+            'categories': C.CATEGORIES,
+            'criteria_by_category': C.CRITERIA_BY_CATEGORY,
+            'relevance_factors': C.RELEVANCE_FACTORS
         }
-
 
 class BusinessPartner(Page):
     """Business Partner interface with tracking"""
 
     def is_displayed(self):
-        return self.player.selected_role == 'Business-Partner'
+        return self.player.is_business_partner()  # Cleaner than checking string
 
     timeout_seconds = C.SESSION_DURATION_SECONDS
 
     def vars_for_template(self):
         return {
             'applicants': C.APPLICANTS,
-            'session_number': self.round_number,
+            'session_number': self.player.round_number,
             'remaining_time': C.SESSION_DURATION_SECONDS
         }
 
@@ -152,9 +168,7 @@ class BusinessPartner(Page):
 class SessionComplete(WaitPage):
     """Wait for all players to complete the session"""
 
-    def after_all_players_arrive(self):
-        group = self.group
-
+    def after_all_players_arrive(group):
         # Record session end time
         group.session_end_time = time.time()
 
@@ -165,8 +179,6 @@ class SessionComplete(WaitPage):
         for player in group.get_players():
             player.session_end_timestamp = time.time()
 
-
-# ===== POST-SESSION ASSESSMENT =====
 
 class SelfAssessment(Page):
     """Self-assessment questionnaire after each session"""
@@ -181,19 +193,21 @@ class SelfAssessment(Page):
             session_duration = round((self.player.session_end_timestamp - self.player.session_start_timestamp) / 60, 1)
 
         return {
-            'session_number': self.round_number,
+            'session_number': self.player.round_number,
             'session_duration_minutes': session_duration,
             'role_played': self.player.selected_role
         }
 
-class CognitiveTestInstructions(Page):
-    """Instructions for cognitive test"""
 
-    timeout_seconds = 60
+class CognitiveTestInstructions(Page):
+    timeout_seconds = 20
+
+    def is_displayed(self):
+        return self.player.round_number > 0
 
     def vars_for_template(self):
         return {
-            'session_number': self.round_number
+            'session_number': self.player.round_number
         }
 
 
@@ -202,57 +216,62 @@ class CognitiveTest(Page):
 
     form_model = 'player'
     form_fields = ['cognitive_test_score', 'cognitive_test_reaction_time', 'cognitive_test_errors']
-    timeout_seconds = 60
+    timeout_seconds = 30
 
     def is_displayed(self):
-        return self.round_number > 0
-
+        return self.player.round_number > 0
 
     def vars_for_template(self):
         # Generate random Stroop test items
         test_items = []
-        for i in range(15):  # Shorter test between sessions
-            word = random.choice(C.STROOP_WORDS)
-            color = random.choice(C.STROOP_COLORS)
+        color_mapping = {
+            '#ff0000': 'red',
+            '#0000ff': 'blue',
+            '#00ff00': 'green',
+            '#ffff00': 'yellow'
+        }
 
-            if random.random() < 0.7:
-                while color == f"#{word}":
-                    color = random.choice(C.STROOP_COLORS)
-            else:
-                color = f"#{word}"
+        for i in range(20):
+            word = random.choice(C.STROOP_WORDS)
+            color_hex = random.choice(C.STROOP_COLORS)
+            color_name = color_mapping[color_hex]
 
             test_items.append({
                 'word': word,
-                'color': color,
-                'correct_answer': color.replace('#', '')
+                'color': color_hex,
+                'correct_answer': color_name
             })
 
         return {
             'test_items': test_items,
-            'test_duration': C.COGNITIVE_TEST_DURATION,
-            'session_number': self.round_number
+            'test_duration': 30,
+            'session_number': self.player.round_number
         }
 
 
 class CognitiveTestResults(Page):
     """Show cognitive test results"""
 
-    timeout_seconds = 60  # 1 Minute für Results
+    timeout_seconds = 20
+
+    def is_displayed(self):
+        return self.player.round_number > 0
 
     def vars_for_template(self):
         return {
-            'session_number': self.round_number,
+            'session_number': self.player.round_number,
             'score': self.player.cognitive_test_score or 0,
             'reaction_time': self.player.cognitive_test_reaction_time or 0,
             'errors': self.player.cognitive_test_errors or 0,
-            'total_items': 15
+            'total_items': 20
         }
 
-    def is_displayed(self):
-        return self.round_number > 0
 
 class SessionResults(Page):
     """Show brief results and prepare for next session"""
+
+    def is_displayed(self):
+        return True
 
     def vars_for_template(self):
         # Get current session performance
@@ -262,18 +281,18 @@ class SessionResults(Page):
             'role_played': self.player.selected_role
         }
 
-        # Get fatigue trend
+        # Get fatigue trend - useful for showing progress
         fatigue_trend = self.player.get_cumulative_fatigue_trend()
 
         return {
-            'session_number': self.round_number,
+            'session_number': self.player.round_number,
             'total_sessions': C.NUM_ROUNDS,
             'current_performance': current_performance,
             'fatigue_trend': fatigue_trend,
-            'is_final_session': self.round_number == C.NUM_ROUNDS
+            'is_final_session': self.player.round_number == C.NUM_ROUNDS
         }
 
-    timeout_seconds = 15  # Brief review
+    timeout_seconds = 15
 
 
 # ===== FINAL RESULTS =====
@@ -282,10 +301,10 @@ class FinalResults(Page):
     """Final results and debriefing"""
 
     def is_displayed(self):
-        return self.round_number == C.NUM_ROUNDS
+        return self.player.round_number == C.NUM_ROUNDS
 
     def vars_for_template(self):
-        # Compile comprehensive results
+        # Compile comprehensive results for research analysis
         all_sessions_data = []
 
         for round_num in range(1, C.NUM_ROUNDS + 1):
@@ -307,7 +326,7 @@ class FinalResults(Page):
             except:
                 continue
 
-        # Calculate overall trends
+        # Calculate overall trends for research
         fatigue_trend = [s['fatigue_level'] for s in all_sessions_data if s['fatigue_level']]
         cognitive_trend = [s['cognitive_score'] for s in all_sessions_data if s['cognitive_score']]
 
@@ -323,9 +342,9 @@ class FinalResults(Page):
 page_sequence = [
     # Round 1 only: Consent and Baseline
     Consent,
-    BaselineCognitiveTestInstructions,  # Instructions
-    BaselineCognitiveTest,              # Test
-    BaselineCognitiveTestResults,       # Results
+    BaselineCognitiveTestInstructions,
+    BaselineCognitiveTest,
+    BaselineCognitiveTestResults,
 
     # Every round: Role selection and session
     RoleSelection,
@@ -339,9 +358,9 @@ page_sequence = [
     # Post-session assessment
     SessionComplete,
     SelfAssessment,
-    CognitiveTestInstructions,  # Instructions (ab Runde 2)
-    CognitiveTest,              # Test (ab Runde 2)
-    CognitiveTestResults,       # Results (ab Runde 2)
+    CognitiveTestInstructions,
+    CognitiveTest,
+    CognitiveTestResults,
     SessionResults,
 
     # Final round only: Results
