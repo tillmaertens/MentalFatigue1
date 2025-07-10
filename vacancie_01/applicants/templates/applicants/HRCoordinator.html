@@ -148,9 +148,15 @@
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
         }
 
         /* Evaluation Form Styles */
@@ -432,7 +438,9 @@
             <div class="evaluation-container">
                 <div class="evaluation-header">
                     <div class="evaluation-controls">
-                        <button type="button" class="add-criteria-btn" onclick="showFilterSelection(event); return false;">+ Add Criteria</button>
+                        <button type="button" class="add-criteria-btn"
+                                onclick="showFilterSelection(event); return false;">+ Add Criteria
+                        </button>
                     </div>
                 </div>
 
@@ -710,7 +718,6 @@
         }
 
 
-
         function deleteCriteria(id) {
             const row = document.getElementById(`criteria-${id}`);
             const criteriaInput = document.getElementById(`criteria-name-${id}`);
@@ -755,12 +762,25 @@
             updateCriterionData(id);
         }
 
+        function saveScore(applicantId, criteriaId) {
+            // Get the criterion name and current data
+            const criteriaInput = document.getElementById(`criteria-name-${criteriaId}`);
+            const criterionName = criteriaInput.value.trim();
+
+            if (!criterionName) {
+                return; // Don't save if no criterion name
+            }
+
+            // Update the criterion data (this will trigger pie chart update)
+            updateCriterionData(criteriaId);
+        }
+
         function updateCriterionData(criteriaId) {
             const criteriaInput = document.getElementById(`criteria-name-${criteriaId}`);
             const relevanceSelect = document.getElementById(`relevance-${criteriaId}`);
 
             const criterionName = criteriaInput.value.trim();
-            const relevance = relevanceSelect.value;
+            const relevance = relevanceSelect.value || 'normal'; // Default to 'normal' if empty
 
             if (!criterionName) {
                 return;
