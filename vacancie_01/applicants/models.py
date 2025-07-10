@@ -5,7 +5,7 @@ import pandas as pd
 import os
 
 doc = """
-Mental Fatigue Experiment - 6 Sessions of 10min digital coworking with role rotation
+Mental Fatigue Experiment - 6 Sessions of 10min digital coworking with role rotation (right now 30 for debugging)
 """
 
 
@@ -123,7 +123,7 @@ class C(BaseConstants):
     NUM_ROUNDS = 6
 
     # Timing
-    SESSION_DURATION_MINUTES = 10
+    SESSION_DURATION_MINUTES = 30
     SESSION_DURATION_SECONDS = SESSION_DURATION_MINUTES * 60
 
     # Data for templates

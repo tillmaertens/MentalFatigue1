@@ -83,17 +83,44 @@
             align-items: center;
         }
 
-        .description-placeholder {
+        .recruiter-mask {
             background-color: #f9f9f9;
-            border: 2px dashed #ccc;
-            padding: 40px;
-            text-align: center;
+            border: 2px solid #ccc;
+            padding: 20px;
+            text-align: left;
             margin-bottom: 30px;
             border-radius: 5px;
-            color: #666;
-            font-style: italic;
+            color: #333;
+            font-style: normal;
             width: 100%;
             max-width: 500px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.5
+        }
+
+        .recruiter-mask h2,
+        .recruiter-mask h3 {
+            color: #2c3e50;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .recruiter-mask p {
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+
+        .recruiter-mask table {
+            margin: 10px 0;
+            font-size: 12px;
+            border: 1px solid #ddd;
+        }
+
+        .recruiter-mask td {
+            border: 1px solid #ddd;
+            padding: 5px;
         }
 
         /* Document buttons */
@@ -101,13 +128,13 @@
             display: flex;
             justify-content: center;
             gap: 15px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
         }
 
         .doc-button {
             background-color: #28a745;
             color: white;
-            padding: 15px 30px;
+            padding: 10px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -152,7 +179,7 @@
             <!-- Dynamic Applicant Content -->
             {% for applicant in applicants %}
                 <div id="applicant-{{ applicant.id }}" class="applicant-content">
-                    <div class="description-placeholder">
+                    <div class="recruiter-mask">
                         {{ applicant.description }}
                     </div>
                     <div class="document-buttons">

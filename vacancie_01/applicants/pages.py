@@ -2,6 +2,8 @@ from otree.api import *
 from .models import C, ensure_all_roles_assigned
 import time
 import random
+from docx import Document
+import os
 
 
 # ===== BASELINE & SETUP PAGES =====
@@ -121,11 +123,96 @@ class Recruiter(Page):
     timeout_seconds = C.SESSION_DURATION_SECONDS
 
     def vars_for_template(self):
+        # Ihre bestehenden Applicants aus C.APPLICANTS laden und erweitern
+        applicants_with_content = []
+
+        for applicant in C.APPLICANTS:
+            # Kopieren Sie die bestehenden Daten
+            applicant_data = applicant.copy()
+
+            # Word-Dokument-Inhalt hinzufügen
+            applicant_data['description'] = self.get_word_content(applicant['id'])
+
+            applicants_with_content.append(applicant_data)
+
         return {
-            'applicants': C.APPLICANTS,
+            'applicants': applicants_with_content,
             'session_number': self.player.round_number,
             'remaining_time': C.SESSION_DURATION_SECONDS
         }
+
+    def get_word_content(self, applicant_id):
+        """Load Word document and convert to HTML"""
+        try:
+            # Get the current directory (where pages.py is located)
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+
+            # Go up to the project root, then navigate to the correct path
+            doc_path = os.path.join(
+                current_dir,  # This is vacancie_01/applicants/
+                '..',  # Go up to vacancie_01/
+                '_static',  # Go to _static/
+                'applicants',  # Go to applicants/
+                f'recruiter_maske_{applicant_id}.docx'
+            )
+
+            # Normalize the path to handle '..' correctly
+            doc_path = os.path.normpath(doc_path)
+
+            # Check if file exists
+            if not os.path.exists(doc_path):
+                return f"<p><em>Word document for Applicant {applicant_id.upper()} not found</em></p>"
+
+            # Load Word document
+            document = Document(doc_path)
+
+            # Convert to HTML
+            html_content = self.convert_docx_to_html(document)
+
+            return html_content
+
+        except Exception as e:
+            return f"<p><em>Error loading document: {str(e)}</em></p>"
+
+    def convert_docx_to_html(self, document):
+        """Convert Word document to HTML"""
+        html_parts = []
+
+        # Process paragraphs
+        for paragraph in document.paragraphs:
+            text = paragraph.text.strip()
+            if text:  # Only non-empty paragraphs
+                # Keep simple formatting
+                if paragraph.style.name.startswith('Heading'):
+                    level = 3  # Default H3
+                    if 'Heading 1' in paragraph.style.name:
+                        level = 2
+                    elif 'Heading 2' in paragraph.style.name:
+                        level = 3
+                    html_parts.append(f'<h{level}>{text}</h{level}>')
+                else:
+                    # Check for bold text (simplified)
+                    if any(run.bold for run in paragraph.runs):
+                        html_parts.append(f'<p><strong>{text}</strong></p>')
+                    else:
+                        html_parts.append(f'<p>{text}</p>')
+
+        # Process tables (if any)
+        for table in document.tables:
+            html_parts.append('<table style="border-collapse: collapse; width: 100%; margin: 10px 0;">')
+            for row in table.rows:
+                html_parts.append('<tr>')
+                for cell in row.cells:
+                    cell_text = cell.text.strip()
+                    html_parts.append(f'<td style="padding: 8px; border: 1px solid #ddd;">{cell_text}</td>')
+                html_parts.append('</tr>')
+            html_parts.append('</table>')
+
+        # If no content was found
+        if not html_parts:
+            return "<p><em>The Word document is empty or could not be read.</em></p>"
+
+        return ''.join(html_parts)
 
 
 class HRCoordinator(Page):
@@ -148,6 +235,7 @@ class HRCoordinator(Page):
             'criteria_by_category': C.CRITERIA_BY_CATEGORY,
             'relevance_factors': C.RELEVANCE_FACTORS
         }
+
 
 class BusinessPartner(Page):
     """Business Partner interface with tracking"""
