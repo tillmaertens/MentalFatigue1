@@ -42,7 +42,6 @@
             flex-direction: column;
         }
 
-        /* Job Description and Pie Chart Section */
         .job-description-section {
             margin-bottom: 20px;
         }
@@ -72,7 +71,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
-        /* Pie Chart Styles */
         .pie-chart-section {
             flex: 1;
             text-align: center;
@@ -130,23 +128,6 @@
             text-align: center;
         }
 
-        /* Real-time indicator */
-        .update-indicator {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #28a745;
-            display: none;
-        }
-
-        .update-indicator.updating {
-            display: block;
-            animation: pulse 1s infinite;
-        }
-
         @keyframes pulse {
             0% {
                 opacity: 1;
@@ -194,7 +175,6 @@
             background-color: #0056b3;
         }
 
-        /* Filter Selection Styles */
         .filter-selection {
             display: none;
             background-color: #f8f9fa;
@@ -391,28 +371,60 @@
         .delete-btn:hover {
             background-color: #c82333;
         }
+
+        .skip {
+            background: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+
+        .skip-button {
+            background: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .session-info-bar {
+            background: #e3f2fd;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
     </style>
 
     <!-- Skip Button -->
-    <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
+    <div class="skip">
         <button onclick="skipSession()"
-                style="background: #dc3545; color: white; padding: 10px 15px; border: none; border-radius: 5px; font-size: 12px; cursor: pointer;">
+                class="skip-button">
             Skip Session
         </button>
     </div>
 
     <!-- Session Info Bar -->
-    <div style="background: #e3f2fd; padding: 10px; text-align: center; margin-bottom: 20px; border-radius: 5px;">
+    <div class="session-info-bar">
         <strong>Session {{ session_number }} of 6</strong>
     </div>
 
     <div class="hr-coordinator-container">
-        <!-- Left Panel - Video Meeting -->
+        <!-- Video Meeting -->
         <div class="left-panel">
             <div>Video Meeting Placeholder</div>
         </div>
 
-        <!-- Right Panel - HR Coordinator Information -->
+        <!-- HR Coordinator Information -->
         <div class="right-panel">
             <!-- Job Description and Pie Chart Section -->
             <div class="job-description-section">
@@ -447,7 +459,7 @@
                 <!-- Filter Selection Panel -->
                 <div id="filterSelection" class="filter-selection">
                     <div class="filter-categories" id="filterCategories">
-                        <!-- Categories will be populated by JavaScript -->
+                        <!-- will be populated by JavaScript -->
                     </div>
                 </div>
 
@@ -464,7 +476,7 @@
                         </tr>
                         </thead>
                         <tbody id="evaluationBody">
-                        <!-- Rows will be populated by JavaScript -->
+                        <!-- will also be populated by JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -474,7 +486,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
-        // Simple backend data
+
         const applicantsData = {{ applicants|safe }};
         const minScore = 0;
         const maxScore = 8;
@@ -483,7 +495,7 @@
         const criteriaByCategory = {{ criteria_by_category|safe }};
 
         let criteriaCount = 0;
-        let saveTimeouts = {}; // Store timeouts for debouncing
+        let saveTimeouts = {};
         let currentSelectedCategory = null;
         let pieChart = null;
         let lastDataString = '';
@@ -516,10 +528,9 @@
             // Check for existing data immediately
             updatePieChartFromLocalStorage();
 
-            // Start real-time updates
+            // real-time updates
             startRealTimeUpdates();
 
-            // Do NOT add initial empty row - start with empty table
         });
 
         function initializeFilterCategories() {
@@ -689,7 +700,7 @@
             `;
             });
 
-            // Add relevance dropdown
+            // Relevance dropdown
             rowHTML += `
             <td>
                 <select class="relevance-select" id="relevance-${criteriaCount}"
@@ -699,7 +710,7 @@
             </td>
         `;
 
-            // Add delete button
+            // Delete button
             rowHTML += `
             <td>
                 <button type="button" class="delete-btn" onclick="deleteCriteria(${criteriaCount})">×</button>
@@ -709,7 +720,7 @@
             row.innerHTML = rowHTML;
             tbody.appendChild(row);
 
-            // Focus on the new criteria input if it's empty
+            // New criteria input if it's empty
             if (!criterionText) {
                 setTimeout(() => {
                     document.getElementById(`criteria-name-${criteriaCount}`).focus();
@@ -746,7 +757,6 @@
             updateCriterionData(criteriaId);
         }
 
-        // Debounced saving functions
         function debouncedSaveCriterion(id) {
             if (saveTimeouts[`criteria-${id}`]) {
                 clearTimeout(saveTimeouts[`criteria-${id}`]);
@@ -763,7 +773,7 @@
         }
 
         function saveScore(applicantId, criteriaId) {
-            // Get the criterion name and current data
+            // Get's the criterion name and current data
             const criteriaInput = document.getElementById(`criteria-name-${criteriaId}`);
             const criterionName = criteriaInput.value.trim();
 
@@ -771,7 +781,7 @@
                 return; // Don't save if no criterion name
             }
 
-            // Update the criterion data (this will trigger pie chart update)
+            // Update the criterion data )for Pie chart)
             updateCriterionData(criteriaId);
         }
 
@@ -780,13 +790,13 @@
             const relevanceSelect = document.getElementById(`relevance-${criteriaId}`);
 
             const criterionName = criteriaInput.value.trim();
-            const relevance = relevanceSelect.value || 'normal'; // Default to 'normal' if empty
+            const relevance = relevanceSelect.value || 'normal'; // Default relevance
 
             if (!criterionName) {
                 return;
             }
 
-            // Track criteria added - send to backend
+            // Track criteria for backend
             fetch('/update_criteria_count/', {
                 method: 'POST',
                 headers: {
@@ -797,7 +807,7 @@
                 })
             });
 
-            // Collect all user-entered scores for this criterion
+            // Collects points for Pie chart
             const applicantScores = {};
             applicantsData.forEach(applicant => {
                 const scoreSelect = document.getElementById(`score-${applicant.id}-${criteriaId}`);
@@ -813,7 +823,7 @@
                 relevance: relevance
             });
 
-            // Store in localStorage for pie chart
+            // Store in local Storage for pie chart
             const evaluationData = getLocalEvaluationData();
             evaluationData[criterionName] = {
                 name: criterionName,
@@ -851,12 +861,11 @@
             // Relevance factors
             const relevanceFactors = {low: 1, normal: 2, high: 3};
 
-            // Calculate using USER-ENTERED SCORES only
+            // Calculation for Pie Chart
             Object.keys(evaluationData).forEach(criterionName => {
                 const criterionData = evaluationData[criterionName];
                 const relevanceFactor = relevanceFactors[criterionData.relevance] || 2;
 
-                // Use USER-ENTERED scores (not metadata)
                 ['a', 'b', 'c'].forEach(applicantId => {
                     const userScore = criterionData.scores[applicantId] || 0;
                     const nutzwert = userScore * relevanceFactor;
@@ -935,7 +944,7 @@
             const totals = nutzwertResults.applicant_totals;
             const percentages = nutzwertResults.applicant_percentages || {};
 
-            // Check if we have any data
+            // Check qfor data
             const hasData = Object.values(totals).some(value => value > 0);
 
             if (!hasData) {
@@ -958,20 +967,19 @@
                 const applicantId = applicant.id;
                 const total = totals[applicantId] || 0;
 
-                if (total >= 0) { // Include all values, even 0
+                if (total >= 0) {
                     labels.push(applicant.name);
                     data.push(total);
                     colors.push(applicantColors[applicantId] || '#999');
                 }
             });
 
-            // Update chart
+            // Update chart / legend
             pieChart.data.labels = labels;
             pieChart.data.datasets[0].data = data;
             pieChart.data.datasets[0].backgroundColor = colors;
             pieChart.update();
 
-            // Update custom legend
             updateLegend(labels, colors, totals, percentages);
         }
 
@@ -1000,15 +1008,12 @@
                 applicant_percentages: {a: 0, b: 0, c: 0}
             };
 
-            // Relevance factors
             const relevanceFactors = {low: 1, normal: 2, high: 3};
 
-            // Calculate using USER-ENTERED SCORES only
             Object.keys(evaluationData).forEach(criterionName => {
                 const criterionData = evaluationData[criterionName];
                 const relevanceFactor = relevanceFactors[criterionData.relevance] || 2;
 
-                // Use USER-ENTERED scores (not metadata)
                 ['a', 'b', 'c'].forEach(applicantId => {
                     const userScore = criterionData.scores[applicantId] || 0;
                     const nutzwert = userScore * relevanceFactor;
@@ -1016,7 +1021,6 @@
                 });
             });
 
-            // Calculate percentages
             const totalPoints = Object.values(results.applicant_totals).reduce((sum, val) => sum + val, 0);
             if (totalPoints > 0) {
                 ['a', 'b', 'c'].forEach(applicantId => {
@@ -1029,7 +1033,7 @@
         }
 
         function startRealTimeUpdates() {
-            // Update pie chart every time data changes
+
             setInterval(function () {
                 updatePieChartFromLocalStorage();
             }, 1000);
@@ -1041,7 +1045,7 @@
                 if (storedResults) {
                     const nutzwertResults = JSON.parse(storedResults);
 
-                    // Check if data has changed
+
                     const dataString = JSON.stringify(nutzwertResults);
                     if (dataString !== lastDataString) {
                         updatePieChartDisplay(nutzwertResults);

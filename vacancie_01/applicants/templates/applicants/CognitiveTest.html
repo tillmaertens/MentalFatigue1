@@ -98,6 +98,30 @@
             color: black;
             border-color: #ffff00;
         }
+
+        .skip {
+            background: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+
+        .skip-button {
+            background: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+        }
     </style>
 
     <div class="test-header">
@@ -106,29 +130,30 @@
     </div>
 
     <!-- Skip Button for debugging -->
-    <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
+    <div class="skip">
         <button onclick="skipSession()"
-                style="background: #dc3545; color: white; padding: 10px 15px; border: none; border-radius: 5px; font-size: 12px; cursor: pointer;">
+                class="skip-button">
             Skip Session
         </button>
     </div>
 
-    <div id="testContainer">
-        <div id="testItem"></div>
 
-        <div class="color-buttons">
-            <button type="button" class="color-btn red-btn" onclick="selectColor('red')">RED</button>
-            <button type="button" class="color-btn blue-btn" onclick="selectColor('blue')">BLUE</button>
-            <button type="button" class="color-btn green-btn" onclick="selectColor('green')">GREEN</button>
-            <button type="button" class="color-btn yellow-btn" onclick="selectColor('yellow')">YELLOW</button>
-        </div>
+    <div id="testItem"></div>
+
+    <div class="color-buttons">
+        <button type="button" class="color-btn red-btn" onclick="selectColor('red')">RED</button>
+        <button type="button" class="color-btn blue-btn" onclick="selectColor('blue')">BLUE</button>
+        <button type="button" class="color-btn green-btn" onclick="selectColor('green')">GREEN</button>
+        <button type="button" class="color-btn yellow-btn" onclick="selectColor('yellow')">YELLOW</button>
     </div>
+
 
     <input type="hidden" name="cognitive_test_score" id="cognitive_test_score" value="0">
     <input type="hidden" name="cognitive_test_reaction_time" id="cognitive_test_reaction_time" value="0">
     <input type="hidden" name="cognitive_test_errors" id="cognitive_test_errors" value="0">
 
     <script>
+
         const testItems = {{ test_items|safe }};
 
         let currentItemIndex = 0;

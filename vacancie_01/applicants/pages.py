@@ -9,14 +9,12 @@ import os
 # ===== BASELINE & SETUP PAGES =====
 
 class Consent(Page):
-    """Consent form for mental fatigue experiment"""
 
     def is_displayed(self):
         return self.player.round_number == 1
 
 
 class BaselineCognitiveTestInstructions(Page):
-    """Baseline cognitive test instructions"""
 
     template_name = 'applicants/CognitiveTestInstructions.html'
     timeout_seconds = 20
@@ -31,7 +29,6 @@ class BaselineCognitiveTestInstructions(Page):
 
 
 class BaselineCognitiveTest(Page):
-    """Baseline cognitive test"""
 
     template_name = 'applicants/CognitiveTest.html'
     form_model = 'player'
@@ -70,7 +67,6 @@ class BaselineCognitiveTest(Page):
 
 
 class BaselineCognitiveTestResults(Page):
-    """Show baseline cognitive test results"""
 
     template_name = 'applicants/CognitiveTestResults.html'
     timeout_seconds = 20
@@ -89,7 +85,6 @@ class BaselineCognitiveTestResults(Page):
 
 
 class RoleSelection(Page):
-    """Players select their role for this session"""
 
     form_model = 'player'
     form_fields = ['selected_role']
@@ -108,31 +103,24 @@ class WaitForRoles(WaitPage):
     """Wait for all players to select roles"""
 
     def after_all_players_arrive(group):
-        # Use utility function to ensure all roles are assigned
         ensure_all_roles_assigned(group)
 
 
 # ===== MAIN TASK PAGES =====
 
 class Recruiter(Page):
-    """Recruiter interface with tracking"""
 
     def is_displayed(self):
-        return self.player.is_recruiter()  # Cleaner than checking string
+        return self.player.is_recruiter()
 
     timeout_seconds = C.SESSION_DURATION_SECONDS
 
     def vars_for_template(self):
-        # Ihre bestehenden Applicants aus C.APPLICANTS laden und erweitern
         applicants_with_content = []
 
         for applicant in C.APPLICANTS:
-            # Kopieren Sie die bestehenden Daten
             applicant_data = applicant.copy()
-
-            # Word-Dokument-Inhalt hinzufügen
             applicant_data['description'] = self.get_word_content(applicant['id'])
-
             applicants_with_content.append(applicant_data)
 
         return {
@@ -142,9 +130,8 @@ class Recruiter(Page):
         }
 
     def get_word_content(self, applicant_id):
-        """Load Word document and convert to HTML"""
+        """Load and convert word doc to html"""
         try:
-            # Get the current directory (where pages.py is located)
             current_dir = os.path.dirname(os.path.abspath(__file__))
 
             # Go up to the project root, then navigate to the correct path
@@ -156,12 +143,7 @@ class Recruiter(Page):
                 f'recruiter_maske_{applicant_id}.docx'
             )
 
-            # Normalize the path to handle '..' correctly
             doc_path = os.path.normpath(doc_path)
-
-            # Check if file exists
-            if not os.path.exists(doc_path):
-                return f"<p><em>Word document for Applicant {applicant_id.upper()} not found</em></p>"
 
             # Load Word document
             document = Document(doc_path)
@@ -181,8 +163,7 @@ class Recruiter(Page):
         # Process paragraphs
         for paragraph in document.paragraphs:
             text = paragraph.text.strip()
-            if text:  # Only non-empty paragraphs
-                # Keep simple formatting
+            if text:
                 if paragraph.style.name.startswith('Heading'):
                     level = 3  # Default H3
                     if 'Heading 1' in paragraph.style.name:
@@ -191,24 +172,11 @@ class Recruiter(Page):
                         level = 3
                     html_parts.append(f'<h{level}>{text}</h{level}>')
                 else:
-                    # Check for bold text (simplified)
                     if any(run.bold for run in paragraph.runs):
                         html_parts.append(f'<p><strong>{text}</strong></p>')
                     else:
                         html_parts.append(f'<p>{text}</p>')
 
-        # Process tables (if any)
-        for table in document.tables:
-            html_parts.append('<table style="border-collapse: collapse; width: 100%; margin: 10px 0;">')
-            for row in table.rows:
-                html_parts.append('<tr>')
-                for cell in row.cells:
-                    cell_text = cell.text.strip()
-                    html_parts.append(f'<td style="padding: 8px; border: 1px solid #ddd;">{cell_text}</td>')
-                html_parts.append('</tr>')
-            html_parts.append('</table>')
-
-        # If no content was found
         if not html_parts:
             return "<p><em>The Word document is empty or could not be read.</em></p>"
 
@@ -216,7 +184,6 @@ class Recruiter(Page):
 
 
 class HRCoordinator(Page):
-    """HR Coordinator interface with metadata-based criteria"""
 
     def is_displayed(self):
         return self.player.is_hr_coordinator()
@@ -238,10 +205,9 @@ class HRCoordinator(Page):
 
 
 class BusinessPartner(Page):
-    """Business Partner interface with tracking"""
 
     def is_displayed(self):
-        return self.player.is_business_partner()  # Cleaner than checking string
+        return self.player.is_business_partner()
 
     timeout_seconds = C.SESSION_DURATION_SECONDS
 
@@ -254,7 +220,6 @@ class BusinessPartner(Page):
 
 
 class SessionComplete(WaitPage):
-    """Wait for all players to complete the session"""
 
     def after_all_players_arrive(group):
         # Record session end time
@@ -269,13 +234,11 @@ class SessionComplete(WaitPage):
 
 
 class SelfAssessment(Page):
-    """Self-assessment questionnaire after each session"""
 
     form_model = 'player'
     form_fields = ['fatigue_level', 'mental_effort', 'concentration_difficulty', 'motivation_level']
 
     def vars_for_template(self):
-        # Calculate session duration for this player
         session_duration = 0
         if self.player.session_start_timestamp and self.player.session_end_timestamp:
             session_duration = round((self.player.session_end_timestamp - self.player.session_start_timestamp) / 60, 1)
@@ -300,7 +263,6 @@ class CognitiveTestInstructions(Page):
 
 
 class CognitiveTest(Page):
-    """Cognitive load test after each session"""
 
     form_model = 'player'
     form_fields = ['cognitive_test_score', 'cognitive_test_reaction_time', 'cognitive_test_errors']
@@ -338,7 +300,6 @@ class CognitiveTest(Page):
 
 
 class CognitiveTestResults(Page):
-    """Show cognitive test results"""
 
     timeout_seconds = 20
 
@@ -355,38 +316,9 @@ class CognitiveTestResults(Page):
         }
 
 
-class SessionResults(Page):
-    """Show brief results and prepare for next session"""
-
-    def is_displayed(self):
-        return True
-
-    def vars_for_template(self):
-        # Get current session performance
-        current_performance = {
-            'criteria_added': self.player.criteria_added_this_session,
-            'scores_entered': self.player.scores_entered_this_session,
-            'role_played': self.player.selected_role
-        }
-
-        # Get fatigue trend - useful for showing progress
-        fatigue_trend = self.player.get_cumulative_fatigue_trend()
-
-        return {
-            'session_number': self.player.round_number,
-            'total_sessions': C.NUM_ROUNDS,
-            'current_performance': current_performance,
-            'fatigue_trend': fatigue_trend,
-            'is_final_session': self.player.round_number == C.NUM_ROUNDS
-        }
-
-    timeout_seconds = 15
-
-
 # ===== FINAL RESULTS =====
 
 class FinalResults(Page):
-    """Final results and debriefing"""
 
     def is_displayed(self):
         return self.player.round_number == C.NUM_ROUNDS
@@ -449,7 +381,6 @@ page_sequence = [
     CognitiveTestInstructions,
     CognitiveTest,
     CognitiveTestResults,
-    SessionResults,
 
     # Final round only: Results
     FinalResults

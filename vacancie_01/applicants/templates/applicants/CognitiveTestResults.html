@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const errors = {{ errors }};
     const totalAttempted = score + errors; // Total questions actually answered
 
-    // Calculate accuracy based on attempted items, not total possible items
+    // Calculate accuracy based on attempted items instead of all Items
     const accuracy = totalAttempted > 0 ? Math.round((score / totalAttempted) * 100) : 0;
     document.getElementById('accuracy').textContent = accuracy + '%';
 });

@@ -46,17 +46,15 @@ def get_applicants_data():
 
 
 def load_metadata_criteria():
-    """Load criteria from metadata Excel file"""
     try:
-        # Try different possible paths for the Excel file
-        possible_paths = [
+        metadata_path = [
             '_static/applicants/metadata1.xlsx',
         ]
 
         df = None
         file_path = None
 
-        for path in possible_paths:
+        for path in metadata_path:
             if os.path.exists(path):
                 file_path = path
                 break
@@ -69,6 +67,7 @@ def load_metadata_criteria():
 
         criteria_data = []
         categories = []
+
 
         for index, row in df.iterrows():
             # Check different possible column names
@@ -108,7 +107,7 @@ def load_metadata_criteria():
             'categories': categories,
             'criteria_by_category': criteria_by_category
         }
-
+        
     except Exception as e:
         # If there's any error, return empty structure
         return {
@@ -116,6 +115,7 @@ def load_metadata_criteria():
             'categories': [],
             'criteria_by_category': {}
         }
+
 
 class C(BaseConstants):
     NAME_IN_URL = 'mental_fatigue'
@@ -145,7 +145,7 @@ class C(BaseConstants):
     STROOP_WORDS = ['red', 'blue', 'green', 'yellow']
     STROOP_COLORS = ['#ff0000', '#0000ff', '#00ff00', '#ffff00']
 
-    # Role constants - prevents typos and makes templates cleaner
+    # Role constants
     RECRUITER_ROLE = 'Recruiter'
     HR_COORDINATOR_ROLE = 'HR-Coordinator'
     BUSINESS_PARTNER_ROLE = 'Business-Partner'
@@ -256,13 +256,13 @@ class Player(BasePlayer):
         doc="When this player finished the session"
     )
 
-    # Reaction time data (JSON array of measurements)
+    # Reaction time data
     reaction_times = models.LongStringField(
         initial='[]',
         doc="JSON array of reaction times for various actions"
     )
 
-    # Mouse movement data (for later analysis)
+    # Mouse movement data
     mouse_movements = models.LongStringField(
         initial='[]',
         doc="JSON array of mouse movement data"
@@ -309,23 +309,7 @@ class Player(BasePlayer):
         doc="Number of errors in cognitive test"
     )
 
-    # Physiological data placeholders (for future lab integration)
-    eeg_data_file = models.StringField(
-        initial='',
-        doc="Filename of EEG data for this session (for lab experiments)"
-    )
-
-    eye_tracking_data_file = models.StringField(
-        initial='',
-        doc="Filename of eye tracking data for this session (for lab experiments)"
-    )
-
-    heart_rate_data = models.LongStringField(
-        initial='[]',
-        doc="JSON array of heart rate measurements (if available)"
-    )
-
-    # Helper methods for cleaner templates and logic
+    # Methods for cleaner templates and logic
     def is_recruiter(self):
         return self.selected_role == C.RECRUITER_ROLE
 
@@ -336,7 +320,6 @@ class Player(BasePlayer):
         return self.selected_role == C.BUSINESS_PARTNER_ROLE
 
     def add_reaction_time(self, action_type, reaction_time_ms):
-        """Add a reaction time measurement"""
         try:
             times = json.loads(self.reaction_times) if self.reaction_times else []
         except json.JSONDecodeError:
@@ -352,7 +335,6 @@ class Player(BasePlayer):
         self.reaction_times = json.dumps(times)
 
     def add_mouse_movement(self, x, y, event_type):
-        """Add mouse movement data"""
         try:
             movements = json.loads(self.mouse_movements) if self.mouse_movements else []
         except json.JSONDecodeError:
@@ -369,7 +351,6 @@ class Player(BasePlayer):
         self.mouse_movements = json.dumps(movements)
 
     def get_cumulative_fatigue_trend(self):
-        """Get fatigue progression across all completed rounds - useful for analysis"""
         fatigue_data = []
         for round_num in range(1, self.round_number + 1):
             try:
@@ -388,7 +369,7 @@ class Player(BasePlayer):
         return fatigue_data
 
 
-# Utility function for role assignment - critical for your experiment
+# Utility function for role assignment
 def ensure_all_roles_assigned(group):
     """Ensure all three roles are assigned to players"""
     selected_roles = [p.selected_role for p in group.get_players()]
