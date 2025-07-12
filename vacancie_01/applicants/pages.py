@@ -15,7 +15,6 @@ class Consent(Page):
 
 
 class BaselineCognitiveTestInstructions(Page):
-
     template_name = 'applicants/CognitiveTestInstructions.html'
     timeout_seconds = 20
 
@@ -29,7 +28,6 @@ class BaselineCognitiveTestInstructions(Page):
 
 
 class BaselineCognitiveTest(Page):
-
     template_name = 'applicants/CognitiveTest.html'
     form_model = 'player'
     form_fields = ['cognitive_test_score', 'cognitive_test_reaction_time', 'cognitive_test_errors']
@@ -67,7 +65,6 @@ class BaselineCognitiveTest(Page):
 
 
 class BaselineCognitiveTestResults(Page):
-
     template_name = 'applicants/CognitiveTestResults.html'
     timeout_seconds = 20
 
@@ -85,7 +82,6 @@ class BaselineCognitiveTestResults(Page):
 
 
 class RoleSelection(Page):
-
     form_model = 'player'
     form_fields = ['selected_role']
 
@@ -177,11 +173,28 @@ class Recruiter(Page):
                     else:
                         html_parts.append(f'<p>{text}</p>')
 
+        # Process tables
+        for table in document.tables:
+            html_parts.append('<table style="width:100%; border-collapse: collapse; margin: 10px 0;">')
+
+            for row_idx, row in enumerate(table.rows):
+                html_parts.append('<tr>')
+                for cell in row.cells:
+                    cell_text = cell.text.strip()
+                    # Check if it's a header row
+                    if row_idx == 0 or any(run.bold for para in cell.paragraphs for run in para.runs):
+                        html_parts.append(
+                            f'<td style="border: 1px solid #ddd; padding: 5px; font-weight: bold; background-color: #f5f5f5;">{cell_text}</td>')
+                    else:
+                        html_parts.append(f'<td style="border: 1px solid #ddd; padding: 5px;">{cell_text}</td>')
+                html_parts.append('</tr>')
+
+            html_parts.append('</table>')
+
         if not html_parts:
             return "<p><em>The Word document is empty or could not be read.</em></p>"
 
         return ''.join(html_parts)
-
 
 class HRCoordinator(Page):
 
@@ -234,7 +247,6 @@ class SessionComplete(WaitPage):
 
 
 class SelfAssessment(Page):
-
     form_model = 'player'
     form_fields = ['fatigue_level', 'mental_effort', 'concentration_difficulty', 'motivation_level']
 
@@ -263,7 +275,6 @@ class CognitiveTestInstructions(Page):
 
 
 class CognitiveTest(Page):
-
     form_model = 'player'
     form_fields = ['cognitive_test_score', 'cognitive_test_reaction_time', 'cognitive_test_errors']
     timeout_seconds = 30
@@ -300,7 +311,6 @@ class CognitiveTest(Page):
 
 
 class CognitiveTestResults(Page):
-
     timeout_seconds = 20
 
     def is_displayed(self):

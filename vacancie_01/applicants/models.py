@@ -33,9 +33,9 @@ class Applicant:
 
 def create_applicants():
     applicants = []
-    applicant_a = Applicant('a', 'Applicant A', 'Placeholder Recruiter Mask')
-    applicant_b = Applicant('b', 'Applicant B', 'Placeholder Recruiter Mask')
-    applicant_c = Applicant('c', 'Applicant C', 'Placeholder Recruiter Mask')
+    applicant_a = Applicant('a', 'Applicant A', 'Recruiter Mask')
+    applicant_b = Applicant('b', 'Applicant B', 'Recruiter Mask')
+    applicant_c = Applicant('c', 'Applicant C', 'Recruiter Mask')
     applicants.extend([applicant_a, applicant_b, applicant_c])
     return applicants
 
@@ -107,7 +107,7 @@ def load_metadata_criteria():
             'categories': categories,
             'criteria_by_category': criteria_by_category
         }
-        
+
     except Exception as e:
         # If there's any error, return empty structure
         return {
