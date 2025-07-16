@@ -1,4 +1,3 @@
-# Your original settings with minimal research-focused additions
 
 SESSION_CONFIGS = [
     dict(
