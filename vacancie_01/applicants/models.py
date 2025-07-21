@@ -4,7 +4,6 @@ import time
 import pandas as pd
 import os
 
-
 doc = """
 Mental Fatigue Experiment - 6 Sessions of 10min digital coworking with role rotation (right now 30 for debugging)
 """
@@ -69,12 +68,10 @@ def load_metadata_criteria():
         criteria_data = []
         categories = []
 
-
         for index, row in df.iterrows():
             # Check different possible column names
             name_value = None
             category_value = None
-
 
             # Try different column name variations
             for col in df.columns:
@@ -83,7 +80,6 @@ def load_metadata_criteria():
                     name_value = row.get(col)
                 elif 'requirement_category' in col_lower or 'category' in col_lower:
                     category_value = row.get(col)
-
 
             if pd.notna(name_value) and str(name_value).strip():
                 criterion = {
@@ -153,49 +149,12 @@ class C(BaseConstants):
 
 
 class Subsession(BaseSubsession):
-    def creating_session(subsession):
-        """Initialize session data"""
-        # Store session start time for each round
-        for group in subsession.get_groups():
-            group.session_start_time = time.time()
+    pass
 
 
 class Group(BaseGroup):
-    # Session timing
-    session_start_time = models.FloatField(
-        doc="Unix timestamp when this session started"
-    )
+    pass
 
-    session_end_time = models.FloatField(
-        initial=0.0,
-        doc="Unix timestamp when this session ended"
-    )
-
-    # Evaluation data for this session
-    evaluation_data = models.LongStringField(
-        initial='{}',
-        doc="JSON containing evaluation criteria and scores for this session"
-    )
-
-    # Performance metrics for this session
-    total_criteria_added = models.IntegerField(
-        initial='',
-        doc="Total number of criteria added by group in this session"
-    )
-
-    session_completion_rate = models.FloatField(
-        initial=0.0,
-        doc="Percentage of evaluation completed in this session"
-    )
-
-    def get_evaluation_data(self):
-        try:
-            return json.loads(self.evaluation_data) if self.evaluation_data else {}
-        except json.JSONDecodeError:
-            return {}
-
-    def set_evaluation_data(self, data_dict):
-        self.evaluation_data = json.dumps(data_dict)
 
 class Player(BasePlayer):
     # Role selection for each round
@@ -211,65 +170,48 @@ class Player(BasePlayer):
 
     # Session performance tracking
     criteria_added_this_session = models.IntegerField(
-        initial='',
+        blank=True,
         doc="Number of criteria added by this player in current session"
-    )
-
-    # Timing data
-    session_start_timestamp = models.FloatField(
-        initial=0.0,
-        doc="When this player started the session"
-    )
-
-    session_end_timestamp = models.FloatField(
-        initial=0.0,
-        doc="When this player finished the session"
-    )
-
-    # Reaction time data
-    reaction_times = models.LongStringField(
-        initial='[]',
-        doc="JSON array of reaction times for various actions"
     )
 
     # Self-assessment after each session
     fatigue_level = models.IntegerField(
         min=1, max=10,
-        initial='',
+        blank=True,
         doc="Self-reported fatigue level (1=not tired, 10=extremely tired)"
     )
 
     mental_effort = models.IntegerField(
         min=1, max=10,
-        initial='',
+        blank=True,
         doc="Self-reported mental effort required (1=very low, 10=very high)"
     )
 
     concentration_difficulty = models.IntegerField(
         min=1, max=10,
-        initial='',
+        blank=True,
         doc="Difficulty concentrating (1=very easy, 10=very difficult)"
     )
 
     motivation_level = models.IntegerField(
         min=1, max=10,
-        initial='',
+        blank=True,
         doc="Current motivation level (1=very low, 10=very high)"
     )
 
     # Cognitive Load Test Results
     cognitive_test_score = models.IntegerField(
-        initial=0,
+        blank=True,
         doc="Score on cognitive load test (correct answers)"
     )
 
     cognitive_test_reaction_time = models.FloatField(
-        initial=0.0,
+        blank=True,
         doc="Average reaction time in cognitive test (milliseconds)"
     )
 
     cognitive_test_errors = models.IntegerField(
-        initial=0,
+        blank=True,
         doc="Number of errors in cognitive test"
     )
 
@@ -290,14 +232,12 @@ class Player(BasePlayer):
             times = []
 
         times.append({
-            'timestamp': time.time(),
             'action': action_type,
             'reaction_time_ms': reaction_time_ms,
             'round': self.round_number
         })
 
         self.reaction_times = json.dumps(times)
-
 
     def get_cumulative_fatigue_trend(self):
         fatigue_data = []

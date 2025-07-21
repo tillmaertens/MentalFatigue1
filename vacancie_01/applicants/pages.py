@@ -92,9 +92,6 @@ class RoleSelection(Page):
             'total_sessions': C.NUM_ROUNDS
         }
 
-    def before_next_page(self):
-        self.player.session_start_timestamp = time.time()
-
 
 class WaitForRoles(WaitPage):
     """Wait for all players to select roles"""
@@ -236,29 +233,13 @@ class BusinessPartner(Page):
         }
 
 
-class SessionComplete(WaitPage):
-
-    def after_all_players_arrive(group):
-        # Record session end time
-        group.session_end_time = time.time()
-
-        # Update player end timestamps
-        for player in group.get_players():
-            player.session_end_timestamp = time.time()
-
-
 class SelfAssessment(Page):
     form_model = 'player'
     form_fields = ['fatigue_level', 'mental_effort', 'concentration_difficulty', 'motivation_level']
 
     def vars_for_template(self):
-        session_duration = 0
-        if self.player.session_start_timestamp and self.player.session_end_timestamp:
-            session_duration = round((self.player.session_end_timestamp - self.player.session_start_timestamp) / 60, 1)
-
         return {
             'session_number': self.player.round_number,
-            'session_duration_minutes': session_duration,
             'role_played': self.player.selected_role
         }
 
@@ -387,7 +368,6 @@ page_sequence = [
     BusinessPartner,
 
     # Post-session assessment
-    SessionComplete,
     SelfAssessment,
     CognitiveTestInstructions,
     CognitiveTest,
