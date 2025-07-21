@@ -6,6 +6,7 @@ from docx import Document
 import os
 
 
+
 # ===== BASELINE & SETUP PAGES =====
 
 class Consent(Page):
@@ -196,7 +197,10 @@ class Recruiter(Page):
 
         return ''.join(html_parts)
 
+
 class HRCoordinator(Page):
+    form_model = 'player'
+    form_fields = ['criteria_added_this_session']
 
     def is_displayed(self):
         return self.player.is_hr_coordinator()
@@ -237,9 +241,6 @@ class SessionComplete(WaitPage):
     def after_all_players_arrive(group):
         # Record session end time
         group.session_end_time = time.time()
-
-        # Calculate session metrics
-        group.calculate_session_metrics()
 
         # Update player end timestamps
         for player in group.get_players():

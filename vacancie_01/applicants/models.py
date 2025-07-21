@@ -4,6 +4,7 @@ import time
 import pandas as pd
 import os
 
+
 doc = """
 Mental Fatigue Experiment - 6 Sessions of 10min digital coworking with role rotation (right now 30 for debugging)
 """
@@ -178,13 +179,8 @@ class Group(BaseGroup):
 
     # Performance metrics for this session
     total_criteria_added = models.IntegerField(
-        initial=0,
+        initial='',
         doc="Total number of criteria added by group in this session"
-    )
-
-    total_scores_entered = models.IntegerField(
-        initial=0,
-        doc="Total number of scores entered by group in this session"
     )
 
     session_completion_rate = models.FloatField(
@@ -201,22 +197,6 @@ class Group(BaseGroup):
     def set_evaluation_data(self, data_dict):
         self.evaluation_data = json.dumps(data_dict)
 
-    def calculate_session_metrics(self):
-        """Calculate performance metrics for this session"""
-        evaluation = self.get_evaluation_data()
-
-        self.total_criteria_added = len(evaluation)
-
-        total_possible_scores = len(evaluation) * 3
-        filled_scores = 0
-
-        for criterion_data in evaluation.values():
-            scores = criterion_data.get('scores', {})
-            filled_scores += len([s for s in scores.values() if s])
-
-        self.session_completion_rate = (filled_scores / total_possible_scores * 100) if total_possible_scores > 0 else 0
-
-
 class Player(BasePlayer):
     # Role selection for each round
     selected_role = models.StringField(
@@ -231,18 +211,8 @@ class Player(BasePlayer):
 
     # Session performance tracking
     criteria_added_this_session = models.IntegerField(
-        initial=0,
+        initial='',
         doc="Number of criteria added by this player in current session"
-    )
-
-    scores_entered_this_session = models.IntegerField(
-        initial=0,
-        doc="Number of scores entered by this player in current session"
-    )
-
-    clicks_this_session = models.IntegerField(
-        initial=0,
-        doc="Number of clicks made by this player in current session"
     )
 
     # Timing data
@@ -262,34 +232,28 @@ class Player(BasePlayer):
         doc="JSON array of reaction times for various actions"
     )
 
-    # Mouse movement data
-    mouse_movements = models.LongStringField(
-        initial='[]',
-        doc="JSON array of mouse movement data"
-    )
-
     # Self-assessment after each session
     fatigue_level = models.IntegerField(
         min=1, max=10,
-        initial=1,
+        initial='',
         doc="Self-reported fatigue level (1=not tired, 10=extremely tired)"
     )
 
     mental_effort = models.IntegerField(
         min=1, max=10,
-        initial=1,
+        initial='',
         doc="Self-reported mental effort required (1=very low, 10=very high)"
     )
 
     concentration_difficulty = models.IntegerField(
         min=1, max=10,
-        initial=1,
+        initial='',
         doc="Difficulty concentrating (1=very easy, 10=very difficult)"
     )
 
     motivation_level = models.IntegerField(
         min=1, max=10,
-        initial=5,
+        initial='',
         doc="Current motivation level (1=very low, 10=very high)"
     )
 
@@ -334,21 +298,6 @@ class Player(BasePlayer):
 
         self.reaction_times = json.dumps(times)
 
-    def add_mouse_movement(self, x, y, event_type):
-        try:
-            movements = json.loads(self.mouse_movements) if self.mouse_movements else []
-        except json.JSONDecodeError:
-            movements = []
-
-        movements.append({
-            'timestamp': time.time(),
-            'x': x,
-            'y': y,
-            'event': event_type,
-            'round': self.round_number
-        })
-
-        self.mouse_movements = json.dumps(movements)
 
     def get_cumulative_fatigue_trend(self):
         fatigue_data = []

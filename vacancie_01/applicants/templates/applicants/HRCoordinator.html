@@ -418,6 +418,27 @@
         <strong>Session {{ session_number }} of 6</strong>
     </div>
 
+    <!-- Hidden form field for criteria count -->
+    {% formfields %}
+
+    <script>
+        // Count criteria locally and update hidden form field
+        function updateLocalCriteriaCount() {
+            const evaluationData = getLocalEvaluationData();
+            const criteriaCount = Object.keys(evaluationData).length;
+
+            // Update the hidden form field
+            const hiddenField = document.querySelector('input[name="criteria_added_this_session"]');
+            if (hiddenField) {
+                hiddenField.value = criteriaCount;
+                console.log('Updated criteria count to:', criteriaCount);
+            }
+        }
+
+        // Call this function periodically to keep the count updated
+        setInterval(updateLocalCriteriaCount, 2000); // Every 2 seconds
+    </script>
+
     <div class="hr-coordinator-container">
         <!-- Video Meeting -->
         <div class="left-panel">
@@ -790,24 +811,13 @@
             const relevanceSelect = document.getElementById(`relevance-${criteriaId}`);
 
             const criterionName = criteriaInput.value.trim();
-            const relevance = relevanceSelect.value || 'normal'; // Default relevance
+            const relevance = relevanceSelect.value || 'normal';
 
             if (!criterionName) {
                 return;
             }
 
-            // Track criteria for backend
-            fetch('/update_criteria_count/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    'criteria_count': 1
-                })
-            });
-
-            // Collects points for Pie chart
+            // Collect scores for Pie chart
             const applicantScores = {};
             applicantsData.forEach(applicant => {
                 const scoreSelect = document.getElementById(`score-${applicant.id}-${criteriaId}`);
@@ -838,6 +848,8 @@
             updatePieChartDisplay(results);
 
             console.log('Updated pie chart immediately with scores:', results);
+
+            updateLocalCriteriaCount();
         }
 
         function getLocalEvaluationData() {
