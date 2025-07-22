@@ -42,47 +42,57 @@
         .preference-header {
             font-size: 20px;
             font-weight: bold;
-            color: #333;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
             text-align: center;
             padding: 10px;
-            background-color: lightblue;
-            border-radius: 5px;
         }
 
         .requirements-button {
-            background-color: #f5f5f5;
-            color: #555;
-            padding: 100px 40px;
-            left: 20px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
+            background: white;
+            color: #2c3e50;
+            padding: 30px 25px;
+            border: 2px solid #e0e6ed;
+            border-radius: 16px;
             cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 16px;
+            font-weight: 700;
             display: flex;
-            max-width: 280px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            max-width: 240px;
+            min-height: 110px;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 12px rgba(44, 62, 80, 0.08);
+            margin: 40px auto;
+            position: relative;
+        }
+
+        .requirements-button::before {
+            content: '📊';
+            font-size: 30px;
+            margin-bottom: 10px;
         }
 
         .requirements-button:hover {
-            background-color: #e9e9e9;
+            border-color: black;
+            color: black;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.15);
         }
 
         .email-button {
             position: absolute;
-            top: 60px;
-            right: 10px;
-            width: 90px;
-            height: 70px;
+            bottom: 8px;
+            right: 110px;
+            width: 110px;
+            height: 90px;
             background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
             border: none;
             border-radius: 8px;
             cursor: pointer;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
@@ -101,15 +111,23 @@
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
+        .email-button::after {
+            content: 'E-Mail';
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            text-transform: uppercase;
+        }
+
         .sticky-button {
             position: absolute;
-            bottom: 20px;
-            right: 30px;
-            width: 110px;
-            height: 110px;
+            bottom: 8px;
+            right: 10px;
+            width: 90px;
+            height: 90px;
             background: linear-gradient(45deg, #ffeb3b 0%, #ffc107 100%);
             border: none;
-            border-radius: 0 20px 20px 0;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -117,12 +135,11 @@
             justify-content: center;
             transition: all 0.3s ease;
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-            transform: rotate(-5deg);
             font-family: 'Courier New', monospace;
         }
 
         .sticky-button:hover {
-            transform: rotate(0deg) translateY(-3px);
+            transform: translateY(-3px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
 
@@ -134,7 +151,7 @@
 
         .sticky-button::after {
             content: 'Notes';
-            font-size: 10px;
+            font-size: 12px;
             font-weight: bold;
             color: #333;
             text-transform: uppercase;
@@ -171,57 +188,409 @@
             margin-bottom: 20px;
             border-radius: 5px;
         }
+
+        /* Requirements Catalog Styles */
+        .requirements-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .requirements-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .close-catalog-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .close-catalog-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .category-selection {
+            margin-bottom: 20px;
+        }
+
+        .category-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .category-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .category-btn {
+            background-color: #e9ecef;
+            color: #495057;
+            border: 1px solid #ced4da;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .category-btn:hover {
+            background-color: #dee2e6;
+        }
+
+        .category-btn.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .criteria-selection {
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .criteria-selection.show {
+            display: block;
+        }
+
+        .criteria-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+
+        .criteria-item {
+            padding: 7px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .criteria-item:hover {
+            background-color: #e9ecef;
+        }
+
+        .criteria-item:last-child {
+            border-bottom: none;
+        }
+
+        .selected-criteria {
+            font-size: 16px;
+            font-weight: bold;
+            color: black;
+        }
+
+        .points-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .points-table th {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .points-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .points-table .expression-cell {
+            text-align: left;
+            max-width: 300px;
+        }
+
+        .points-table .points-cell {
+            color: black;
+            min-width: 60px;
+        }
     </style>
 
+    <!-- Skip Button -->
     <div class="skip">
-        <button onclick="skipSession()"
-                class="skip-button">
+        <button onclick="skipSession()" class="skip-button">
             Skip Session
         </button>
     </div>
-
-    <script>
-        function skipSession() {
-            if (confirm('Skip this session?')) {
-                // Submit the form immediately
-                document.querySelector('form').submit();
-            }
-        }
-    </script>
 
     <!-- Session Info Bar -->
     <div class="session-info-bar">
         <strong>Session {{ session_number }} of 6</strong>
     </div>
 
-
+    <!-- Main Container -->
     <div class="business-partner-container">
         <!-- Video Meeting -->
         <div class="left-panel">
-            <div> Video Meeting Placeholder</div>
+            <div>Video Meeting Placeholder</div>
         </div>
 
-        <!-- Preference Profile -->
+        <!-- Right Panel -->
         <div class="right-panel">
-            <div class="preference-header">Preference Profile</div>
 
-            <!-- Email Button -->
-            <button type="button" class="email-button" onclick="openPDF(event, 'Emails.pdf')" title="Open Emails">
-            </button>
+            <!-- Default Preference Profile View -->
+            <div id="defaultView">
+                <div class="preference-header">Preference Profile</div>
 
-            <!-- Requirements Catalog Button -->
-            <button type="button" class="requirements-button" onclick="openPDF(event, 'Anforderungskatalog_1.pdf')">
-                Requirements Catalog
-            </button>
+                <!-- Requirements Catalog Button -->
+                <button type="button" class="requirements-button" onclick="showRequirementsCatalog()">
+                    Requirements Catalog
+                </button>
 
-            <!-- Sticky Notes Button -->
-            <button type="button" class="sticky-button" onclick="openImage(event, 'StickyNotes.jpg')"
-                    title="Open Sticky Notes">
-            </button>
+                <!-- Email Button -->
+                <button type="button" class="email-button" onclick="openPDF(event, 'Emails.pdf')" title="Open Emails">
+                </button>
+
+                <!-- Sticky Notes Button -->
+                <button type="button" class="sticky-button" onclick="openImage(event, 'StickyNotes.jpg')"
+                        title="Open Sticky Notes">
+                </button>
+            </div>
+
+            <!-- Requirements Catalog View - ersetzt komplett den Inhalt -->
+            <div id="requirementsCatalog" style="display: none;">
+
+                <!-- Header auch hier -->
+                <div class="preference-header">Preference Profile</div>
+
+                <div class="requirements-header">
+                    <div class="requirements-title">Requirements Catalog</div>
+                    <button type="button" class="close-catalog-btn" onclick="closeRequirementsCatalog()">
+                        × Close
+                    </button>
+                </div>
+
+                <!-- Category Selection -->
+                <div class="category-selection">
+                    <div class="category-title">Select Category:</div>
+                    <div class="category-buttons" id="categoryButtons">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Criteria Selection -->
+                <div id="criteriaSelection" class="criteria-selection">
+                    <div class="category-title">Select Criterion:</div>
+                    <div class="criteria-list" id="criteriaList">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Selected Criteria and Points Table -->
+                <div id="pointsTableContainer" style="display: none;">
+                    <div id="selectedCriteriaTitle" class="selected-criteria"></div>
+                    <table class="points-table">
+                        <thead>
+                        <tr>
+                            <th>Expression</th>
+                            <th>Points</th>
+                        </tr>
+                        </thead>
+                        <tbody id="pointsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
         </div>
     </div>
 
+    <!-- JavaScript -->
     <script>
+        const criteriaData = {{ criteria_data|safe }};
+        const categories = {{ categories|safe }};
+        const criteriaByCategory = {{ criteria_by_category|safe }};
+
+        // To remove '' and []
+        function cleanText(text) {
+            if (!text || typeof text !== 'string') return text;
+
+            let cleaned = text;
+
+            // Remove square brackets at start and end
+            if (cleaned.startsWith('[') && cleaned.endsWith(']')) {
+                cleaned = cleaned.slice(1, -1);
+            }
+
+            // Remove quotes at start and end
+            if ((cleaned.startsWith("'") && cleaned.endsWith("'")) ||
+                (cleaned.startsWith('"') && cleaned.endsWith('"'))) {
+                cleaned = cleaned.slice(1, -1);
+            }
+
+            return cleaned;
+        }
+
+
+        function skipSession() {
+            if (confirm('Skip this session?')) {
+                document.querySelector('form').submit();
+            }
+        }
+
+        function showRequirementsCatalog() {
+            document.getElementById('defaultView').style.display = 'none';
+            document.getElementById('requirementsCatalog').style.display = 'block';
+
+            // Initialize category buttons
+            initializeCategoryButtons();
+        }
+
+        function closeRequirementsCatalog() {
+            document.getElementById('defaultView').style.display = 'block';
+            document.getElementById('requirementsCatalog').style.display = 'none';
+
+            // Reset selections
+            resetSelections();
+        }
+
+        function initializeCategoryButtons() {
+            const categoryButtonsContainer = document.getElementById('categoryButtons');
+            categoryButtonsContainer.innerHTML = '';
+
+            categories.forEach(category => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'category-btn';
+                button.textContent = category;
+                button.onclick = () => selectCategory(category, button);
+
+                categoryButtonsContainer.appendChild(button);
+            });
+        }
+
+        function selectCategory(category, buttonElement) {
+            // Close points table and reset criteria selection
+            document.getElementById('pointsTableContainer').style.display = 'none';
+
+            // Remove active class from all category buttons
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Add active class to selected button
+            buttonElement.classList.add('active');
+
+            // Show criteria for this category
+            showCriteriaForCategory(category);
+        }
+
+        function showCriteriaForCategory(category) {
+            const criteriaListContainer = document.getElementById('criteriaList');
+            const criteriaSelection = document.getElementById('criteriaSelection');
+
+            criteriaListContainer.innerHTML = '';
+
+            const categoryRequirements = criteriaByCategory[category] || [];
+
+            categoryRequirements.forEach(requirement => {
+                const criteriaItem = document.createElement('div');
+                criteriaItem.className = 'criteria-item';
+                criteriaItem.textContent = requirement.name;
+                criteriaItem.onclick = () => selectCriterion(requirement);
+
+                criteriaListContainer.appendChild(criteriaItem);
+            });
+
+            criteriaSelection.classList.add('show');
+        }
+
+        function selectCriterion(requirement) {
+            // Close previous table (if any)
+            document.getElementById('pointsTableContainer').style.display = 'none';
+
+            // Hide criteria selection
+            document.getElementById('criteriaSelection').classList.remove('show');
+
+            // Show selected criterion title
+            document.getElementById('selectedCriteriaTitle').textContent = requirement.name;
+
+            // Generate points table
+            generatePointsTable(requirement);
+
+            // Show points table
+            document.getElementById('pointsTableContainer').style.display = 'block';
+        }
+
+        function generatePointsTable(requirement) {
+            const tableBody = document.getElementById('pointsTableBody');
+            tableBody.innerHTML = '';
+
+            // Find the full criterion data with scores from metadata
+            let fullCriterion = null;
+            for (let criterion of criteriaData) {
+                if (criterion.name === requirement.name) {
+                    fullCriterion = criterion;
+                    break;
+                }
+            }
+
+            if (!fullCriterion) {
+                // Show message if no criterion data available
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="2" style="text-align: center; color: #666;">No data available for this criterion</td>';
+                tableBody.appendChild(row);
+                return;
+            }
+
+            // Generate table rows for points 0-8 from the criterion object directly
+            for (let points = 0; points <= 8; points++) {
+                const pointField = `requirement_point_is_${points}`;
+
+                // Check if this field exists in the criterion
+                if (!fullCriterion.hasOwnProperty(pointField)) continue;
+
+                const expression = fullCriterion[pointField];
+
+                // Skip empty expressions or "None"
+                if (!expression || expression === 'None' || expression.trim() === '') continue;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="expression-cell">${cleanText(expression)}</td>
+                    <td class="points-cell">${points}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+
+            // If no valid rows were added, show message
+            if (tableBody.children.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="2" style="text-align: center; color: #666;">No points expressions defined for this criterion</td>';
+                tableBody.appendChild(row);
+            }
+        }
+
+        function resetSelections() {
+            document.getElementById('criteriaSelection').classList.remove('show');
+            document.getElementById('pointsTableContainer').style.display = 'none';
+
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+
         // Function to open PDF files
         function openPDF(event, pdfPath) {
             event.preventDefault();

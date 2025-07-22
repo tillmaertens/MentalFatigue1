@@ -287,7 +287,10 @@ class BusinessPartner(Page):
         return {
             'applicants': C.APPLICANTS,
             'session_number': self.player.round_number,
-            'remaining_time': C.SESSION_DURATION_SECONDS
+            'remaining_time': C.SESSION_DURATION_SECONDS,
+            'criteria_data': C.CRITERIA_DATA,
+            'categories': C.CATEGORIES,
+            'criteria_by_category': C.CRITERIA_BY_CATEGORY,
         }
 
 

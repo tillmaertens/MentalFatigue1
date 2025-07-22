@@ -88,6 +88,14 @@ def load_metadata_criteria():
                         'applicant_c': int(applicant_c_score) if pd.notna(applicant_c_score) else 0,
                     }
                 }
+
+                # Requirement_point_is_X fields for Business Partner
+                for points in range(9):  # 0-8
+                    point_field = f'requirement_point_is_{points}'
+                    point_value = row.get(point_field)
+                    if pd.notna(point_value):
+                        criterion[point_field] = str(point_value).strip()
+
                 criteria_data.append(criterion)
 
                 if criterion['category'] not in categories:
