@@ -1,6 +1,5 @@
 from otree.api import *
 import json
-import time
 import pandas as pd
 import os
 
@@ -49,6 +48,7 @@ def load_metadata_criteria():
     try:
         metadata_path = [
             '_static/applicants/metadata1.xlsx',
+            '_static/applicants/metadatanew.xlsx',
         ]
 
         df = None
@@ -60,39 +60,39 @@ def load_metadata_criteria():
                 break
 
         if not file_path:
-            raise FileNotFoundError("metadata1.xlsx not found")
+            raise FileNotFoundError("metadata Excel file not found")
 
-        # Read the Excel file
-        df = pd.read_excel(file_path, header=1)  # Header in row 2 (index 1)
+        df = pd.read_excel(file_path, header=1)
 
         criteria_data = []
         categories = []
 
         for index, row in df.iterrows():
-            # Check different possible column names
-            name_value = None
-            category_value = None
+            name_value = row.get('requirement_name')
+            category_value = row.get('requirement_category')
+            relevance_value = row.get('requirement_relevance')
 
-            # Try different column name variations
-            for col in df.columns:
-                col_lower = str(col).lower()
-                if 'requirement_name' in col_lower or 'name' in col_lower:
-                    name_value = row.get(col)
-                elif 'requirement_category' in col_lower or 'category' in col_lower:
-                    category_value = row.get(col)
+            # Scores für die drei Applicants
+            applicant_a_score = row.get('applicant_a_points')
+            applicant_b_score = row.get('applicant_b_points')
+            applicant_c_score = row.get('applicant_c_points')
 
             if pd.notna(name_value) and str(name_value).strip():
                 criterion = {
                     'name': str(name_value).strip(),
                     'category': str(category_value).strip() if pd.notna(category_value) else 'general',
+                    'relevance': str(relevance_value).strip() if pd.notna(relevance_value) else 'normal',
+                    'scores': {
+                        'applicant_a': int(applicant_a_score) if pd.notna(applicant_a_score) else 0,
+                        'applicant_b': int(applicant_b_score) if pd.notna(applicant_b_score) else 0,
+                        'applicant_c': int(applicant_c_score) if pd.notna(applicant_c_score) else 0,
+                    }
                 }
                 criteria_data.append(criterion)
 
-                # Collect unique categories
                 if criterion['category'] not in categories:
                     categories.append(criterion['category'])
 
-        # Group criteria by category
         criteria_by_category = {}
         for category in categories:
             criteria_by_category[category] = [
@@ -106,13 +106,11 @@ def load_metadata_criteria():
         }
 
     except Exception as e:
-        # If there's any error, return empty structure
         return {
             'criteria': [],
             'categories': [],
             'criteria_by_category': {}
         }
-
 
 class C(BaseConstants):
     NAME_IN_URL = 'mental_fatigue'
@@ -172,6 +170,21 @@ class Player(BasePlayer):
     criteria_added_this_session = models.IntegerField(
         blank=True,
         doc="Number of criteria added by this player in current session"
+    )
+
+    validation_data_json = models.LongStringField(
+        blank=True,
+        doc="JSON string containing criteria data for validation (hidden from admin)"
+    )
+
+    criteria_correct_this_session = models.IntegerField(
+        blank=True,
+        doc="Number of criteria correctly entered (scores and relevance match metadata)"
+    )
+
+    criteria_incorrect_this_session = models.IntegerField(
+        blank=True,
+        doc="Number of criteria incorrectly entered (scores or relevance don't match metadata)"
     )
 
     # Self-assessment after each session
@@ -238,6 +251,55 @@ class Player(BasePlayer):
         })
 
         self.reaction_times = json.dumps(times)
+
+    def validate_criteria_data(self, criteria_data):
+        """
+        Validates criteria data against metadata and updates correct/incorrect counters
+        criteria_data: dict with format {criterion_name: {scores: {a: score, b: score, c: score}, relevance: 'low/normal/high'}}
+        """
+        correct_count = 0
+        incorrect_count = 0
+
+        metadata = C.METADATA_WITH_SCORES
+
+        for criterion_name, data in criteria_data.items():
+
+            criterion_metadata = None
+            for criterion in metadata['criteria']:
+                if criterion['name'].strip().lower() == criterion_name.strip().lower():
+                    criterion_metadata = criterion
+                    break
+
+            if criterion_metadata:
+                # Prüfe Scores und Relevanz
+                scores_correct = True
+                relevance_correct = True
+
+                # Prüfe Scores für jeden Applicant
+                for applicant_id in ['a', 'b', 'c']:
+                    entered_score = data['scores'].get(applicant_id, 0)
+                    correct_score = criterion_metadata['scores'].get(f'applicant_{applicant_id}', 0)
+
+                    if int(entered_score) != int(correct_score):
+                        scores_correct = False
+                        break
+
+                # Prüfe Relevanz
+                entered_relevance = data.get('relevance', 'normal')
+                correct_relevance = criterion_metadata.get('relevance', 'normal')
+
+                if entered_relevance != correct_relevance:
+                    relevance_correct = False
+
+                # Zähle richtig oder falsch
+                if scores_correct and relevance_correct:
+                    correct_count += 1
+                else:
+                    incorrect_count += 1
+
+        # Update die Felder
+        self.criteria_correct_this_session = correct_count
+        self.criteria_incorrect_this_session = incorrect_count
 
     def get_cumulative_fatigue_trend(self):
         fatigue_data = []

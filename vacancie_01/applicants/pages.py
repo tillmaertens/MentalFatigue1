@@ -1,10 +1,8 @@
 from otree.api import *
 from .models import C, ensure_all_roles_assigned
-import time
 import random
 from docx import Document
 import os
-
 
 
 # ===== BASELINE & SETUP PAGES =====
@@ -197,12 +195,72 @@ class Recruiter(Page):
 
 class HRCoordinator(Page):
     form_model = 'player'
-    form_fields = ['criteria_added_this_session']
+    form_fields = ['criteria_added_this_session', 'validation_data_json']  # Add the new field
 
     def is_displayed(self):
         return self.player.is_hr_coordinator()
 
     timeout_seconds = C.SESSION_DURATION_SECONDS
+
+    def before_next_page(self):
+        """Validation using form data"""
+        import json
+
+        try:
+            validation_data_str = self.player.validation_data_json or '{}'
+
+            if not validation_data_str or validation_data_str == '{}':
+                self.player.criteria_correct_this_session = 0
+                self.player.criteria_incorrect_this_session = 0
+                return
+
+            criteria_data = json.loads(validation_data_str)
+            correct_count = 0
+            incorrect_count = 0
+            metadata_criteria = C.METADATA['criteria']
+
+            for criterion_name, data in criteria_data.items():
+                # Find the criterion in metadata
+                criterion_metadata = None
+                for criterion in metadata_criteria:
+                    if criterion['name'].strip().lower() == criterion_name.strip().lower():
+                        criterion_metadata = criterion
+                        break
+
+                if criterion_metadata:
+                    # Check scores and relevance
+                    scores_correct = True
+                    relevance_correct = True
+
+                    # Check scores for each applicant
+                    for applicant_id in ['a', 'b', 'c']:
+                        entered_score = data['scores'].get(applicant_id, 0)
+                        correct_score = criterion_metadata['scores'].get(f'applicant_{applicant_id}', 0)
+
+                        if int(entered_score or 0) != int(correct_score):
+                            scores_correct = False
+                            break
+
+                    # Check relevance
+                    entered_relevance = data.get('relevance', 'normal')
+                    correct_relevance = criterion_metadata.get('relevance', 'normal')
+                    relevance_correct = entered_relevance == correct_relevance
+
+                    # Count correct or incorrect
+                    if scores_correct and relevance_correct:
+                        correct_count += 1
+                    else:
+                        incorrect_count += 1
+                else:
+                    incorrect_count += 1
+
+            # Update Player fields
+            self.player.criteria_correct_this_session = correct_count
+            self.player.criteria_incorrect_this_session = incorrect_count
+
+        except Exception as e:
+            self.player.criteria_correct_this_session = 0
+            self.player.criteria_incorrect_this_session = 0
 
     def vars_for_template(self):
         return {

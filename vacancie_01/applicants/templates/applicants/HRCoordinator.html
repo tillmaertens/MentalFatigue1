@@ -2,6 +2,7 @@
 
 {% block content %}
 
+    <!-- CSS Styles -->
     <style>
         body {
             background-color: #FFFFFF;
@@ -265,7 +266,6 @@
             margin-right: 10px;
         }
 
-
         .table-container {
             flex: 1;
             overflow: auto;
@@ -405,15 +405,18 @@
         }
 
         label[for="id_criteria_added_this_session"],
-        #id_criteria_added_this_session {
+        #id_criteria_added_this_session,
+        label[for="id_validation_data_json"],
+        #id_validation_data_json {
             display: none !important;
         }
     </style>
 
+    <!-- HTML Content -->
+
     <!-- Skip Button -->
     <div class="skip">
-        <button onclick="skipSession()"
-                class="skip-button">
+        <button onclick="skipSession()" class="skip-button">
             Skip Session
         </button>
     </div>
@@ -423,27 +426,11 @@
         <strong>Session {{ session_number }} of 6</strong>
     </div>
 
-    <!-- Hidden form field for criteria count -->
+    <!-- Hidden form fields -->
     {% formfields %}
+    <input type="hidden" id="validation_data" name="validation_data"/>
 
-    <script>
-        // Count criteria locally and update hidden form field
-        function updateLocalCriteriaCount() {
-            const evaluationData = getLocalEvaluationData();
-            const criteriaCount = Object.keys(evaluationData).length;
-
-            // Update the hidden form field
-            const hiddenField = document.querySelector('input[name="criteria_added_this_session"]');
-            if (hiddenField) {
-                hiddenField.value = criteriaCount;
-                console.log('Updated criteria count to:', criteriaCount);
-            }
-        }
-
-        // Call this function periodically to keep the count updated
-        setInterval(updateLocalCriteriaCount, 2000); // Every 2 seconds
-    </script>
-
+    <!-- Main Container -->
     <div class="hr-coordinator-container">
         <!-- Video Meeting -->
         <div class="left-panel">
@@ -476,8 +463,8 @@
             <div class="evaluation-container">
                 <div class="evaluation-header">
                     <div class="evaluation-controls">
-                        <button type="button" class="add-criteria-btn"
-                                onclick="showFilterSelection(event); return false;">+ Add Criteria
+                        <button type="button" class="add-criteria-btn" onclick="showFilterSelection(event); return false;">
+                            + Add Criteria
                         </button>
                     </div>
                 </div>
@@ -510,9 +497,9 @@
         </div>
     </div>
 
+    <!-- JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
-
         const applicantsData = {{ applicants|safe }};
         const minScore = 0;
         const maxScore = 8;
@@ -533,17 +520,43 @@
             'c': '#FFCE56'
         };
 
-        // Initialize page
+        // Count criteria locally and update hidden form field
+        function updateLocalCriteriaCount() {
+            const evaluationData = getLocalEvaluationData();
+            const criteriaCount = Object.keys(evaluationData).length;
+
+            // Update criteria count field
+            const criteriaCountField = document.querySelector('input[name="criteria_added_this_session"]');
+            if (criteriaCountField) {
+                criteriaCountField.value = criteriaCount;
+            }
+
+            // Update validation data field
+            const validationDataField = document.querySelector('input[name="validation_data_json"]') ||
+                document.querySelector('#id_validation_data_json');
+            if (validationDataField) {
+                validationDataField.value = JSON.stringify(evaluationData);
+            }
+        }
+
+        function skipSession() {
+            if (confirm('Skip this session?')) {
+                // Update fields before submission
+                updateLocalCriteriaCount();
+
+                // Submit form
+                setTimeout(() => {
+                    document.querySelector('form').submit();
+                }, 100);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             console.log('HR Coordinator loaded');
-            console.log('Applicants data:', applicantsData);
-            console.log('Criteria data:', criteriaData);
-            console.log('Categories:', categories);
 
             // Clear any old data to start fresh
             localStorage.removeItem('nutzwertResults');
             localStorage.removeItem('evaluationData');
-            console.log('Cleared localStorage for fresh start');
 
             // Initialize filter categories
             initializeFilterCategories();
@@ -556,7 +569,6 @@
 
             // real-time updates
             startRealTimeUpdates();
-
         });
 
         function initializeFilterCategories() {
@@ -666,20 +678,14 @@
             event.preventDefault();
             event.stopPropagation();
 
-            // Add the selected requirement as a new criteria row
+            // New Row for selected requirement
             addCriteriaRow(requirement.name, {}, 'normal');
 
-            // Hide the filter selection
+            // Hide filter selection
             hideFilterSelection();
 
             // Return false to prevent navigation
             return false;
-        }
-
-        function skipSession() {
-            if (confirm('Skip this session?')) {
-                document.querySelector('form').submit();
-            }
         }
 
         function addCriteriaRow(criterionText = '', scores = {}, relevance = 'normal') {
@@ -705,13 +711,13 @@
             </td>
         `;
 
-            // Add score dropdown for each applicant
+            // Score dropdown for each applicant
             applicantsData.forEach(applicant => {
                 const score = scores[applicant.id] || '';
 
-                // Build score dropdown options (1-8 only, no 0)
+                // Build score dropdown options
                 let scoreOptions = '<option value="">-</option>';
-                for (let i = 1; i <= 8; i++) {
+                for (let i = 0; i <= 8; i++) {
                     const selected = score == i ? 'selected' : '';
                     scoreOptions += `<option value="${i}" ${selected}>${i}</option>`;
                 }
@@ -753,7 +759,6 @@
                 }, 100);
             }
         }
-
 
         function deleteCriteria(id) {
             const row = document.getElementById(`criteria-${id}`);
@@ -832,12 +837,6 @@
                 }
             });
 
-            console.log('Saving criterion:', {
-                name: criterionName,
-                scores: applicantScores,
-                relevance: relevance
-            });
-
             // Store in local Storage for pie chart
             const evaluationData = getLocalEvaluationData();
             evaluationData[criterionName] = {
@@ -851,8 +850,6 @@
             const results = getResultsFromEvaluationData(evaluationData);
             localStorage.setItem('nutzwertResults', JSON.stringify(results));
             updatePieChartDisplay(results);
-
-            console.log('Updated pie chart immediately with scores:', results);
 
             updateLocalCriteriaCount();
         }
@@ -899,7 +896,6 @@
                 });
             }
 
-            console.log('Updated pie chart with USER SCORES:', results);
             localStorage.setItem('nutzwertResults', JSON.stringify(results));
 
             // Update pie chart display immediately
@@ -1050,7 +1046,6 @@
         }
 
         function startRealTimeUpdates() {
-
             setInterval(function () {
                 updatePieChartFromLocalStorage();
             }, 1000);
@@ -1061,7 +1056,6 @@
                 const storedResults = localStorage.getItem('nutzwertResults');
                 if (storedResults) {
                     const nutzwertResults = JSON.parse(storedResults);
-
 
                     const dataString = JSON.stringify(nutzwertResults);
                     if (dataString !== lastDataString) {
@@ -1081,6 +1075,13 @@
             window.open(fullPath, '_blank', 'noopener,noreferrer');
             return false;
         }
+
+        // Prepare data for validation when form is submitted
+        document.querySelector('form').addEventListener('submit', function () {
+            const evaluationData = getLocalEvaluationData();
+            document.getElementById('validation_data').value = JSON.stringify(evaluationData);
+        });
+
     </script>
 
 {% endblock %}
