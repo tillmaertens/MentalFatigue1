@@ -60,51 +60,18 @@
         }
 
         .preference-header {
-            font-size: 20px;
+            font-size: 30px;
             font-weight: bold;
             margin-bottom: 10px;
             text-align: center;
             padding: 10px;
         }
 
-        .requirements-button {
-            background: white;
-            color: #2c3e50;
-            padding: 30px 25px;
-            border: 2px solid #e0e6ed;
-            border-radius: 16px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 700;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            max-width: 240px;
-            min-height: 110px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 12px rgba(44, 62, 80, 0.08);
-            margin: 40px auto;
-            position: relative;
-        }
-
-        .requirements-button::before {
-            content: '📊';
-            font-size: 30px;
-            margin-bottom: 10px;
-        }
-
-        .requirements-button:hover {
-            border-color: black;
-            color: black;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.15);
-        }
 
         .email-button {
             position: absolute;
-            bottom: 8px;
-            right: 110px;
+            bottom: 25px;
+            right: 150px;
             width: 110px;
             height: 90px;
             background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
@@ -141,8 +108,8 @@
 
         .sticky-button {
             position: absolute;
-            bottom: 8px;
-            right: 10px;
+            bottom: 25px;
+            right: 30px;
             width: 90px;
             height: 90px;
             background: linear-gradient(45deg, #ffeb3b 0%, #ffc107 100%);
@@ -176,6 +143,103 @@
             color: #333;
             text-transform: uppercase;
         }
+
+        /* PDF Modal Styles */
+        .pdf-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .pdf-iframe {
+            width: 90%;
+            height: 90%;
+            max-width: 1000px;
+            max-height: 800px;
+            border: none;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Image Modal Styles */
+        .image-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .image-container {
+            max-width: 30%;
+            max-height: 30%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .modal-image {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Shared Modal Styles */
+        .modal-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 10000;
+            transition: background-color 0.3s;
+        }
+
+        .modal-close-btn:hover {
+            background-color: #c82333;
+        }
+
+        .error-message {
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
 
         .skip {
             background: #dc3545;
@@ -221,6 +285,27 @@
             font-size: 20px;
             font-weight: bold;
             color: #333;
+        }
+
+        .requirements-notebook {
+            width: 350px;
+            height: 450px;
+            margin: 20px auto 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .requirements-notebook:hover {
+            transform: translateY(-3px) scale(1.02);
+        }
+
+        .requirements-notebook img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .close-catalog-btn {
@@ -369,14 +454,13 @@
         <!-- Right Panel -->
         <div class="right-panel">
 
-            <!-- Default Preference Profile View -->
             <div id="defaultView">
-                <div class="preference-header">Preference Profile</div>
+                <div class="preference-header">Requirements</div>
 
-                <!-- Requirements Catalog Button -->
-                <button type="button" class="requirements-button" onclick="showRequirementsCatalog()">
-                    Requirements Catalog
-                </button>
+                <!-- Requirements Catalog Notebook -->
+                <div class="requirements-notebook" onclick="showRequirementsCatalog()">
+                    <img src="/static/applicants/notebook.png" alt="Job Requirement Catalog"/>
+                </div>
 
                 <!-- Email Button -->
                 <button type="button" class="email-button" onclick="openPDF(event, 'Emails.pdf')" title="Open Emails">
@@ -388,11 +472,9 @@
                 </button>
             </div>
 
-            <!-- Requirements Catalog View - ersetzt komplett den Inhalt -->
+            <!-- Requirements Catalog View -->
             <div id="requirementsCatalog" style="display: none;">
 
-                <!-- Header auch hier -->
-                <div class="preference-header">Preference Profile</div>
 
                 <div class="requirements-header">
                     <div class="requirements-title">Requirements Catalog</div>
@@ -611,35 +693,103 @@
             });
         }
 
-        // Function to open PDF files
         function openPDF(event, pdfPath) {
             event.preventDefault();
             event.stopPropagation();
 
             const fullPath = '/static/applicants/' + pdfPath;
-            const newWindow = window.open(fullPath, '_blank', 'noopener,noreferrer');
 
-            if (newWindow) {
-                newWindow.focus();
-            }
+            const modal = document.createElement('div');
+            modal.id = 'pdfModal';
+            modal.className = 'pdf-modal-overlay';
+
+            const iframe = document.createElement('iframe');
+            iframe.src = fullPath;
+            iframe.className = 'pdf-iframe';
+
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = '× Close';
+            closeBtn.className = 'modal-close-btn';
+
+            const closeModal = () => {
+                if (document.getElementById('pdfModal')) {
+                    document.body.removeChild(modal);
+                }
+            };
+
+            closeBtn.onclick = closeModal;
+            modal.onclick = (e) => e.target === modal && closeModal();
+
+            const handleKeyPress = (e) => {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    document.removeEventListener('keydown', handleKeyPress);
+                }
+            };
+            document.addEventListener('keydown', handleKeyPress);
+
+            modal.appendChild(iframe);
+            modal.appendChild(closeBtn);
+            document.body.appendChild(modal);
 
             return false;
         }
 
-        // Function to open image files
         function openImage(event, imagePath) {
             event.preventDefault();
             event.stopPropagation();
 
             const fullPath = '/static/applicants/' + imagePath;
-            const newWindow = window.open(fullPath, '_blank', 'noopener,noreferrer');
 
-            if (newWindow) {
-                newWindow.focus();
-            }
+            const modal = document.createElement('div');
+            modal.id = 'imageModal';
+            modal.className = 'image-modal-overlay';
+
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'image-container';
+
+            const img = document.createElement('img');
+            img.src = fullPath;
+            img.className = 'modal-image';
+
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = '× Close';
+            closeBtn.className = 'modal-close-btn';
+
+            const closeModal = () => {
+                if (document.getElementById('imageModal')) {
+                    document.body.removeChild(modal);
+                }
+            };
+
+            closeBtn.onclick = closeModal;
+            modal.onclick = (e) => e.target === modal && closeModal();
+
+            const handleKeyPress = (e) => {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    document.removeEventListener('keydown', handleKeyPress);
+                }
+            };
+            document.addEventListener('keydown', handleKeyPress);
+
+            // Optional: Keep error handling
+            img.onerror = () => {
+                img.style.display = 'none';
+                const errorMsg = document.createElement('div');
+                errorMsg.textContent = 'Image could not be loaded';
+                errorMsg.className = 'error-message';
+                imageContainer.appendChild(errorMsg);
+            };
+
+            imageContainer.appendChild(img);
+            modal.appendChild(imageContainer);
+            modal.appendChild(closeBtn);
+            document.body.appendChild(modal);
 
             return false;
         }
+
     </script>
 
 {% endblock %}

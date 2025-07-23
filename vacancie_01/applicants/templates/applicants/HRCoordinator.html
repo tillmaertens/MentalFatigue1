@@ -406,6 +406,61 @@
             background-color: #c82333;
         }
 
+        /* PDF Modal Styles */
+        .pdf-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .pdf-modal-iframe {
+            width: 90%;
+            height: 90%;
+            max-width: 1000px;
+            max-height: 800px;
+            border: none;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .pdf-modal-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 10000;
+            transition: background-color 0.3s;
+        }
+
+        .pdf-modal-close-btn:hover {
+            background-color: #c82333;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
         .skip {
             background: #dc3545;
             color: white;
@@ -1049,8 +1104,55 @@
         function openPDF(event, pdfPath) {
             event.preventDefault();
             event.stopPropagation();
+
             const fullPath = '/static/applicants/' + pdfPath;
-            window.open(fullPath, '_blank', 'noopener,noreferrer');
+
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.id = 'pdfModal';
+            modal.className = 'pdf-modal';
+
+            // Create iframe for PDF
+            const iframe = document.createElement('iframe');
+            iframe.src = fullPath;
+            iframe.className = 'pdf-modal-iframe';
+
+            // Create close button
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = '× Close';
+            closeBtn.className = 'pdf-modal-close-btn';
+
+            // Close modal function
+            const closeModal = () => {
+                if (document.getElementById('pdfModal')) {
+                    document.body.removeChild(modal);
+                }
+            };
+
+            // Close on button click
+            closeBtn.onclick = closeModal;
+
+            // Close on background click
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            };
+
+            // Close on ESC key press
+            const handleKeyPress = (e) => {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    document.removeEventListener('keydown', handleKeyPress);
+                }
+            };
+            document.addEventListener('keydown', handleKeyPress);
+
+            // Assemble modal
+            modal.appendChild(iframe);
+            modal.appendChild(closeBtn);
+            document.body.appendChild(modal);
+
             return false;
         }
 
