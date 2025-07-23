@@ -12,14 +12,22 @@
 
         .recruiter-container {
             display: flex;
-            height: auto;
             gap: 20px;
-            min-height: 500px;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            width: 100%;
+            max-width: 860px;
+            margin: 0 auto; /* Center the container */
         }
 
-        /* Video meeting placeholder */
+        /* Left side - Video meeting placeholder */
         .left-panel {
-            flex: 1;
+            width: 400px;
+            height: 600px;
+            max-width: 400px;
+            max-height: 600px;
+            min-width: 400px;
+            min-height: 600px;
             background-color: #f0f0f0;
             border: 2px solid #ddd;
             border-radius: 10px;
@@ -28,18 +36,26 @@
             align-items: center;
             font-size: 24px;
             color: #666;
-            min-height: 400px;
+            overflow: hidden;
+            box-sizing: border-box;
         }
 
-        /* Applicant information */
+        /* Right side - HR Coordinator Information */
         .right-panel {
-            flex: 1;
+            width: 670px;
+            height: 600px;
+            max-width: 670px;
+            max-height: 600px;
+            min-width: 670px;
+            min-height: 600px;
             padding: 20px;
             border: 2px solid #ddd;
             border-radius: 10px;
+            position: relative;
             display: flex;
             flex-direction: column;
-            min-height: 400px;
+            overflow: hidden;
+            box-sizing: border-box;
         }
 
         /* Applicant selection buttons */
@@ -88,14 +104,17 @@
             border: 2px solid #ccc;
             padding: 20px;
             text-align: left;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border-radius: 5px;
             color: #333;
             font-style: normal;
             width: 100%;
-            max-width: 500px;
-            max-height: 400px;
+
+            flex: 1; /* Take remaining space in right panel */
+            max-height: 390px;
             overflow-y: auto;
+            box-sizing: border-box;
+
             font-size: 14px;
             line-height: 1.5
         }
@@ -126,7 +145,7 @@
         .document-buttons {
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 45px;
             flex-wrap: nowrap;
         }
 

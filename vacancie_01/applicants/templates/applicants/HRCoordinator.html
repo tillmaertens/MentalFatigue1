@@ -13,13 +13,22 @@
 
         .hr-coordinator-container {
             display: flex;
-            height: auto;
             gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 860px;
+            margin: 0 auto;
         }
 
         /* Left side - Video meeting placeholder */
         .left-panel {
-            flex: 1;
+            width: 400px;
+            height: 600px;
+            max-width: 400px;
+            max-height: 600px;
+            min-width: 400px;
+            min-height: 600px;
             background-color: #f0f0f0;
             border: 2px solid #ddd;
             border-radius: 10px;
@@ -28,29 +37,43 @@
             align-items: center;
             font-size: 24px;
             color: #666;
-            min-height: 400px;
+            overflow: hidden;
+            box-sizing: border-box;
         }
 
         /* Right side - HR Coordinator Information */
         .right-panel {
-            flex: 1;
+            width: 670px;
+            height: 600px;
+            max-width: 670px;
+            max-height: 600px;
+            min-width: 670px;
+            min-height: 600px;
             padding: 20px;
             border: 2px solid #ddd;
             border-radius: 10px;
             position: relative;
-            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-sizing: border-box;
+        }
+
+        .job-description-section {
+            height: 260px;
+            margin-bottom: 10px;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
-        .job-description-section {
-            margin-bottom: 20px;
-        }
-
         .job-description-container {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             align-items: flex-start;
+            height: 100%;
+            margin-bottom: 10px;
         }
 
         .job-description-button {
@@ -75,6 +98,10 @@
         .pie-chart-section {
             flex: 1;
             text-align: center;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .pie-chart-title {
@@ -87,19 +114,23 @@
         .pie-chart-container {
             position: relative;
             display: inline-block;
+            margin-bottom: 15px;
         }
 
         #pieChart {
-            max-width: 200px;
-            max-height: 200px;
+            max-width: 150px;
+            max-height: 150px;
+            margin-left: 150px;
         }
 
         .chart-legend {
             display: flex;
-            flex-direction: column;
-            gap: 5px;
-            margin-top: 10px;
-            font-size: 12px;
+            flex-direction: row;
+            gap: 10px;
+            margin-top: 5px;
+            font-size: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .legend-item {
@@ -120,40 +151,33 @@
             color: #666;
             font-style: italic;
             font-size: 12px;
-            padding: 20px;
+            padding: 15px;
             position: absolute;
-            top: 50%;
+            top: 60%;
             left: 50%;
             transform: translate(-50%, -50%);
             width: 150px;
             text-align: center;
         }
 
-        @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
-            100% {
-                opacity: 1;
-            }
-        }
-
         /* Evaluation Form Styles */
         .evaluation-container {
-            flex: 1;
+            height: 294px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 5px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-height: 320px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
 
         .evaluation-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
         }
 
         .evaluation-controls {
@@ -176,102 +200,112 @@
             background-color: #0056b3;
         }
 
-        .filter-selection {
+        /* Modal Styles */
+        .modal-overlay {
             display: none;
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 15px;
-            position: relative;
-        }
-
-        .filter-selection.show {
-            display: block;
-        }
-
-        .filter-categories {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        .filter-category-btn {
-            background-color: #e9ecef;
-            color: #495057;
-            border: 1px solid #ced4da;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .filter-category-btn:hover {
-            background-color: #dee2e6;
-        }
-
-        .filter-category-btn.active {
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff;
-        }
-
-        .filter-requirements {
-            display: none;
-            position: absolute;
-            top: 100%;
+            position: fixed;
+            top: 0;
             left: 0;
-            min-width: 200px;
-            width: max-content;
-            max-width: 400px;
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            padding: 5px;
-            background-color: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
-            white-space: nowrap;
         }
 
-        .filter-requirements.show {
-            display: block;
+        .modal-overlay.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        .requirement-item {
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 800px;
+            max-height: 80vh;
+            width: 90%;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px 8px;
-            margin-bottom: 2px;
-            background-color: white;
-            border-radius: 3px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            font-size: 12px;
-            min-width: max-content;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
         }
 
-        .requirement-item:hover {
+        .modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .modal-close-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .modal-close-btn:hover {
+            background-color: #c82333;
+        }
+
+        .modal-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .modal-category {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
             background-color: #f8f9fa;
         }
 
-        .requirement-name {
-            font-weight: normal;
-            flex: 1;
-            margin-right: 10px;
+        .modal-category-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #007bff;
+            text-align: center;
         }
+
+        .modal-criteria-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .modal-criteria-item {
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-criteria-item:hover {
+            background-color: #e9ecef;
+            border-color: #007bff;
+        }
+
 
         .table-container {
             flex: 1;
             overflow: auto;
             border: 1px solid #ddd;
             border-radius: 5px;
-            max-height: 350px;
+            min-height: 200px;
         }
 
         .evaluation-table {
@@ -449,7 +483,7 @@
                     <div class="pie-chart-section">
                         <div class="pie-chart-title">Current Evaluation</div>
                         <div class="pie-chart-container">
-                            <canvas id="pieChart" width="200" height="200"></canvas>
+                            <canvas id="pieChart" width="150" height="150"></canvas>
                             <div id="noDataMessage" class="no-data-message">
                                 Add criteria and scores to see results
                             </div>
@@ -463,16 +497,24 @@
             <div class="evaluation-container">
                 <div class="evaluation-header">
                     <div class="evaluation-controls">
-                        <button type="button" class="add-criteria-btn" onclick="showFilterSelection(event); return false;">
+                        <button type="button" class="add-criteria-btn"
+                                onclick="showFilterSelection(event); return false;">
                             + Add Criteria
                         </button>
                     </div>
                 </div>
 
-                <!-- Filter Selection Panel -->
-                <div id="filterSelection" class="filter-selection">
-                    <div class="filter-categories" id="filterCategories">
-                        <!-- will be populated by JavaScript -->
+                <!-- Modal for Criteria Selection -->
+                <div id="criteriaModal" class="modal-overlay">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="modal-title">Select Criteria</div>
+                            <button type="button" class="modal-close-btn" onclick="closeCriteriaModal()">× Close
+                            </button>
+                        </div>
+                        <div id="modalCategories" class="modal-categories">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
                     </div>
                 </div>
 
@@ -503,13 +545,11 @@
         const applicantsData = {{ applicants|safe }};
         const minScore = 0;
         const maxScore = 8;
-        const criteriaData = {{ criteria_data|safe }};
         const categories = {{ categories|safe }};
         const criteriaByCategory = {{ criteria_by_category|safe }};
 
         let criteriaCount = 0;
         let saveTimeouts = {};
-        let currentSelectedCategory = null;
         let pieChart = null;
         let lastDataString = '';
 
@@ -558,134 +598,73 @@
             localStorage.removeItem('nutzwertResults');
             localStorage.removeItem('evaluationData');
 
-            // Initialize filter categories
-            initializeFilterCategories();
-
             // Initialize pie chart
             initializePieChart();
 
             // Check for existing data immediately
             updatePieChartFromLocalStorage();
 
-            // real-time updates
+            // Start real-time updates
             startRealTimeUpdates();
         });
 
-        function initializeFilterCategories() {
-            const categoriesContainer = document.getElementById('filterCategories');
-            categoriesContainer.innerHTML = '';
-
-            categories.forEach(category => {
-                const categoryWrapper = document.createElement('div');
-                categoryWrapper.style.position = 'relative';
-                categoryWrapper.style.display = 'inline-block';
-
-                const categoryBtn = document.createElement('button');
-                categoryBtn.type = 'button';
-                categoryBtn.className = 'filter-category-btn';
-                categoryBtn.textContent = category;
-                categoryBtn.onclick = (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    selectCategory(category, categoryBtn);
-                    return false;
-                };
-
-                const requirementsDropdown = document.createElement('div');
-                requirementsDropdown.className = 'filter-requirements';
-                requirementsDropdown.id = `requirements-${category}`;
-
-                categoryWrapper.appendChild(categoryBtn);
-                categoryWrapper.appendChild(requirementsDropdown);
-                categoriesContainer.appendChild(categoryWrapper);
-            });
+        // Update the showFilterSelection function
+        function showFilterSelection(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            showCriteriaModal();
+            return false;
         }
 
-        function showFilterSelection(event) {
-            const filterSelection = document.getElementById('filterSelection');
-            filterSelection.classList.add('show');
+        // Add these new modal functions
+        function showCriteriaModal() {
+            const modal = document.getElementById('criteriaModal');
+            modal.classList.add('show');
+            populateModalCategories();
+        }
 
-            // Prevent any form submission
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            return false;
+        function closeCriteriaModal() {
+            const modal = document.getElementById('criteriaModal');
+            modal.classList.remove('show');
+        }
+
+        function populateModalCategories() {
+            const container = document.getElementById('modalCategories');
+            container.innerHTML = '';
+
+            categories.forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'modal-category';
+
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'modal-category-title';
+                titleDiv.textContent = category;
+
+                const criteriaList = document.createElement('div');
+                criteriaList.className = 'modal-criteria-list';
+
+                const categoryRequirements = criteriaByCategory[category] || [];
+                categoryRequirements.forEach(requirement => {
+                    const criteriaItem = document.createElement('div');
+                    criteriaItem.className = 'modal-criteria-item';
+                    criteriaItem.textContent = requirement.name;
+                    criteriaItem.onclick = () => selectCriteriaFromModal(requirement);
+                    criteriaList.appendChild(criteriaItem);
+                });
+
+                categoryDiv.appendChild(titleDiv);
+                categoryDiv.appendChild(criteriaList);
+                container.appendChild(categoryDiv);
+            });
         }
 
         function hideFilterSelection() {
-            const filterSelection = document.getElementById('filterSelection');
-            filterSelection.classList.remove('show');
-
-            // Clear active category selection and hide all dropdowns
-            document.querySelectorAll('.filter-category-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            document.querySelectorAll('.filter-requirements').forEach(dropdown => {
-                dropdown.classList.remove('show');
-            });
+            closeCriteriaModal();
         }
 
-        function selectCategory(category, categoryBtn) {
-            // Hide all other dropdowns
-            document.querySelectorAll('.filter-requirements').forEach(dropdown => {
-                dropdown.classList.remove('show');
-            });
-
-            // Remove active class from all buttons
-            document.querySelectorAll('.filter-category-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            // Toggle the selected category
-            const requirementsDropdown = document.getElementById(`requirements-${category}`);
-            if (requirementsDropdown.classList.contains('show')) {
-                requirementsDropdown.classList.remove('show');
-            } else {
-                categoryBtn.classList.add('active');
-                showRequirementsForCategory(category, requirementsDropdown);
-            }
-        }
-
-        function showRequirementsForCategory(category, requirementsContainer) {
-            requirementsContainer.innerHTML = '';
-
-            const categoryRequirements = criteriaByCategory[category] || [];
-
-            categoryRequirements.forEach(requirement => {
-                const requirementDiv = document.createElement('div');
-                requirementDiv.className = 'requirement-item';
-                requirementDiv.onclick = (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    selectRequirement(event, requirement);
-                    return false;
-                };
-
-                requirementDiv.innerHTML = `
-                    <span class="requirement-name">${requirement.name}</span>
-                `;
-
-                requirementsContainer.appendChild(requirementDiv);
-            });
-
-            requirementsContainer.classList.add('show');
-        }
-
-        function selectRequirement(event, requirement) {
-            // Prevent any default behavior or form submission
-            event.preventDefault();
-            event.stopPropagation();
-
-            // New Row for selected requirement
+        function selectCriteriaFromModal(requirement) {
             addCriteriaRow(requirement.name, {}, 'normal');
-
-            // Hide filter selection
-            hideFilterSelection();
-
-            // Return false to prevent navigation
-            return false;
+            closeCriteriaModal();
         }
 
         function addCriteriaRow(criterionText = '', scores = {}, relevance = 'normal') {
@@ -703,13 +682,13 @@
 
             // Build the row HTML
             let rowHTML = `
-            <td>
-                <input type="text" class="criteria-input" placeholder="Enter criteria..."
-                       value="${criterionText}" id="criteria-name-${criteriaCount}"
-                       oninput="debouncedSaveCriterion(${criteriaCount})"
-                       onblur="saveCriterion(${criteriaCount})">
-            </td>
-        `;
+    <td>
+        <input type="text" class="criteria-input" placeholder="Enter criteria..."
+               value="${criterionText}" id="criteria-name-${criteriaCount}"
+               oninput="debouncedSaveCriterion(${criteriaCount})"
+               onblur="saveCriterion(${criteriaCount})">
+    </td>
+`;
 
             // Score dropdown for each applicant
             applicantsData.forEach(applicant => {
@@ -723,31 +702,31 @@
                 }
 
                 rowHTML += `
-                <td>
-                    <select class="score-select" id="score-${applicant.id}-${criteriaCount}"
-                            onchange="saveScore('${applicant.id}', ${criteriaCount})">
-                        ${scoreOptions}
-                    </select>
-                </td>
-            `;
+        <td>
+            <select class="score-select" id="score-${applicant.id}-${criteriaCount}"
+                    onchange="saveScore('${applicant.id}', ${criteriaCount})">
+                ${scoreOptions}
+            </select>
+        </td>
+    `;
             });
 
             // Relevance dropdown
             rowHTML += `
-            <td>
-                <select class="relevance-select" id="relevance-${criteriaCount}"
-                        onchange="saveRelevance(${criteriaCount})">
-                    ${relevanceOptions}
-                </select>
-            </td>
-        `;
+    <td>
+        <select class="relevance-select" id="relevance-${criteriaCount}"
+                onchange="saveRelevance(${criteriaCount})">
+            ${relevanceOptions}
+        </select>
+    </td>
+`;
 
             // Delete button
             rowHTML += `
-            <td>
-                <button type="button" class="delete-btn" onclick="deleteCriteria(${criteriaCount})">×</button>
-            </td>
-        `;
+    <td>
+        <button type="button" class="delete-btn" onclick="deleteCriteria(${criteriaCount})">×</button>
+    </td>
+`;
 
             row.innerHTML = rowHTML;
             tbody.appendChild(row);
@@ -756,6 +735,10 @@
             if (!criterionText) {
                 setTimeout(() => {
                     document.getElementById(`criteria-name-${criteriaCount}`).focus();
+                }, 100);
+            } else {
+                setTimeout(() => {
+                    updateCriterionData(criteriaCount);
                 }, 100);
             }
         }
@@ -922,17 +905,14 @@
                     maintainAspectRatio: true,
                     plugins: {
                         legend: {
-                            display: false // We'll create a custom legend
+                            display: false
                         },
                         tooltip: {
                             callbacks: {
                                 label: function (context) {
                                     const label = context.label || '';
                                     const value = context.parsed || 0;
-                                    const percentage = context.dataset.data.reduce((a, b) => a + b, 0) > 0
-                                        ? ((value / context.dataset.data.reduce((a, b) => a + b, 0)) * 100).toFixed(1)
-                                        : 0;
-                                    return `${label}: ${value} points (${percentage}%)`;
+                                    return `${label}: ${value} points`;
                                 }
                             }
                         }

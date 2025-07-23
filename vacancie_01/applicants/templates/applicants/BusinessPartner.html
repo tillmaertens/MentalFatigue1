@@ -12,13 +12,22 @@
 
         .business-partner-container {
             display: flex;
-            height: auto;
             gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 860px;
+            margin: 0 auto;
         }
 
         /* Left side - Video meeting placeholder */
         .left-panel {
-            flex: 1;
+            width: 400px;
+            height: 600px;
+            max-width: 400px;
+            max-height: 600px;
+            min-width: 400px;
+            min-height: 600px;
             background-color: #f0f0f0;
             border: 2px solid #ddd;
             border-radius: 10px;
@@ -27,16 +36,27 @@
             align-items: center;
             font-size: 24px;
             color: #666;
+            overflow: hidden;
+            box-sizing: border-box;
         }
 
-        /* Right side - Preference Profile */
+        /* Right side - HR Coordinator Information */
         .right-panel {
-            flex: 1;
+            width: 670px;
+            height: 600px;
+            max-width: 670px;
+            max-height: 600px;
+            min-width: 670px;
+            min-height: 600px;
             padding: 20px;
             border: 2px solid #ddd;
             border-radius: 10px;
             position: relative;
-            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-sizing: border-box;
         }
 
         .preference-header {
