@@ -246,20 +246,6 @@ class Player(BasePlayer):
     def is_business_partner(self):
         return self.selected_role == C.BUSINESS_PARTNER_ROLE
 
-    def add_reaction_time(self, action_type, reaction_time_ms):
-        try:
-            times = json.loads(self.reaction_times) if self.reaction_times else []
-        except json.JSONDecodeError:
-            times = []
-
-        times.append({
-            'action': action_type,
-            'reaction_time_ms': reaction_time_ms,
-            'round': self.round_number
-        })
-
-        self.reaction_times = json.dumps(times)
-
     def validate_criteria_data(self, criteria_data):
         """
         Validates criteria data against metadata and updates correct/incorrect counters

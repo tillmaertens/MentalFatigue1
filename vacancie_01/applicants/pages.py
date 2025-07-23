@@ -393,7 +393,6 @@ class FinalResults(Page):
                     'cognitive_score': round_player.cognitive_test_score,
                     'cognitive_reaction_time': round_player.cognitive_test_reaction_time,
                     'criteria_added': round_player.criteria_added_this_session,
-                    'scores_entered': round_player.scores_entered_this_session
                 }
                 all_sessions_data.append(session_data)
             except:
