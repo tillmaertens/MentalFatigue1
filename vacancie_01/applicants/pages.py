@@ -416,7 +416,8 @@ class HRCoordinator(Page):
             'criteria_data': metadata['criteria'],
             'categories': metadata['categories'],
             'criteria_by_category': metadata['criteria_by_category'],
-            'relevance_factors': C.RELEVANCE_FACTORS
+            'relevance_factors': C.RELEVANCE_FACTORS,
+            'job_desc_file': vacancy_info['job_desc_file'] if vacancy_info else 'job_description_1.pdf'
         }
 
 
