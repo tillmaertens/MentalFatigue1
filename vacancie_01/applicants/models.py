@@ -9,16 +9,17 @@ Mental Fatigue Experiment - 6 Sessions of 10min digital coworking with role rota
 
 
 class Applicant:
-    def __init__(self, applicant_id, name, description):
+    def __init__(self, applicant_id, name, description, doc_suffix=''):
         self.id = applicant_id
         self.name = name
         self.description = description
+        self.doc_suffix = doc_suffix
 
     def get_documents(self):
         return {
-            'cv': f'applicants_{self.id}/cv_{self.id}.pdf',
-            'job_reference': f'applicants_{self.id}/job_reference_{self.id}.pdf',
-            'cover_letter': f'applicants_{self.id}/cover_letter_{self.id}.pdf'
+            'cv': f'applicants_{self.id}/cv_{self.id}{self.doc_suffix}.pdf',
+            'job_reference': f'applicants_{self.id}/job_reference_{self.id}{self.doc_suffix}.pdf',
+            'cover_letter': f'applicants_{self.id}/cover_letter_{self.id}{self.doc_suffix}.pdf'
         }
 
     def to_dict(self):
@@ -44,17 +45,22 @@ def get_applicants_data():
     return [applicant.to_dict() for applicant in applicant_objects]
 
 
-def load_metadata_criteria():
+def load_metadata_criteria(round_number=None, player=None):
     try:
-        metadata_path = [
-            '_static/applicants/metadata1.xlsx',
-            '_static/applicants/metadatanew.xlsx',
-        ]
+        # Determine which metadata files to use based on vacancy
+        if round_number and player:
+            vacancy_info = get_vacancy_info(round_number, player)
+            if vacancy_info:
+                metadata_paths = vacancy_info['metadata_files']
+            else:
+                metadata_paths = ['_static/applicants/metadata1.xlsx', '_static/applicants/metadatanew.xlsx']
+        else:
+            metadata_paths = ['_static/applicants/metadata1.xlsx']
 
         df = None
         file_path = None
 
-        for path in metadata_path:
+        for path in metadata_paths:
             if os.path.exists(path):
                 file_path = path
                 break
@@ -120,19 +126,81 @@ def load_metadata_criteria():
             'criteria_by_category': {}
         }
 
+
+def get_vacancy_info(round_number, player):
+    """Returns current vacancy configuration based on round and player choices"""
+    from . import models  # Import to avoid circular import
+
+    if round_number == models.C.TRANSITION_ROUND:
+        return None
+    elif models.C.VACANCY_1_START_ROUND <= round_number <= models.C.VACANCY_1_END_ROUND:
+        # First vacancy period - get user's choice from round 1
+        selection_player = player.in_round(models.C.VACANCY_1_START_ROUND)
+        first_vacancy = selection_player.selected_first_vacancy or 1
+        return get_vacancy_config(first_vacancy)
+    elif models.C.VACANCY_2_START_ROUND <= round_number <= models.C.VACANCY_2_END_ROUND:
+        # Second vacancy period - get the OTHER vacancy
+        selection_player = player.in_round(models.C.VACANCY_1_START_ROUND)
+        first_vacancy = selection_player.selected_first_vacancy or 1
+        second_vacancy = 2 if first_vacancy == 1 else 1
+        return get_vacancy_config(second_vacancy)
+    else:
+        return None
+
+def get_vacancy_config(vacancy_number):
+    """Returns configuration for specific vacancy number"""
+    if vacancy_number == 1:
+        job_desc_file = 'job_description_1.pdf'
+    else:
+        job_desc_file = 'job_description_2.pdf'
+
+    return {
+        'vacancy': vacancy_number,
+        'duration_seconds': 30 * 60 if vacancy_number == 1 else 10 * 60,
+        'metadata_files': [f'_static/applicants/metadata{vacancy_number}.xlsx'],
+        'doc_suffix': str(vacancy_number),
+        'job_desc_file': job_desc_file
+    }
+
+
+def get_applicants_data_for_vacancy(vacancy_info=None):
+    """Returns applicant data with appropriate document suffixes"""
+    applicants = []
+    doc_suffix = vacancy_info['doc_suffix'] if vacancy_info else '1'  # Default to '1'
+
+    applicant_a = Applicant('a', 'Applicant A', 'Recruiter Mask', doc_suffix)
+    applicant_b = Applicant('b', 'Applicant B', 'Recruiter Mask', doc_suffix)
+    applicant_c = Applicant('c', 'Applicant C', 'Recruiter Mask', doc_suffix)
+    applicants.extend([applicant_a, applicant_b, applicant_c])
+    return [applicant.to_dict() for applicant in applicants]
+
+
 class C(BaseConstants):
     NAME_IN_URL = 'mental_fatigue'
     PLAYERS_PER_GROUP = 3
-    NUM_ROUNDS = 6
+    NUM_ROUNDS = 13  # 6 vacancy1 + 1 transition + 6 vacancy2
 
-    # Timing
+    # Vacancy configurations
+    VACANCY_1_DURATION_MINUTES = 30  # 30 minutes for vacancy 1
+    VACANCY_2_DURATION_MINUTES = 10  # 10 minutes for vacancy 2
+    VACANCY_1_DURATION_SECONDS = VACANCY_1_DURATION_MINUTES * 60
+    VACANCY_2_DURATION_SECONDS = VACANCY_2_DURATION_MINUTES * 60
+
+    # Round tracking - no separate vacancy selection round
+    VACANCY_1_START_ROUND = 1
+    VACANCY_1_END_ROUND = 6
+    TRANSITION_ROUND = 7
+    VACANCY_2_START_ROUND = 8
+    VACANCY_2_END_ROUND = 13
+
+    # Keep old constant for backward compatibility
     SESSION_DURATION_MINUTES = 30
     SESSION_DURATION_SECONDS = SESSION_DURATION_MINUTES * 60
 
     # Data for templates
-    APPLICANTS = get_applicants_data()
+    APPLICANTS = get_applicants_data_for_vacancy()
 
-    # Load metadata criteria
+    # Load metadata criteria (default to vacancy 1)
     METADATA = load_metadata_criteria()
     CRITERIA_DATA = METADATA['criteria']
     CATEGORIES = METADATA['categories']
@@ -236,6 +304,18 @@ class Player(BasePlayer):
         doc="Number of errors in cognitive test"
     )
 
+    # NEW: Vacancy tracking fields
+    selected_first_vacancy = models.IntegerField(
+        choices=[[1, 'Vacancy 1'], [2, 'Vacancy 2']],
+        blank=True,
+        doc="Which vacancy user chose to start with (1 or 2)"
+    )
+
+    continue_to_second_vacancy = models.BooleanField(
+        blank=True,
+        doc="Whether user chose to continue to second vacancy after completing first"
+    )
+
     # Methods for cleaner templates and logic
     def is_recruiter(self):
         return self.selected_role == C.RECRUITER_ROLE
@@ -254,7 +334,8 @@ class Player(BasePlayer):
         correct_count = 0
         incorrect_count = 0
 
-        metadata = C.METADATA_WITH_SCORES
+        # Load current vacancy metadata
+        metadata = load_metadata_criteria(self.round_number, self)
 
         for criterion_name, data in criteria_data.items():
 

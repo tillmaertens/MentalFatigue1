@@ -1,8 +1,43 @@
 from otree.api import *
-from .models import C, ensure_all_roles_assigned
+from .models import C, ensure_all_roles_assigned, get_vacancy_info, get_applicants_data_for_vacancy, \
+    load_metadata_criteria
 import random
 from docx import Document
 import os
+
+
+# ===== NEW VACANCY SELECTION & TRANSITION PAGES =====
+
+class VacancySelection(Page):
+    form_model = 'player'
+    form_fields = ['selected_first_vacancy']
+
+    def is_displayed(self):
+        return self.player.round_number == C.VACANCY_1_START_ROUND
+    def vars_for_template(self):
+        return {
+            'total_rounds': C.NUM_ROUNDS,
+        }
+
+
+class TransitionChoice(Page):
+    form_model = 'player'
+    form_fields = ['continue_to_second_vacancy']
+
+    def is_displayed(self):
+        return self.player.round_number == C.TRANSITION_ROUND
+
+    def vars_for_template(self):
+        # Get which vacancy they just completed
+        selection_player = self.player.in_round(C.VACANCY_1_START_ROUND)
+        first_vacancy = selection_player.selected_first_vacancy or 1
+        completed_vacancy = first_vacancy
+        next_vacancy = 2 if first_vacancy == 1 else 1
+
+        return {
+            'completed_vacancy': completed_vacancy,
+            'next_vacancy': next_vacancy,
+        }
 
 
 # ===== BASELINE & SETUP PAGES =====
@@ -10,7 +45,7 @@ import os
 class Consent(Page):
 
     def is_displayed(self):
-        return self.player.round_number == 1
+        return self.player.round_number == C.VACANCY_1_START_ROUND
 
 
 class BaselineCognitiveTestInstructions(Page):
@@ -18,11 +53,17 @@ class BaselineCognitiveTestInstructions(Page):
     timeout_seconds = 20
 
     def is_displayed(self):
-        return self.player.round_number == 1
+        # Show at start of each vacancy
+        return (self.player.round_number == C.VACANCY_1_START_ROUND or
+                self.player.round_number == C.VACANCY_2_START_ROUND)
 
     def vars_for_template(self):
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+
         return {
-            'session_number': self.player.round_number
+            'session_number': 0,  # This is baseline, not a session
+            'vacancy_number': vacancy_number
         }
 
 
@@ -33,9 +74,14 @@ class BaselineCognitiveTest(Page):
     timeout_seconds = 30
 
     def is_displayed(self):
-        return self.player.round_number == 1
+        # Show at start of each vacancy
+        return (self.player.round_number == C.VACANCY_1_START_ROUND or
+                self.player.round_number == C.VACANCY_2_START_ROUND)
 
     def vars_for_template(self):
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+
         # Generate random Stroop test items for baseline
         test_items = []
         color_mapping = {
@@ -59,7 +105,8 @@ class BaselineCognitiveTest(Page):
         return {
             'test_items': test_items,
             'test_duration': 30,
-            'session_number': self.player.round_number
+            'session_number': 0,  # This is baseline, not a session
+            'vacancy_number': vacancy_number
         }
 
 
@@ -68,11 +115,17 @@ class BaselineCognitiveTestResults(Page):
     timeout_seconds = 20
 
     def is_displayed(self):
-        return self.player.round_number == 1
+        # Show at start of each vacancy
+        return (self.player.round_number == C.VACANCY_1_START_ROUND or
+                self.player.round_number == C.VACANCY_2_START_ROUND)
 
     def vars_for_template(self):
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+
         return {
-            'session_number': self.player.round_number,
+            'session_number': 0,  # This is baseline, not a session
+            'vacancy_number': vacancy_number,
             'score': self.player.cognitive_test_score or 0,
             'reaction_time': self.player.cognitive_test_reaction_time or 0,
             'errors': self.player.cognitive_test_errors or 0,
@@ -84,11 +137,36 @@ class RoleSelection(Page):
     form_model = 'player'
     form_fields = ['selected_role']
 
+    def is_displayed(self):
+        return self.should_show_vacancy_session()
+
+    def should_show_vacancy_session(self):
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return True
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            transition_player = self.player.in_round(C.TRANSITION_ROUND)
+            return getattr(transition_player, 'continue_to_second_vacancy', False)
+        return False
+
     def vars_for_template(self):
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        session_number = self.get_vacancy_session_number()
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+
         return {
-            'session_number': self.player.round_number,
-            'total_sessions': C.NUM_ROUNDS
+            'session_number': session_number,
+            'vacancy_number': vacancy_number,
+            'total_sessions': 6  # Always 6 sessions per vacancy
         }
+
+    def get_vacancy_session_number(self):
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return round_num - C.VACANCY_1_START_ROUND + 1
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            return round_num - C.VACANCY_2_START_ROUND + 1
+        return 1
 
 
 class WaitForRoles(WaitPage):
@@ -103,46 +181,74 @@ class WaitForRoles(WaitPage):
 class Recruiter(Page):
 
     def is_displayed(self):
-        return self.player.is_recruiter()
+        if not self.player.is_recruiter():
+            return False
+        return self.should_show_vacancy_session()
 
-    timeout_seconds = C.SESSION_DURATION_SECONDS
+    def should_show_vacancy_session(self):
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return True
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            # Only show if user chose to continue
+            transition_player = self.player.in_round(C.TRANSITION_ROUND)
+            return getattr(transition_player, 'continue_to_second_vacancy', False)
+        return False
+
+    def get_timeout_seconds(self):
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        return vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS
+
+    timeout_seconds = property(get_timeout_seconds)
 
     def vars_for_template(self):
-        applicants_with_content = []
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        applicants_data = get_applicants_data_for_vacancy(vacancy_info)
 
-        for applicant in C.APPLICANTS:
+        applicants_with_content = []
+        doc_suffix = vacancy_info['doc_suffix'] if vacancy_info else '1'
+
+        for applicant in applicants_data:
             applicant_data = applicant.copy()
-            applicant_data['description'] = self.get_word_content(applicant['id'])
+            applicant_data['description'] = self.get_word_content(applicant['id'], doc_suffix)
             applicants_with_content.append(applicant_data)
+
+        # Calculate session number within vacancy
+        session_number = self.get_vacancy_session_number()
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
 
         return {
             'applicants': applicants_with_content,
-            'session_number': self.player.round_number,
-            'remaining_time': C.SESSION_DURATION_SECONDS
+            'session_number': session_number,
+            'vacancy_number': vacancy_number,
+            'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS
         }
 
-    def get_word_content(self, applicant_id):
+    def get_vacancy_session_number(self):
+        """Calculate session number within the current vacancy (1-6)"""
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return round_num - C.VACANCY_1_START_ROUND + 1
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            return round_num - C.VACANCY_2_START_ROUND + 1
+        return 1
+
+    def get_word_content(self, applicant_id, doc_suffix='1'):
         """Load and convert word doc to html"""
         try:
             current_dir = os.path.dirname(os.path.abspath(__file__))
 
-            # Go up to the project root, then navigate to the correct path
             doc_path = os.path.join(
-                current_dir,  # This is vacancie_01/applicants/
-                '..',  # Go up to vacancie_01/
-                '_static',  # Go to _static/
-                'applicants',  # Go to applicants/
-                f'recruiter_maske_{applicant_id}.docx'
+                current_dir,
+                '..',
+                '_static',
+                'applicants',
+                f'recruiter_maske_{applicant_id}{doc_suffix}.docx'  # Updated filename
             )
 
             doc_path = os.path.normpath(doc_path)
-
-            # Load Word document
             document = Document(doc_path)
-
-            # Convert to HTML
             html_content = self.convert_docx_to_html(document)
-
             return html_content
 
         except Exception as e:
@@ -195,12 +301,37 @@ class Recruiter(Page):
 
 class HRCoordinator(Page):
     form_model = 'player'
-    form_fields = ['criteria_added_this_session', 'validation_data_json']  # Add the new field
+    form_fields = ['criteria_added_this_session', 'validation_data_json']
 
     def is_displayed(self):
-        return self.player.is_hr_coordinator()
+        if not self.player.is_hr_coordinator():
+            return False
+        return self.should_show_vacancy_session()
 
-    timeout_seconds = C.SESSION_DURATION_SECONDS
+    def should_show_vacancy_session(self):
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return True
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            # Only show if user chose to continue
+            transition_player = self.player.in_round(C.TRANSITION_ROUND)
+            return getattr(transition_player, 'continue_to_second_vacancy', False)
+        return False
+
+    def get_timeout_seconds(self):
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        return vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS
+
+    timeout_seconds = property(get_timeout_seconds)
+
+    def get_vacancy_session_number(self):
+        """Calculate session number within the current vacancy (1-6)"""
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return round_num - C.VACANCY_1_START_ROUND + 1
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            return round_num - C.VACANCY_2_START_ROUND + 1
+        return 1
 
     def before_next_page(self):
         """Validation using form data"""
@@ -217,7 +348,10 @@ class HRCoordinator(Page):
             criteria_data = json.loads(validation_data_str)
             correct_count = 0
             incorrect_count = 0
-            metadata_criteria = C.METADATA['criteria']
+
+            # Load vacancy-specific metadata
+            metadata = load_metadata_criteria(self.player.round_number, self.player)
+            metadata_criteria = metadata['criteria']
 
             for criterion_name, data in criteria_data.items():
                 # Find the criterion in metadata
@@ -263,15 +397,25 @@ class HRCoordinator(Page):
             self.player.criteria_incorrect_this_session = 0
 
     def vars_for_template(self):
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        applicants_data = get_applicants_data_for_vacancy(vacancy_info)
+
+        # Load vacancy-specific metadata
+        metadata = load_metadata_criteria(self.player.round_number, self.player)
+
+        session_number = self.get_vacancy_session_number()
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+
         return {
-            'applicants': C.APPLICANTS,
+            'applicants': applicants_data,
             'min_score': C.MIN_SCORE,
             'max_score': C.MAX_SCORE,
-            'session_number': self.player.round_number,
-            'remaining_time': C.SESSION_DURATION_SECONDS,
-            'criteria_data': C.CRITERIA_DATA,
-            'categories': C.CATEGORIES,
-            'criteria_by_category': C.CRITERIA_BY_CATEGORY,
+            'session_number': session_number,
+            'vacancy_number': vacancy_number,
+            'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS,
+            'criteria_data': metadata['criteria'],
+            'categories': metadata['categories'],
+            'criteria_by_category': metadata['criteria_by_category'],
             'relevance_factors': C.RELEVANCE_FACTORS
         }
 
@@ -279,18 +423,53 @@ class HRCoordinator(Page):
 class BusinessPartner(Page):
 
     def is_displayed(self):
-        return self.player.is_business_partner()
+        if not self.player.is_business_partner():
+            return False
+        return self.should_show_vacancy_session()
 
-    timeout_seconds = C.SESSION_DURATION_SECONDS
+    def should_show_vacancy_session(self):
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return True
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            # Only show if user chose to continue
+            transition_player = self.player.in_round(C.TRANSITION_ROUND)
+            return getattr(transition_player, 'continue_to_second_vacancy', False)
+        return False
+
+    def get_timeout_seconds(self):
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        return vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS
+
+    timeout_seconds = property(get_timeout_seconds)
+
+    def get_vacancy_session_number(self):
+        """Calculate session number within the current vacancy (1-6)"""
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return round_num - C.VACANCY_1_START_ROUND + 1
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            return round_num - C.VACANCY_2_START_ROUND + 1
+        return 1
 
     def vars_for_template(self):
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        applicants_data = get_applicants_data_for_vacancy(vacancy_info)
+
+        # Load vacancy-specific metadata
+        metadata = load_metadata_criteria(self.player.round_number, self.player)
+
+        session_number = self.get_vacancy_session_number()
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+
         return {
-            'applicants': C.APPLICANTS,
-            'session_number': self.player.round_number,
-            'remaining_time': C.SESSION_DURATION_SECONDS,
-            'criteria_data': C.CRITERIA_DATA,
-            'categories': C.CATEGORIES,
-            'criteria_by_category': C.CRITERIA_BY_CATEGORY,
+            'applicants': applicants_data,
+            'session_number': session_number,
+            'vacancy_number': vacancy_number,
+            'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS,
+            'criteria_data': metadata['criteria'],
+            'categories': metadata['categories'],
+            'criteria_by_category': metadata['criteria_by_category'],
         }
 
 
@@ -298,9 +477,34 @@ class SelfAssessment(Page):
     form_model = 'player'
     form_fields = ['fatigue_level', 'mental_effort', 'concentration_difficulty', 'motivation_level']
 
+    def is_displayed(self):
+        return self.should_show_vacancy_session()
+
+    def should_show_vacancy_session(self):
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return True
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            transition_player = self.player.in_round(C.TRANSITION_ROUND)
+            return getattr(transition_player, 'continue_to_second_vacancy', False)
+        return False
+
+    def get_vacancy_session_number(self):
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return round_num - C.VACANCY_1_START_ROUND + 1
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            return round_num - C.VACANCY_2_START_ROUND + 1
+        return 1
+
     def vars_for_template(self):
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        session_number = self.get_vacancy_session_number()
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+
         return {
-            'session_number': self.player.round_number,
+            'session_number': session_number,
+            'vacancy_number': vacancy_number,
             'role_played': self.player.selected_role
         }
 
@@ -309,11 +513,33 @@ class CognitiveTestInstructions(Page):
     timeout_seconds = 20
 
     def is_displayed(self):
-        return self.player.round_number > 0
+        return self.should_show_vacancy_session()
+
+    def should_show_vacancy_session(self):
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return True
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            transition_player = self.player.in_round(C.TRANSITION_ROUND)
+            return getattr(transition_player, 'continue_to_second_vacancy', False)
+        return False
+
+    def get_vacancy_session_number(self):
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return round_num - C.VACANCY_1_START_ROUND + 1
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            return round_num - C.VACANCY_2_START_ROUND + 1
+        return 1
 
     def vars_for_template(self):
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        session_number = self.get_vacancy_session_number()
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+
         return {
-            'session_number': self.player.round_number
+            'session_number': session_number,
+            'vacancy_number': vacancy_number
         }
 
 
@@ -323,9 +549,30 @@ class CognitiveTest(Page):
     timeout_seconds = 30
 
     def is_displayed(self):
-        return self.player.round_number > 0
+        return self.should_show_vacancy_session()
+
+    def should_show_vacancy_session(self):
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return True
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            transition_player = self.player.in_round(C.TRANSITION_ROUND)
+            return getattr(transition_player, 'continue_to_second_vacancy', False)
+        return False
+
+    def get_vacancy_session_number(self):
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return round_num - C.VACANCY_1_START_ROUND + 1
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            return round_num - C.VACANCY_2_START_ROUND + 1
+        return 1
 
     def vars_for_template(self):
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        session_number = self.get_vacancy_session_number()
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+
         # Generate random Stroop test items
         test_items = []
         color_mapping = {
@@ -349,7 +596,8 @@ class CognitiveTest(Page):
         return {
             'test_items': test_items,
             'test_duration': 30,
-            'session_number': self.player.round_number
+            'session_number': session_number,
+            'vacancy_number': vacancy_number
         }
 
 
@@ -357,11 +605,33 @@ class CognitiveTestResults(Page):
     timeout_seconds = 20
 
     def is_displayed(self):
-        return self.player.round_number > 0
+        return self.should_show_vacancy_session()
+
+    def should_show_vacancy_session(self):
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return True
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            transition_player = self.player.in_round(C.TRANSITION_ROUND)
+            return getattr(transition_player, 'continue_to_second_vacancy', False)
+        return False
+
+    def get_vacancy_session_number(self):
+        round_num = self.player.round_number
+        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
+            return round_num - C.VACANCY_1_START_ROUND + 1
+        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
+            return round_num - C.VACANCY_2_START_ROUND + 1
+        return 1
 
     def vars_for_template(self):
+        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
+        session_number = self.get_vacancy_session_number()
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+
         return {
-            'session_number': self.player.round_number,
+            'session_number': session_number,
+            'vacancy_number': vacancy_number,
             'score': self.player.cognitive_test_score or 0,
             'reaction_time': self.player.cognitive_test_reaction_time or 0,
             'errors': self.player.cognitive_test_errors or 0,
@@ -377,14 +647,28 @@ class FinalResults(Page):
         return self.player.round_number == C.NUM_ROUNDS
 
     def vars_for_template(self):
-        # Compile comprehensive results for research analysis
-        all_sessions_data = []
+        # Determine which vacancy to show results for (the last completed one)
+        transition_player = self.player.in_round(C.TRANSITION_ROUND)
+        completed_second_vacancy = getattr(transition_player, 'continue_to_second_vacancy', False)
 
-        for round_num in range(1, C.NUM_ROUNDS + 1):
+        if completed_second_vacancy:
+            # Show results from second vacancy (rounds 9-14)
+            start_round = C.VACANCY_2_START_ROUND
+            end_round = C.VACANCY_2_END_ROUND
+            results_vacancy = 2 if self.player.in_round(C.VACANCY_1_START_ROUND).selected_first_vacancy == 1 else 1
+        else:
+            # Show results from first vacancy (rounds 2-7)
+            start_round = C.VACANCY_1_START_ROUND
+            end_round = C.VACANCY_1_END_ROUND
+            results_vacancy = self.player.in_round(C.VACANCY_1_START_ROUND).selected_first_vacancy or 1
+
+        # Compile results from the appropriate vacancy rounds
+        all_sessions_data = []
+        for round_num in range(start_round, end_round + 1):
             try:
                 round_player = self.player.in_round(round_num)
                 session_data = {
-                    'session': round_num,
+                    'session': round_num - start_round + 1,  # Display as 1-6
                     'role': round_player.selected_role,
                     'fatigue_level': round_player.fatigue_level,
                     'mental_effort': round_player.mental_effort,
@@ -398,12 +682,13 @@ class FinalResults(Page):
             except:
                 continue
 
-        # Calculate overall trends for research
+        # Calculate trends
         fatigue_trend = [s['fatigue_level'] for s in all_sessions_data if s['fatigue_level']]
         cognitive_trend = [s['cognitive_score'] for s in all_sessions_data if s['cognitive_score']]
 
         return {
             'all_sessions': all_sessions_data,
+            'results_vacancy': results_vacancy,
             'total_sessions_completed': len(all_sessions_data),
             'average_fatigue': sum(fatigue_trend) / len(fatigue_trend) if fatigue_trend else 0,
             'fatigue_increase': fatigue_trend[-1] - fatigue_trend[0] if len(fatigue_trend) >= 2 else 0,
@@ -412,27 +697,41 @@ class FinalResults(Page):
 
 
 page_sequence = [
-    # Round 1 only: Consent and Baseline
+    # Round 1: Vacancy Selection
+    VacancySelection,
+
+    # Rounds 2-7: First Vacancy
     Consent,
     BaselineCognitiveTestInstructions,
     BaselineCognitiveTest,
     BaselineCognitiveTestResults,
-
-    # Every round: Role selection and session
     RoleSelection,
     WaitForRoles,
-
-    # Main task (role-dependent)
     Recruiter,
     HRCoordinator,
     BusinessPartner,
-
-    # Post-session assessment
     SelfAssessment,
     CognitiveTestInstructions,
     CognitiveTest,
     CognitiveTestResults,
 
-    # Final round only: Results
+    # Round 8: Transition Choice
+    TransitionChoice,
+
+    # Rounds 9-14: Second Vacancy (conditional)
+    BaselineCognitiveTestInstructions,
+    BaselineCognitiveTest,
+    BaselineCognitiveTestResults,
+    RoleSelection,
+    WaitForRoles,
+    Recruiter,
+    HRCoordinator,
+    BusinessPartner,
+    SelfAssessment,
+    CognitiveTestInstructions,
+    CognitiveTest,
+    CognitiveTestResults,
+
+    # Round 14: Final Results
     FinalResults
 ]
