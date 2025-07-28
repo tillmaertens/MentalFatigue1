@@ -2,132 +2,111 @@
 
 {% block content %}
 
-<style>
-    body {
-        background-color: #FFFFFF;
-        font-family: Arial, sans-serif;
-        padding: 20px;
-        max-width: 700px;
-        margin: 0 auto;
-        text-align: center;
-        color: #333;
-    }
+    <style>
+        body {
+            background-color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+            color: #333;
+        }
 
-    .instructions {
-        background-color: #f8f9fa;
-        padding: 30px;
-        border-radius: 5px;
-        margin: 20px 0;
-        border: 1px solid #dee2e6;
-        text-align: left;
-    }
+        .instructions h3 {
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
 
-    .instructions h3 {
-        color: #333;
-        margin-top: 0;
-        margin-bottom: 20px;
-        text-align: center;
-    }
+        .instructions ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
 
-    .instructions ul {
-        margin: 15px 0;
-        padding-left: 20px;
-    }
+        .instructions li {
+            margin: 10px 0;
+            color: #555;
+            line-height: 1.6;
+        }
 
-    .instructions li {
-        margin: 10px 0;
-        color: #555;
-        line-height: 1.6;
-    }
+        .vacancy-option {
+            background-color: #f8f9fa;
+            padding: 15px 30px;
+            margin: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+            font-size: 16px;
+            transition: all 0.3s;
+            min-width: 180px;
+        }
 
-    .vacancy-option {
-        background-color: #f8f9fa;
-        padding: 15px 30px;
-        margin: 10px;
-        border: 2px solid #dee2e6;
-        border-radius: 5px;
-        cursor: pointer;
-        display: inline-block;
-        font-size: 16px;
-        transition: all 0.3s;
-        min-width: 180px;
-    }
+        .vacancy-option:hover {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+        }
 
-    .vacancy-option:hover {
-        background-color: #e9ecef;
-        border-color: #adb5bd;
-    }
+        .vacancy-option.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
 
-    .vacancy-option.selected {
-        background-color: #007bff;
-        color: white;
-        border-color: #007bff;
-    }
+        .selection-section {
+            margin: 30px 0;
+        }
 
-    .selection-section {
-        margin: 30px 0;
-    }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+    </style>
 
-    h1 {
-        color: #333;
-        margin-bottom: 20px;
-    }
-</style>
+    <div class="selection-section">
+        <p><strong>Please select which vacancy you would like to start with:</strong></p>
 
-<h1>Welcome to the Mental Fatigue Experiment</h1>
+        <div>
+            <button type="button" class="vacancy-option" onclick="selectVacancy(event, 1)">
+                Start with Vacancy 1
+            </button>
+            <button type="button" class="vacancy-option" onclick="selectVacancy(event, 2)">
+                Start with Vacancy 2
+            </button>
+        </div>
 
-<div class="instructions">
-    <h3>About this experiment</h3>
-    <ul>
-        <li>You will work on recruiting tasks for different job vacancies</li>
-        <li>Each vacancy has 6 collaborative sessions</li>
-        <li>After completing one vacancy, you can choose to continue with the second</li>
-        <li>We will measure fatigue and performance throughout</li>
-    </ul>
-</div>
-
-<div class="selection-section">
-    <p><strong>Please select which vacancy you would like to start with:</strong></p>
-
-    <div>
-        <button type="button" class="vacancy-option" onclick="selectVacancy(event, 1)">
-            Start with Vacancy 1
-        </button>
-        <button type="button" class="vacancy-option" onclick="selectVacancy(event, 2)">
-            Start with Vacancy 2
-        </button>
     </div>
 
-</div>
+    <script>
+        function selectVacancy(event, vacancyNumber) {
+            event.preventDefault();
 
-<script>
-    function selectVacancy(event, vacancyNumber) {
-        event.preventDefault();
+            // Remove selection from all options
+            document.querySelectorAll('.vacancy-option').forEach(option => {
+                option.classList.remove('selected');
+            });
 
-        // Remove selection from all options
-        document.querySelectorAll('.vacancy-option').forEach(option => {
-            option.classList.remove('selected');
-        });
+            // Add selection to clicked option
+            event.target.classList.add('selected');
 
-        // Add selection to clicked option
-        event.target.classList.add('selected');
+            // Create and submit form
+            setTimeout(() => {
+                var form = document.createElement('form');
+                form.method = 'post';
+                form.action = '';
 
-        // Create and submit form
-        setTimeout(() => {
-            var form = document.createElement('form');
-            form.method = 'post';
-            form.action = '';
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selected_first_vacancy';
+                input.value = vacancyNumber;
 
-            var input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'selected_first_vacancy';
-            input.value = vacancyNumber;
-
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
-        }, 300);
-    }
-</script>
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+            }, 300);
+        }
+    </script>
 
 {% endblock %}
