@@ -6,19 +6,7 @@ from docx import Document
 import os
 
 
-# ===== NEW VACANCY SELECTION & TRANSITION PAGES =====
-
-class VacancySelection(Page):
-    form_model = 'player'
-    form_fields = ['selected_first_vacancy']
-
-    def is_displayed(self):
-        return self.player.round_number == C.VACANCY_1_START_ROUND
-    def vars_for_template(self):
-        return {
-            'total_rounds': C.NUM_ROUNDS,
-        }
-
+# ===== TRANSITION PAGE =====
 
 class TransitionChoice(Page):
     form_model = 'player'
@@ -28,15 +16,10 @@ class TransitionChoice(Page):
         return self.player.round_number == C.TRANSITION_ROUND
 
     def vars_for_template(self):
-        # Get which vacancy they just completed
-        selection_player = self.player.in_round(C.VACANCY_1_START_ROUND)
-        first_vacancy = selection_player.selected_first_vacancy or 1
-        completed_vacancy = first_vacancy
-        next_vacancy = 2 if first_vacancy == 1 else 1
-
+        # Fixed order: completed vacancy 1, next is vacancy 2
         return {
-            'completed_vacancy': completed_vacancy,
-            'next_vacancy': next_vacancy,
+            'completed_vacancy': 1,
+            'next_vacancy': 2,
         }
 
 
@@ -45,7 +28,8 @@ class TransitionChoice(Page):
 class Consent(Page):
 
     def is_displayed(self):
-        return self.player.round_number == C.VACANCY_1_START_ROUND
+        # Only show at the very beginning (Round 1)
+        return self.player.round_number == 1
 
 
 class BaselineCognitiveTestInstructions(Page):
@@ -53,7 +37,7 @@ class BaselineCognitiveTestInstructions(Page):
     timeout_seconds = 20
 
     def is_displayed(self):
-        # Show at start of each vacancy
+        # Only show at start of each vacancy (Round 1 for Vacancy 1, Round 8 for Vacancy 2)
         return (self.player.round_number == C.VACANCY_1_START_ROUND or
                 self.player.round_number == C.VACANCY_2_START_ROUND)
 
@@ -74,7 +58,7 @@ class BaselineCognitiveTest(Page):
     timeout_seconds = 30
 
     def is_displayed(self):
-        # Show at start of each vacancy
+        # Only show at start of each vacancy (Round 1 for Vacancy 1, Round 8 for Vacancy 2)
         return (self.player.round_number == C.VACANCY_1_START_ROUND or
                 self.player.round_number == C.VACANCY_2_START_ROUND)
 
@@ -115,7 +99,7 @@ class BaselineCognitiveTestResults(Page):
     timeout_seconds = 20
 
     def is_displayed(self):
-        # Show at start of each vacancy
+        # Only show at start of each vacancy (Round 1 for Vacancy 1, Round 8 for Vacancy 2)
         return (self.player.round_number == C.VACANCY_1_START_ROUND or
                 self.player.round_number == C.VACANCY_2_START_ROUND)
 
@@ -653,15 +637,15 @@ class FinalResults(Page):
         completed_second_vacancy = getattr(transition_player, 'continue_to_second_vacancy', False)
 
         if completed_second_vacancy:
-            # Show results from second vacancy (rounds 9-14)
+            # Show results from second vacancy (rounds 8-12)
             start_round = C.VACANCY_2_START_ROUND
             end_round = C.VACANCY_2_END_ROUND
-            results_vacancy = 2 if self.player.in_round(C.VACANCY_1_START_ROUND).selected_first_vacancy == 1 else 1
+            results_vacancy = 2  # Fixed: always vacancy 2 for second vacancy
         else:
-            # Show results from first vacancy (rounds 2-7)
+            # Show results from first vacancy (rounds 1-6)
             start_round = C.VACANCY_1_START_ROUND
             end_round = C.VACANCY_1_END_ROUND
-            results_vacancy = self.player.in_round(C.VACANCY_1_START_ROUND).selected_first_vacancy or 1
+            results_vacancy = 1  # Fixed: always vacancy 1 for first vacancy
 
         # Compile results from the appropriate vacancy rounds
         all_sessions_data = []
@@ -698,41 +682,26 @@ class FinalResults(Page):
 
 
 page_sequence = [
-    # Round 1: Vacancy Selection
-    VacancySelection,
+    # === BASELINE PAGES ===
+    # These only appear at the start of each vacancy (rounds 1 and 8)
+    Consent,  # Round 1 only
+    BaselineCognitiveTestInstructions,  # Rounds 1 and 8 only
+    BaselineCognitiveTest,  # Rounds 1 and 8 only
+    BaselineCognitiveTestResults,  # Rounds 1 and 8 only
 
-    # Rounds 2-7: First Vacancy
-    Consent,
-    BaselineCognitiveTestInstructions,
-    BaselineCognitiveTest,
-    BaselineCognitiveTestResults,
-    RoleSelection,
-    WaitForRoles,
-    Recruiter,
-    HRCoordinator,
-    BusinessPartner,
-    SelfAssessment,
-    CognitiveTestInstructions,
-    CognitiveTest,
-    CognitiveTestResults,
+    # === SESSION PAGES ===
+    # These appear for each session within a vacancy (rounds 1-6 and 8-12)
+    RoleSelection,  # All session rounds
+    WaitForRoles,  # All session rounds
+    Recruiter,  # All session rounds (role-specific)
+    HRCoordinator,  # All session rounds (role-specific)
+    BusinessPartner,  # All session rounds (role-specific)
+    SelfAssessment,  # All session rounds
+    CognitiveTestInstructions,  # All session rounds
+    CognitiveTest,  # All session rounds
+    CognitiveTestResults,  # All session rounds
 
-    # Round 8: Transition Choice
-    TransitionChoice,
-
-    # Rounds 9-14: Second Vacancy (conditional)
-    BaselineCognitiveTestInstructions,
-    BaselineCognitiveTest,
-    BaselineCognitiveTestResults,
-    RoleSelection,
-    WaitForRoles,
-    Recruiter,
-    HRCoordinator,
-    BusinessPartner,
-    SelfAssessment,
-    CognitiveTestInstructions,
-    CognitiveTest,
-    CognitiveTestResults,
-
-    # Round 14: Final Results
-    FinalResults
+    # === TRANSITION & FINAL PAGES ===
+    TransitionChoice,  # Round 7 only
+    FinalResults  # Round 12 only
 ]

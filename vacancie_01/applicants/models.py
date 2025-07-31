@@ -128,22 +128,17 @@ def load_metadata_criteria(round_number=None, player=None):
 
 
 def get_vacancy_info(round_number, player):
-    """Returns current vacancy configuration based on round and player choices"""
+    """Returns current vacancy configuration based on round - fixed order: vacancy 1 then vacancy 2"""
     from . import models  # Import to avoid circular import
 
     if round_number == models.C.TRANSITION_ROUND:
         return None
     elif models.C.VACANCY_1_START_ROUND <= round_number <= models.C.VACANCY_1_END_ROUND:
-        # First vacancy period - get user's choice from round 1
-        selection_player = player.in_round(models.C.VACANCY_1_START_ROUND)
-        first_vacancy = selection_player.selected_first_vacancy or 1
-        return get_vacancy_config(first_vacancy)
+        # First vacancy period - always vacancy 1
+        return get_vacancy_config(1)
     elif models.C.VACANCY_2_START_ROUND <= round_number <= models.C.VACANCY_2_END_ROUND:
-        # Second vacancy period - get the OTHER vacancy
-        selection_player = player.in_round(models.C.VACANCY_1_START_ROUND)
-        first_vacancy = selection_player.selected_first_vacancy or 1
-        second_vacancy = 2 if first_vacancy == 1 else 1
-        return get_vacancy_config(second_vacancy)
+        # Second vacancy period - always vacancy 2
+        return get_vacancy_config(2)
     else:
         return None
 
@@ -178,7 +173,7 @@ def get_applicants_data_for_vacancy(vacancy_info=None):
 class C(BaseConstants):
     NAME_IN_URL = 'mental_fatigue'
     PLAYERS_PER_GROUP = 3
-    NUM_ROUNDS = 13  # 6 vacancy1 + 1 transition + 6 vacancy2
+    NUM_ROUNDS = 12  # 6 vacancy1 + 1 transition + 6 vacancy2
 
     # Vacancy configurations
     VACANCY_1_DURATION_MINUTES = 30  # 30 minutes for vacancy 1
@@ -186,12 +181,12 @@ class C(BaseConstants):
     VACANCY_1_DURATION_SECONDS = VACANCY_1_DURATION_MINUTES * 60
     VACANCY_2_DURATION_SECONDS = VACANCY_2_DURATION_MINUTES * 60
 
-    # Round tracking - no separate vacancy selection round
+    # Round tracking - fixed order: vacancy 1 then vacancy 2
     VACANCY_1_START_ROUND = 1
     VACANCY_1_END_ROUND = 6
     TRANSITION_ROUND = 7
     VACANCY_2_START_ROUND = 8
-    VACANCY_2_END_ROUND = 13
+    VACANCY_2_END_ROUND = 12  # Updated to reflect 12 total rounds
 
     # Keep old constant for backward compatibility
     SESSION_DURATION_MINUTES = 30
@@ -304,13 +299,7 @@ class Player(BasePlayer):
         doc="Number of errors in cognitive test"
     )
 
-    # NEW: Vacancy tracking fields
-    selected_first_vacancy = models.IntegerField(
-        choices=[[1, 'Vacancy 1'], [2, 'Vacancy 2']],
-        blank=True,
-        doc="Which vacancy user chose to start with (1 or 2)"
-    )
-
+    # Transition choice - whether user wants to continue to second vacancy
     continue_to_second_vacancy = models.BooleanField(
         blank=True,
         doc="Whether user chose to continue to second vacancy after completing first"
