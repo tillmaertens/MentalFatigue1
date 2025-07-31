@@ -40,11 +40,6 @@ def create_applicants():
     return applicants
 
 
-def get_applicants_data():
-    applicant_objects = create_applicants()
-    return [applicant.to_dict() for applicant in applicant_objects]
-
-
 def load_metadata_criteria(round_number=None, player=None):
     try:
         # Determine which metadata files to use based on vacancy
@@ -131,16 +126,18 @@ def get_vacancy_info(round_number, player):
     """Returns current vacancy configuration based on round - fixed order: vacancy 1 then vacancy 2"""
     from . import models  # Import to avoid circular import
 
-    if round_number == models.C.TRANSITION_ROUND:
-        return None
-    elif models.C.VACANCY_1_START_ROUND <= round_number <= models.C.VACANCY_1_END_ROUND:
-        # First vacancy period - always vacancy 1
+    if models.C.VACANCY_1_START_ROUND <= round_number <= models.C.VACANCY_1_END_ROUND:
+
         return get_vacancy_config(1)
+
     elif models.C.VACANCY_2_START_ROUND <= round_number <= models.C.VACANCY_2_END_ROUND:
-        # Second vacancy period - always vacancy 2
+
         return get_vacancy_config(2)
+
     else:
+
         return None
+
 
 def get_vacancy_config(vacancy_number):
     """Returns configuration for specific vacancy number"""
@@ -170,10 +167,48 @@ def get_applicants_data_for_vacancy(vacancy_info=None):
     return [applicant.to_dict() for applicant in applicants]
 
 
+def get_applicant_ids():
+    """Returns dynamic list of applicant IDs"""
+    applicants = get_applicants_data_for_vacancy()
+    return [applicant['id'] for applicant in applicants]
+
+
+def should_show_vacancy_session(round_number):
+    """Utility function to determine if vacancy session should be shown"""
+    from . import models  # Import to avoid circular import
+
+    if models.C.VACANCY_1_START_ROUND <= round_number <= models.C.VACANCY_1_END_ROUND:
+        return True
+    elif models.C.VACANCY_2_START_ROUND <= round_number <= models.C.VACANCY_2_END_ROUND:
+        return True  # Will check continue_to_second_vacancy in pages that need it
+    return False
+
+
+def get_static_file_path(filename):
+    """Returns full path for static applicant files"""
+    from . import models
+    return models.C.STATIC_APPLICANTS_PATH + filename
+
+
+# Utility function for role assignment
+def ensure_all_roles_assigned(group):
+    """Ensure all three roles are assigned to players"""
+    from . import models
+    selected_roles = [p.selected_role for p in group.get_players()]
+    required_roles = [models.C.RECRUITER_ROLE, models.C.HR_COORDINATOR_ROLE, models.C.BUSINESS_PARTNER_ROLE]
+
+    missing_roles = [role for role in required_roles if role not in selected_roles]
+    unassigned_players = [p for p in group.get_players() if not p.selected_role]
+
+    for i, player in enumerate(unassigned_players):
+        if i < len(missing_roles):
+            player.selected_role = missing_roles[i]
+
+
 class C(BaseConstants):
     NAME_IN_URL = 'mental_fatigue'
     PLAYERS_PER_GROUP = 3
-    NUM_ROUNDS = 12  # 6 vacancy1 + 1 transition + 6 vacancy2
+    NUM_ROUNDS = 14
 
     # Vacancy configurations
     VACANCY_1_DURATION_MINUTES = 30  # 30 minutes for vacancy 1
@@ -181,16 +216,12 @@ class C(BaseConstants):
     VACANCY_1_DURATION_SECONDS = VACANCY_1_DURATION_MINUTES * 60
     VACANCY_2_DURATION_SECONDS = VACANCY_2_DURATION_MINUTES * 60
 
-    # Round tracking - fixed order: vacancy 1 then vacancy 2
     VACANCY_1_START_ROUND = 1
     VACANCY_1_END_ROUND = 6
-    TRANSITION_ROUND = 7
+    VACANCY_1_RESULTS_ROUND = 7
     VACANCY_2_START_ROUND = 8
-    VACANCY_2_END_ROUND = 12  # Updated to reflect 12 total rounds
-
-    # Keep old constant for backward compatibility
-    SESSION_DURATION_MINUTES = 30
-    SESSION_DURATION_SECONDS = SESSION_DURATION_MINUTES * 60
+    VACANCY_2_END_ROUND = 13
+    FINAL_RESULTS_ROUND = 14
 
     # Data for templates
     APPLICANTS = get_applicants_data_for_vacancy()
@@ -215,6 +246,19 @@ class C(BaseConstants):
     RECRUITER_ROLE = 'Recruiter'
     HR_COORDINATOR_ROLE = 'HR-Coordinator'
     BUSINESS_PARTNER_ROLE = 'Business-Partner'
+
+    # File paths
+    STATIC_APPLICANTS_PATH = '/static/applicants/'
+
+    # Applicant colors for charts
+    APPLICANT_COLORS = {
+        'a': '#FF6384',
+        'b': '#36A2EB',
+        'c': '#FFCE56'
+    }
+
+    # Sessions per vacancy
+    SESSIONS_PER_VACANCY = 6
 
 
 class Subsession(BaseSubsession):
@@ -299,12 +343,6 @@ class Player(BasePlayer):
         doc="Number of errors in cognitive test"
     )
 
-    # Transition choice - whether user wants to continue to second vacancy
-    continue_to_second_vacancy = models.BooleanField(
-        blank=True,
-        doc="Whether user chose to continue to second vacancy after completing first"
-    )
-
     # Methods for cleaner templates and logic
     def is_recruiter(self):
         return self.selected_role == C.RECRUITER_ROLE
@@ -340,7 +378,7 @@ class Player(BasePlayer):
                 relevance_correct = True
 
                 # Prüfe Scores für jeden Applicant
-                for applicant_id in ['a', 'b', 'c']:
+                for applicant_id in get_applicant_ids():
                     entered_score = data['scores'].get(applicant_id, 0)
                     correct_score = criterion_metadata['scores'].get(f'applicant_{applicant_id}', 0)
 
@@ -382,17 +420,3 @@ class Player(BasePlayer):
             except:
                 continue
         return fatigue_data
-
-
-# Utility function for role assignment
-def ensure_all_roles_assigned(group):
-    """Ensure all three roles are assigned to players"""
-    selected_roles = [p.selected_role for p in group.get_players()]
-    required_roles = [C.RECRUITER_ROLE, C.HR_COORDINATOR_ROLE, C.BUSINESS_PARTNER_ROLE]
-
-    missing_roles = [role for role in required_roles if role not in selected_roles]
-    unassigned_players = [p for p in group.get_players() if not p.selected_role]
-
-    for i, player in enumerate(unassigned_players):
-        if i < len(missing_roles):
-            player.selected_role = missing_roles[i]

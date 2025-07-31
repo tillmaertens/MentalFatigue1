@@ -403,6 +403,11 @@ document.addEventListener('DOMContentLoaded', function() {
         dateElement.textContent = dateString;
     }
 });
+
+{% if show_next_button %}
+    <button type="submit">Continue to Vacancy 2</button>
+{% endif %}
+
 </script>
 
 {% endblock %}

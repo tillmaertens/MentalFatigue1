@@ -512,7 +512,7 @@
 
     <!-- Session Info Bar -->
     <div class="session-info-bar">
-        <strong>Session {{ session_number }} of 6</strong>
+        <strong>Session {{ session_number }} of {{ total_sessions }}</strong>
     </div>
 
     <!-- Hidden form fields -->
@@ -598,22 +598,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
         const applicantsData = {{ applicants|safe }};
-        const minScore = 0;
-        const maxScore = 8;
+        const minScore = {{ min_score }};
+        const maxScore = {{ max_score }};
         const categories = {{ categories|safe }};
         const criteriaByCategory = {{ criteria_by_category|safe }};
+        const applicantIds = {{ applicant_ids|safe }};
 
         let criteriaCount = 0;
         let saveTimeouts = {};
         let pieChart = null;
         let lastDataString = '';
 
-        // Applicant colors for pie chart
-        const applicantColors = {
-            'a': '#FF6384',
-            'b': '#36A2EB',
-            'c': '#FFCE56'
-        };
+        // Applicant colors for pie chart from backend
+        const applicantColors = {{ applicant_colors|safe }};
 
         // Count criteria locally and update hidden form field
         function updateLocalCriteriaCount() {
@@ -750,7 +747,7 @@
 
                 // Build score dropdown options
                 let scoreOptions = '<option value="">-</option>';
-                for (let i = 0; i <= 8; i++) {
+                for (let i = minScore; i <= maxScore; i++) {
                     const selected = score == i ? 'selected' : '';
                     scoreOptions += `<option value="${i}" ${selected}>${i}</option>`;
                 }
@@ -917,7 +914,7 @@
                 const criterionData = evaluationData[criterionName];
                 const relevanceFactor = relevanceFactors[criterionData.relevance] || 2;
 
-                ['a', 'b', 'c'].forEach(applicantId => {
+                applicantIds.forEach(applicantId => {
                     const userScore = criterionData.scores[applicantId] || 0;
                     const nutzwert = userScore * relevanceFactor;
                     results.applicant_totals[applicantId] += nutzwert;
@@ -927,7 +924,7 @@
             // Calculate percentages
             const totalPoints = Object.values(results.applicant_totals).reduce((sum, val) => sum + val, 0);
             if (totalPoints > 0) {
-                ['a', 'b', 'c'].forEach(applicantId => {
+                applicantIds.forEach(applicantId => {
                     results.applicant_percentages[applicantId] =
                         Math.round((results.applicant_totals[applicantId] / totalPoints) * 100);
                 });
@@ -1061,7 +1058,7 @@
                 const criterionData = evaluationData[criterionName];
                 const relevanceFactor = relevanceFactors[criterionData.relevance] || 2;
 
-                ['a', 'b', 'c'].forEach(applicantId => {
+                applicantIds.forEach(applicantId => {
                     const userScore = criterionData.scores[applicantId] || 0;
                     const nutzwert = userScore * relevanceFactor;
                     results.applicant_totals[applicantId] += nutzwert;
@@ -1070,7 +1067,7 @@
 
             const totalPoints = Object.values(results.applicant_totals).reduce((sum, val) => sum + val, 0);
             if (totalPoints > 0) {
-                ['a', 'b', 'c'].forEach(applicantId => {
+                applicantIds.forEach(applicantId => {
                     results.applicant_percentages[applicantId] =
                         Math.round((results.applicant_totals[applicantId] / totalPoints) * 100);
                 });
@@ -1105,7 +1102,7 @@
             event.preventDefault();
             event.stopPropagation();
 
-            const fullPath = '/static/applicants/' + pdfPath;
+            const fullPath = '{{ static_path }}' + pdfPath;
 
             // Create modal overlay
             const modal = document.createElement('div');

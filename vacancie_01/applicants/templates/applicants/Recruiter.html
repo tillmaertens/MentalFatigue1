@@ -261,7 +261,7 @@
     </div>
 
     <div class="session-info-bar">
-        <strong>Session {{ session_number }} of 6</strong>
+        <strong>Session {{ session_number }} of {{ total_sessions }}</strong>
     </div>
 
     <div class="recruiter-container">
@@ -342,7 +342,7 @@
             event.preventDefault();
             event.stopPropagation();
 
-            const fullPath = '/static/applicants/' + pdfPath;
+            const fullPath = '{{ static_path }}' + pdfPath;
 
             // Create modal overlay
             const modal = document.createElement('div');

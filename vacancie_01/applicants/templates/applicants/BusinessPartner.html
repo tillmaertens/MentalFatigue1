@@ -441,7 +441,7 @@
 
     <!-- Session Info Bar -->
     <div class="session-info-bar">
-        <strong>Session {{ session_number }} of 6</strong>
+        <strong>Session {{ session_number }} of {{ total_sessions }}</strong>
     </div>
 
     <!-- Main Container -->
@@ -459,7 +459,7 @@
 
                 <!-- Requirements Catalog Notebook -->
                 <div class="requirements-notebook" onclick="showRequirementsCatalog()">
-                    <img src="/static/applicants/notebook.png" alt="Job Requirement Catalog"/>
+                    <img src="{{ static_path }}notebook.png" alt="Job Requirement Catalog"/>
                 </div>
 
                 <!-- Email Button -->
@@ -656,8 +656,8 @@
                 return;
             }
 
-            // Generate table rows for points 0-8 from the criterion object directly
-            for (let points = 0; points <= 8; points++) {
+            // Generate table rows for points from the criterion object directly
+            for (let points = {{ min_score }}; points <= {{ max_score }}; points++) {
                 const pointField = `requirement_point_is_${points}`;
 
                 // Check if this field exists in the criterion
@@ -697,7 +697,7 @@
             event.preventDefault();
             event.stopPropagation();
 
-            const fullPath = '/static/applicants/' + pdfPath;
+            const fullPath = '{{ static_path }}' + pdfPath;
 
             const modal = document.createElement('div');
             modal.id = 'pdfModal';
@@ -739,7 +739,7 @@
             event.preventDefault();
             event.stopPropagation();
 
-            const fullPath = '/static/applicants/' + imagePath;
+            const fullPath = '{{ static_path }}' + imagePath;
 
             const modal = document.createElement('div');
             modal.id = 'imageModal';
