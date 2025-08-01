@@ -1,6 +1,7 @@
 from otree.api import *
 from .models import C, get_vacancy_info, get_applicants_data_for_vacancy, \
-    load_metadata_criteria, should_show_vacancy_session, get_applicant_ids, ensure_all_roles_assigned
+    load_metadata_criteria, should_show_vacancy_session, get_applicant_ids, ensure_all_roles_assigned, \
+    assign_rotating_role
 import random
 from docx import Document
 import os
@@ -29,6 +30,7 @@ class Consent(Page):
 
     def is_displayed(self):
         return self.player.round_number == 1
+
 
 class RoleSelection(Page):
     form_model = 'player'
@@ -64,7 +66,10 @@ class WaitForRoles(WaitPage):
         ensure_all_roles_assigned(group)
 
     def is_displayed(self):
-        return should_show_vacancy_session(self.player.round_number)
+        displayed = should_show_vacancy_session(self.player.round_number)
+        print(
+            f"WaitForRoles.is_displayed: Player {self.player.id_in_group}, Round {self.player.round_number}, Display: {displayed}")
+        return displayed
 
 
 # ===== MAIN TASK PAGES =====
@@ -72,11 +77,12 @@ class WaitForRoles(WaitPage):
 class Recruiter(Page):
 
     def is_displayed(self):
-        if not self.player.is_recruiter():
-            return False
         if not should_show_vacancy_session(self.player.round_number):
             return False
-        return True
+
+        # AUTOMATISCHE ROLLENZUWEISUNG
+        assign_rotating_role(self.player)
+        return self.player.is_recruiter()
 
     def get_timeout_seconds(self):
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
@@ -189,11 +195,12 @@ class HRCoordinator(Page):
     form_fields = ['criteria_added_this_session', 'validation_data_json']
 
     def is_displayed(self):
-        if not self.player.is_hr_coordinator():
-            return False
         if not should_show_vacancy_session(self.player.round_number):
             return False
-        return True
+
+        # AUTOMATISCHE ROLLENZUWEISUNG
+        assign_rotating_role(self.player)
+        return self.player.is_hr_coordinator()
 
     def get_timeout_seconds(self):
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
@@ -305,9 +312,11 @@ class HRCoordinator(Page):
 class BusinessPartner(Page):
 
     def is_displayed(self):
-        if not self.player.is_business_partner():
-            return False
-        return self.should_show_vacancy_session()
+        # AUTOMATISCHE ROLLENZUWEISUNG
+        if should_show_vacancy_session(self.player.round_number):
+            assign_rotating_role(self.player)
+            return self.player.is_business_partner()
+        return False
 
     def should_show_vacancy_session(self):
         round_num = self.player.round_number
@@ -491,9 +500,9 @@ class CognitiveTestResults(Page):
         return {
             'session_number': session_number,
             'vacancy_number': vacancy_number,
-            'score': self.player.cognitive_test_score or 0,
-            'reaction_time': self.player.cognitive_test_reaction_time or 0,
-            'errors': self.player.cognitive_test_errors or 0,
+            'score': self.player.field_maybe_none('cognitive_test_score') or 0,
+            'reaction_time': self.player.field_maybe_none('cognitive_test_reaction_time') or 0,
+            'errors': self.player.field_maybe_none('cognitive_test_errors') or 0,
             'total_items': 20,
             'total_sessions': C.SESSIONS_PER_VACANCY
         }
@@ -512,56 +521,84 @@ class FinalResults(Page):
         show_next_button = is_vacancy_1_results
 
         if is_vacancy_1_results:
-            # Show results from first vacancy (rounds 1-6)
-            start_round = C.VACANCY_1_START_ROUND
-            end_round = C.VACANCY_1_END_ROUND
+            start_round = C.VACANCY_1_START_ROUND  # 1
+            end_round = C.VACANCY_1_END_ROUND  # 6
             results_vacancy = 1
         else:
-            # Show results from second vacancy (rounds 8-13)
-            start_round = C.VACANCY_2_START_ROUND
-            end_round = C.VACANCY_2_END_ROUND
+            start_round = C.VACANCY_2_START_ROUND  # 8
+            end_round = C.VACANCY_2_END_ROUND  # 13
             results_vacancy = 2
 
-        # Compile results from the appropriate vacancy rounds
+        # Compile results WITH NULL SAFETY
         all_sessions_data = []
         for round_num in range(start_round, end_round + 1):
             try:
                 round_player = self.player.in_round(round_num)
+
+                # SAFE ACCESS WITH TRY-EXCEPT FOR oTree FIELDS
+                def safe_get(field_func, default=0):
+                    try:
+                        value = field_func()
+                        return value if value is not None else default
+                    except:
+                        return default
+
                 session_data = {
                     'session': round_num - start_round + 1,  # Display as 1-6
-                    'role': round_player.selected_role,
-                    'fatigue_level': round_player.fatigue_level,
-                    'mental_effort': round_player.mental_effort,
-                    'concentration_difficulty': round_player.concentration_difficulty,
-                    'motivation_level': round_player.motivation_level,
-                    'cognitive_score': round_player.cognitive_test_score,
-                    'cognitive_reaction_time': round_player.cognitive_test_reaction_time,
-                    'criteria_added': round_player.criteria_added_this_session,
+                    'role': safe_get(lambda: round_player.selected_role, 'Unknown'),
+                    'fatigue_level': safe_get(lambda: round_player.fatigue_level),
+                    'mental_effort': safe_get(lambda: round_player.mental_effort),
+                    'concentration_difficulty': safe_get(lambda: round_player.concentration_difficulty),
+                    'motivation_level': safe_get(lambda: round_player.motivation_level),
+                    'cognitive_score': safe_get(lambda: round_player.cognitive_test_score),
+                    'cognitive_reaction_time': safe_get(lambda: round_player.cognitive_test_reaction_time),
+                    'criteria_added': safe_get(lambda: round_player.criteria_added_this_session),
+                    'criteria_correct': safe_get(lambda: round_player.criteria_correct_this_session),
+                    'criteria_incorrect': safe_get(lambda: round_player.criteria_incorrect_this_session),
                 }
                 all_sessions_data.append(session_data)
-            except:
+            except Exception as e:
                 continue
 
-        # Calculate trends
-        fatigue_trend = [s['fatigue_level'] for s in all_sessions_data if s['fatigue_level']]
-        cognitive_trend = [s['cognitive_score'] for s in all_sessions_data if s['cognitive_score']]
+        # Calculate trends WITH NULL SAFETY
+        fatigue_values = [s['fatigue_level'] for s in all_sessions_data if
+                          s['fatigue_level'] and s['fatigue_level'] > 0]
+        cognitive_values = [s['cognitive_score'] for s in all_sessions_data if
+                            s['cognitive_score'] and s['cognitive_score'] > 0]
+        effort_values = [s['mental_effort'] for s in all_sessions_data if s['mental_effort'] and s['mental_effort'] > 0]
+        concentration_values = [s['concentration_difficulty'] for s in all_sessions_data if
+                                s['concentration_difficulty'] and s['concentration_difficulty'] > 0]
+        motivation_values = [s['motivation_level'] for s in all_sessions_data if
+                             s['motivation_level'] and s['motivation_level'] > 0]
 
-        return {
+        # SAFE CALCULATIONS
+        average_fatigue = sum(fatigue_values) / len(fatigue_values) if fatigue_values else 0
+        fatigue_increase = fatigue_values[-1] - fatigue_values[0] if len(fatigue_values) >= 2 else 0
+        cognitive_decline = cognitive_values[0] - cognitive_values[-1] if len(cognitive_values) >= 2 else 0
+
+        # Additional averages
+        average_effort = sum(effort_values) / len(effort_values) if effort_values else 0
+        average_concentration = sum(concentration_values) / len(concentration_values) if concentration_values else 0
+        average_motivation = sum(motivation_values) / len(motivation_values) if motivation_values else 0
+
+        result = {
             'all_sessions': all_sessions_data,
             'results_vacancy': results_vacancy,
             'total_sessions_completed': len(all_sessions_data),
-            'average_fatigue': sum(fatigue_trend) / len(fatigue_trend) if fatigue_trend else 0,
-            'fatigue_increase': fatigue_trend[-1] - fatigue_trend[0] if len(fatigue_trend) >= 2 else 0,
-            'cognitive_decline': cognitive_trend[0] - cognitive_trend[-1] if len(cognitive_trend) >= 2 else 0,
+            'average_fatigue': average_fatigue,
+            'fatigue_increase': fatigue_increase,
+            'cognitive_decline': cognitive_decline,
+            'average_effort': average_effort,
+            'average_concentration': average_concentration,
+            'average_motivation': average_motivation,
             'show_next_button': show_next_button,
             'is_vacancy_1_results': is_vacancy_1_results
         }
+        return result
 
 
 page_sequence = [
     Consent,
-    RoleSelection,
-    WaitForRoles,
     Recruiter,
     HRCoordinator,
     BusinessPartner,

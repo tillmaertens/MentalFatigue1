@@ -205,6 +205,16 @@ def ensure_all_roles_assigned(group):
             player.selected_role = missing_roles[i]
 
 
+def assign_rotating_role(player):
+    """Automatically assign rotating role based on player ID and round number"""
+    roles = [C.RECRUITER_ROLE, C.HR_COORDINATOR_ROLE, C.BUSINESS_PARTNER_ROLE]
+
+    # Calculate role index: rotates every round for each player
+    role_index = (player.id_in_group - 1 + player.round_number - 1) % 3
+    player.selected_role = roles[role_index]
+
+    return player.selected_role
+
 class C(BaseConstants):
     NAME_IN_URL = 'mental_fatigue'
     PLAYERS_PER_GROUP = 3

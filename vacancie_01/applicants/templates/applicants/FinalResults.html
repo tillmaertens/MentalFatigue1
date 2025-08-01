@@ -1,6 +1,9 @@
 {% block title %}Final Results - Mental Fatigue Experiment{% endblock %}
 
 {% block content %}
+<!-- PLOTLY CDN HINZUFÜGEN (oben) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.29.1/plotly.min.js"></script>
+
 <style>
     body {
         background-color: #FFFFFF;
@@ -65,6 +68,27 @@
         font-weight: bold;
     }
 
+    /* NEUE CHART STYLES HINZUFÜGEN */
+    .charts-section {
+        margin: 30px 0;
+    }
+
+    .chart-container {
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+
+    .chart-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
     .sessions-table {
         background-color: white;
         border-radius: 5px;
@@ -84,7 +108,8 @@
 
     .session-row {
         display: grid;
-        grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr;
+        /* ERWEITERT: 8 statt 6 Spalten */
+        grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
         padding: 15px 20px;
         border-bottom: 1px solid #e9ecef;
         align-items: center;
@@ -206,7 +231,55 @@
         border-radius: 5px;
         border: 1px solid #e9ecef;
     }
+
+    /* NEUE BUTTON STYLES */
+    .next-button-container {
+        text-align: center;
+        margin: 30px 0;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+    }
+
+    .next-button {
+        background-color: #28a745;
+        color: white;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 5px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    /* TASK PERFORMANCE STYLES */
+    .task-performance {
+        margin: 30px 0;
+    }
+
+    .section-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+        text-align: center;
+        margin-bottom: 25px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+    }
+
+    .performance-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
 </style>
+
+<!-- FORM TAG HINZUFÜGEN -->
+<form method="post">
 
 <div class="completion-header">
     <h1>Experiment Complete</h1>
@@ -214,6 +287,7 @@
     <p>Thank you for your participation in this comprehensive study</p>
 </div>
 
+<!-- ZWEI ZUSÄTZLICHE STAT CARDS -->
 <div class="summary-stats">
     <div class="stat-card">
         <span class="stat-value">{{ total_sessions_completed }}</span>
@@ -231,6 +305,51 @@
         <span class="stat-value" id="cognitiveChange">{{ cognitive_decline }}</span>
         <div class="stat-label">Performance Change</div>
     </div>
+    <!-- NEUE CARDS -->
+    <div class="stat-card">
+        <span class="stat-value" id="avgEffort">-</span>
+        <div class="stat-label">Avg Mental Effort</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value" id="avgMotivation">-</span>
+        <div class="stat-label">Avg Motivation</div>
+    </div>
+</div>
+
+<!-- TASK PERFORMANCE SECTION -->
+<div class="task-performance">
+    <div class="section-title">Task Performance Analysis</div>
+    <div class="performance-stats">
+        <div class="stat-card">
+            <span class="stat-value" id="totalCriteria">0</span>
+            <div class="stat-label">Total Criteria Evaluated</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value" id="correctCriteria">0</span>
+            <div class="stat-label">Correctly Assessed</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value" id="incorrectCriteria">0</span>
+            <div class="stat-label">Assessment Errors</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value" id="accuracyRate">0%</span>
+            <div class="stat-label">Overall Accuracy</div>
+        </div>
+    </div>
+</div>
+
+<!-- NEUE CHARTS SECTION EINFÜGEN -->
+<div class="charts-section">
+    <div class="chart-container">
+        <div class="chart-title">Performance Trends Over Sessions</div>
+        <div id="performanceChart" style="width:100%;height:400px;"></div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title">Fatigue vs Task Accuracy</div>
+        <div id="correlationChart" style="width:100%;height:400px;"></div>
+    </div>
 </div>
 
 <div class="sessions-table">
@@ -238,6 +357,7 @@
         Session-by-Session Results
     </div>
 
+    <!-- ERWEITERTE HEADER ROW -->
     <div class="session-row row-header">
         <div><strong>Session</strong></div>
         <div><strong>Role</strong></div>
@@ -245,6 +365,9 @@
         <div><strong>Mental Effort</strong></div>
         <div><strong>Concentration</strong></div>
         <div><strong>Motivation</strong></div>
+        <!-- NEUE SPALTEN -->
+        <div><strong>Test Score</strong></div>
+        <div><strong>Reaction Time</strong></div>
     </div>
 
     {% for session in all_sessions %}
@@ -257,6 +380,9 @@
         <div class="session-data" data-effort="{{ session.mental_effort }}">{{ session.mental_effort }}/10</div>
         <div class="session-data" data-concentration="{{ session.concentration_difficulty }}">{{ session.concentration_difficulty }}/10</div>
         <div class="session-data" data-motivation="{{ session.motivation_level }}">{{ session.motivation_level }}/10</div>
+        <!-- NEUE SPALTEN -->
+        <div class="session-data">{% if session.cognitive_score %}{{ session.cognitive_score }}/20{% else %}-{% endif %}</div>
+        <div class="session-data" data-reaction-time="{{ session.cognitive_reaction_time }}">{% if session.cognitive_reaction_time %}-{% else %}-{% endif %}</div>
     </div>
     {% endfor %}
 </div>
@@ -307,6 +433,23 @@
         <p>Your cognitive performance improved over time, showing learning effects.</p>
         {% endif %}
     </div>
+
+    <!-- ZWEI NEUE TREND CARDS -->
+    <div class="trend-card">
+        <div class="trend-title">Mental Effort</div>
+        <div class="trend-indicator trend-negative">
+            <span id="effortTrend">+0.0 points</span>
+        </div>
+        <p id="effortDescription">Mental effort required increased.</p>
+    </div>
+
+    <div class="trend-card">
+        <div class="trend-title">Motivation Level</div>
+        <div class="trend-indicator trend-negative">
+            <span id="motivationTrend">-0.0 points</span>
+        </div>
+        <p id="motivationDescription">Motivation levels decreased.</p>
+    </div>
 </div>
 
 <div class="debriefing">
@@ -346,6 +489,17 @@
         <strong>Completion Date:</strong> <span id="completionDate"></span>
     </div>
 </div>
+
+<!-- SUBMIT BUTTON KORREKT PLATZIERT -->
+{% if show_next_button %}
+<div class="next-button-container">
+    <h3>Ready to Continue?</h3>
+    <p>Proceed to the second vacancy with different applicants and criteria.</p>
+    <button type="submit" class="next-button">Continue to Vacancy 2</button>
+</div>
+{% endif %}
+
+</form>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -394,6 +548,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (text === 'null/10' || text === 'None/10' || text === '/10' || text === 'undefined/10' || text.startsWith('null') || text.startsWith('None')) {
             element.textContent = '-';
         }
+
+        // Format reaction time
+        const reactionTime = element.getAttribute('data-reaction-time');
+        if (reactionTime && reactionTime !== 'None' && reactionTime !== 'null') {
+            const formattedTime = Math.round(parseFloat(reactionTime));
+            element.textContent = formattedTime + 'ms';
+        }
     });
 
     const now = new Date();
@@ -402,12 +563,170 @@ document.addEventListener('DOMContentLoaded', function() {
     if (dateElement) {
         dateElement.textContent = dateString;
     }
+
+    // NEUE CHART FUNKTIONALITÄT
+    const sessionData = [
+        {% for session in all_sessions %}
+        {
+            session: {{ session.session }},
+            fatigue: {% if session.fatigue_level %}{{ session.fatigue_level }}{% else %}null{% endif %},
+            effort: {% if session.mental_effort %}{{ session.mental_effort }}{% else %}null{% endif %},
+            concentration: {% if session.concentration_difficulty %}{{ session.concentration_difficulty }}{% else %}null{% endif %},
+            motivation: {% if session.motivation_level %}{{ session.motivation_level }}{% else %}null{% endif %},
+            score: {% if session.cognitive_score %}{{ session.cognitive_score }}{% else %}null{% endif %},
+            reactionTime: {% if session.cognitive_reaction_time %}{{ session.cognitive_reaction_time }}{% else %}null{% endif %},
+            criteriaCorrect: {% if session.criteria_correct %}{{ session.criteria_correct }}{% else %}0{% endif %},
+            criteriaIncorrect: {% if session.criteria_incorrect %}{{ session.criteria_incorrect }}{% else %}0{% endif %}
+        }{% if session.session != total_sessions_completed %},{% endif %}
+        {% endfor %}
+    ];
+
+    // Filter clean data
+    const cleanData = sessionData.filter(d =>
+        d.fatigue !== null && d.effort !== null &&
+        d.concentration !== null && d.motivation !== null
+    );
+
+    if (cleanData.length > 1) {
+        // Create Multi-Line Chart
+        const traces = [
+            {
+                x: cleanData.map(d => d.session),
+                y: cleanData.map(d => d.fatigue),
+                mode: 'lines+markers',
+                name: 'Fatigue',
+                line: {color: '#dc3545', width: 3}
+            },
+            {
+                x: cleanData.map(d => d.session),
+                y: cleanData.map(d => d.effort),
+                mode: 'lines+markers',
+                name: 'Mental Effort',
+                line: {color: '#fd7e14', width: 3}
+            },
+            {
+                x: cleanData.map(d => d.session),
+                y: cleanData.map(d => d.concentration),
+                mode: 'lines+markers',
+                name: 'Concentration',
+                line: {color: '#ffc107', width: 3}
+            },
+            {
+                x: cleanData.map(d => d.session),
+                y: cleanData.map(d => d.motivation),
+                mode: 'lines+markers',
+                name: 'Motivation',
+                line: {color: '#28a745', width: 3}
+            }
+        ];
+
+        const layout = {
+            xaxis: {title: 'Session Number', dtick: 1},
+            yaxis: {title: 'Rating (1-10)', range: [0, 10]},
+            legend: {orientation: 'h', y: -0.2},
+            margin: {l: 60, r: 40, t: 40, b: 80}
+        };
+
+        Plotly.newPlot('performanceChart', traces, layout, {responsive: true});
+
+        // Calculate additional metrics
+        const firstSession = cleanData[0];
+        const lastSession = cleanData[cleanData.length - 1];
+
+        // Update effort trend
+        const effortChange = lastSession.effort - firstSession.effort;
+        document.getElementById('effortTrend').textContent =
+            (effortChange > 0 ? '+' : '') + effortChange.toFixed(1) + ' points';
+
+        // Update motivation trend
+        const motivationChange = lastSession.motivation - firstSession.motivation;
+        document.getElementById('motivationTrend').textContent =
+            (motivationChange > 0 ? '+' : '') + motivationChange.toFixed(1) + ' points';
+
+        // Update averages
+        const avgEffort = cleanData.reduce((sum, d) => sum + d.effort, 0) / cleanData.length;
+        const avgMotivation = cleanData.reduce((sum, d) => sum + d.motivation, 0) / cleanData.length;
+
+        document.getElementById('avgEffort').textContent = avgEffort.toFixed(1);
+        document.getElementById('avgMotivation').textContent = avgMotivation.toFixed(1);
+    }
+
+    // TASK PERFORMANCE CALCULATIONS
+    const sessionsWithCriteria = sessionData.filter(d =>
+        d.session && (d.criteriaCorrect > 0 || d.criteriaIncorrect > 0)
+    );
+
+    if (sessionsWithCriteria.length > 0) {
+        const totalCorrect = sessionsWithCriteria.reduce((sum, d) => sum + (d.criteriaCorrect || 0), 0);
+        const totalIncorrect = sessionsWithCriteria.reduce((sum, d) => sum + (d.criteriaIncorrect || 0), 0);
+        const totalCriteria = totalCorrect + totalIncorrect;
+        const accuracyRate = totalCriteria > 0 ? (totalCorrect / totalCriteria * 100) : 0;
+
+        // Update Task Performance Cards
+        document.getElementById('totalCriteria').textContent = totalCriteria;
+        document.getElementById('correctCriteria').textContent = totalCorrect;
+        document.getElementById('incorrectCriteria').textContent = totalIncorrect;
+        document.getElementById('accuracyRate').textContent = accuracyRate.toFixed(1) + '%';
+
+        // CREATE CORRELATION CHART (Fatigue vs Accuracy)
+        const correlationData = sessionsWithCriteria.map(d => {
+            const sessionTotal = (d.criteriaCorrect || 0) + (d.criteriaIncorrect || 0);
+            const sessionAccuracy = sessionTotal > 0 ? (d.criteriaCorrect || 0) / sessionTotal * 100 : 0;
+            return {
+                session: d.session,
+                fatigue: d.fatigue || 0,
+                accuracy: sessionAccuracy
+            };
+        }).filter(d => d.fatigue > 0);
+
+        if (correlationData.length > 1) {
+            const correlationTrace = {
+                x: correlationData.map(d => d.fatigue),
+                y: correlationData.map(d => d.accuracy),
+                mode: 'markers+lines',
+                type: 'scatter',
+                name: 'Accuracy vs Fatigue',
+                marker: {
+                    size: 12,
+                    color: correlationData.map(d => d.session),
+                    colorscale: 'Viridis',
+                    showscale: true,
+                    colorbar: {title: 'Session'}
+                },
+                line: {color: '#007bff', width: 2}
+            };
+
+            const correlationLayout = {
+                xaxis: {
+                    title: 'Fatigue Level (1-10)',
+                    range: [0, 10],
+                    dtick: 1
+                },
+                yaxis: {
+                    title: 'Task Accuracy (%)',
+                    range: [0, 100],
+                    dtick: 20
+                },
+                margin: {l: 60, r: 60, t: 40, b: 60},
+                annotations: [{
+                    x: correlationData[0].fatigue,
+                    y: correlationData[0].accuracy,
+                    text: `Session ${correlationData[0].session}`,
+                    showarrow: true,
+                    arrowhead: 2
+                }]
+            };
+
+            Plotly.newPlot('correlationChart', [correlationTrace], correlationLayout, {responsive: true});
+        }
+    } else {
+        // No criteria data available
+        document.getElementById('totalCriteria').textContent = '-';
+        document.getElementById('correctCriteria').textContent = '-';
+        document.getElementById('incorrectCriteria').textContent = '-';
+        document.getElementById('accuracyRate').textContent = '-';
+    }
 });
-
-{% if show_next_button %}
-    <button type="submit">Continue to Vacancy 2</button>
-{% endif %}
-
 </script>
 
 {% endblock %}

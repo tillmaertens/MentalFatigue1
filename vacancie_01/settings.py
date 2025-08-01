@@ -29,3 +29,5 @@ SESSION_FIELDS = [
 SECRET_KEY = '12345678abcde'
 LANGUAGE_CODE = 'en-us'
 INSTALLED_APPS = ['otree']
+
+DEBUG = False
