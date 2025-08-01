@@ -31,15 +31,6 @@ class Applicant:
         }
 
 
-def create_applicants():
-    applicants = []
-    applicant_a = Applicant('a', 'Applicant A', 'Recruiter Mask')
-    applicant_b = Applicant('b', 'Applicant B', 'Recruiter Mask')
-    applicant_c = Applicant('c', 'Applicant C', 'Recruiter Mask')
-    applicants.extend([applicant_a, applicant_b, applicant_c])
-    return applicants
-
-
 def load_metadata_criteria(round_number=None, player=None):
     try:
         # Determine which metadata files to use based on vacancy
@@ -184,36 +175,29 @@ def should_show_vacancy_session(round_number):
     return False
 
 
-def get_static_file_path(filename):
-    """Returns full path for static applicant files"""
-    from . import models
-    return models.C.STATIC_APPLICANTS_PATH + filename
-
-
-# Utility function for role assignment
-def ensure_all_roles_assigned(group):
-    """Ensure all three roles are assigned to players"""
-    from . import models
-    selected_roles = [p.selected_role for p in group.get_players()]
-    required_roles = [models.C.RECRUITER_ROLE, models.C.HR_COORDINATOR_ROLE, models.C.BUSINESS_PARTNER_ROLE]
-
-    missing_roles = [role for role in required_roles if role not in selected_roles]
-    unassigned_players = [p for p in group.get_players() if not p.selected_role]
-
-    for i, player in enumerate(unassigned_players):
-        if i < len(missing_roles):
-            player.selected_role = missing_roles[i]
-
-
 def assign_rotating_role(player):
-    """Automatically assign rotating role based on player ID and round number"""
-    roles = [C.RECRUITER_ROLE, C.HR_COORDINATOR_ROLE, C.BUSINESS_PARTNER_ROLE]
+    """
+    Automatically assign rotating role based on player ID and round number
+    Only assigns if no role is currently set to prevent overwriting historical data
+    """
+    # CRITICAL: Only assign role if not already set
+    # This prevents overwriting historical player data when accessing in_round()
+    if not player.selected_role:
+        roles = [C.RECRUITER_ROLE, C.HR_COORDINATOR_ROLE, C.BUSINESS_PARTNER_ROLE]
 
-    # Calculate role index: rotates every round for each player
-    role_index = (player.id_in_group - 1 + player.round_number - 1) % 3
-    player.selected_role = roles[role_index]
+        # Calculate role index: rotates every round for each player
+        role_index = (player.id_in_group - 1 + player.round_number - 1) % 3
+        player.selected_role = roles[role_index]
 
     return player.selected_role
+
+
+def get_vacancy_session_number(round_number):
+    if C.VACANCY_1_START_ROUND <= round_number <= C.VACANCY_1_END_ROUND:
+        return round_number - C.VACANCY_1_START_ROUND + 1
+    elif C.VACANCY_2_START_ROUND <= round_number <= C.VACANCY_2_END_ROUND:
+        return round_number - C.VACANCY_2_START_ROUND + 1
+    return 1
 
 class C(BaseConstants):
     NAME_IN_URL = 'mental_fatigue'

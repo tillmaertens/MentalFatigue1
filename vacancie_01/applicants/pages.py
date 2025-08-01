@@ -1,94 +1,41 @@
-from otree.api import *
+from otree.api import *  # Core oTree framework
 from .models import C, get_vacancy_info, get_applicants_data_for_vacancy, \
-    load_metadata_criteria, should_show_vacancy_session, get_applicant_ids, ensure_all_roles_assigned, \
-    assign_rotating_role
-import random
-from docx import Document
-import os
+    load_metadata_criteria, should_show_vacancy_session, get_applicant_ids, \
+    assign_rotating_role, get_vacancy_session_number
+import random   # for StroopTest Items
+from docx import Document   # Word -> HTML converting
+import os   # file paths
 
-
-# ===== TRANSITION PAGE =====
-
-class TransitionChoice(Page):
-    form_model = 'player'
-    form_fields = ['continue_to_second_vacancy']
-
-    def is_displayed(self):
-        return False
-
-    def vars_for_template(self):
-        # Fixed order: completed vacancy 1, next is vacancy 2
-        return {
-            'completed_vacancy': 1,
-            'next_vacancy': 2,
-        }
-
-
-# ===== BASELINE & SETUP PAGES =====
 
 class Consent(Page):
 
     def is_displayed(self):
-        return self.player.round_number == 1
+        return self.player.round_number == 1 #only shown in the very first round
 
-
-class RoleSelection(Page):
-    form_model = 'player'
-    form_fields = ['selected_role']
-
-    def is_displayed(self):
-        return should_show_vacancy_session(self.player.round_number)
-
-    def vars_for_template(self):
-        vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        session_number = self.get_vacancy_session_number()
-        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
-
-        return {
-            'session_number': session_number,
-            'vacancy_number': vacancy_number,
-            'total_sessions': C.SESSIONS_PER_VACANCY
-        }
-
-    def get_vacancy_session_number(self):
-        round_num = self.player.round_number
-        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
-            return round_num - C.VACANCY_1_START_ROUND + 1
-        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
-            return round_num - C.VACANCY_2_START_ROUND + 1
-        return 1
-
-
-class WaitForRoles(WaitPage):
-    """Wait for all players to select roles"""
-
-    def after_all_players_arrive(group):
-        ensure_all_roles_assigned(group)
-
-    def is_displayed(self):
-        displayed = should_show_vacancy_session(self.player.round_number)
-        print(
-            f"WaitForRoles.is_displayed: Player {self.player.id_in_group}, Round {self.player.round_number}, Display: {displayed}")
-        return displayed
-
-
-# ===== MAIN TASK PAGES =====
+#MAIN TASK PAGES
 
 class Recruiter(Page):
-
+    """
+    Recruiter players
+    review applicant information including CVs, job references, and cover letters.
+    """
     def is_displayed(self):
+        """
+        Only shown during active vacancy sessions.
+        Automatically assigns rotating roles and checks if player has Recruiter role.
+        """
         if not should_show_vacancy_session(self.player.round_number):
             return False
 
-        # AUTOMATISCHE ROLLENZUWEISUNG
+        # AUTOMATIC ROLE ASSIGNMENT
         assign_rotating_role(self.player)
         return self.player.is_recruiter()
 
     def get_timeout_seconds(self):
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        return vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS
+        return vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS   # Calcultes timeout based on Vacancie number
 
-    timeout_seconds = property(get_timeout_seconds)
+    timeout_seconds = property(get_timeout_seconds)    # Convert method to property for oTree
 
     def vars_for_template(self):
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
@@ -103,7 +50,7 @@ class Recruiter(Page):
             applicants_with_content.append(applicant_data)
 
         # Calculate session number within vacancy
-        session_number = self.get_vacancy_session_number()
+        session_number = get_vacancy_session_number(self.player.round_number)
         vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
 
         return {
@@ -114,15 +61,6 @@ class Recruiter(Page):
             'static_path': C.STATIC_APPLICANTS_PATH,
             'total_sessions': C.SESSIONS_PER_VACANCY
         }
-
-    def get_vacancy_session_number(self):
-        """Calculate session number within the current vacancy (1-6)"""
-        round_num = self.player.round_number
-        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
-            return round_num - C.VACANCY_1_START_ROUND + 1
-        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
-            return round_num - C.VACANCY_2_START_ROUND + 1
-        return 1
 
     def get_word_content(self, applicant_id, doc_suffix='1'):
         """Load and convert word doc to html"""
@@ -208,14 +146,6 @@ class HRCoordinator(Page):
 
     timeout_seconds = property(get_timeout_seconds)
 
-    def get_vacancy_session_number(self):
-        """Calculate session number within the current vacancy (1-6)"""
-        round_num = self.player.round_number
-        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
-            return round_num - C.VACANCY_1_START_ROUND + 1
-        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
-            return round_num - C.VACANCY_2_START_ROUND + 1
-        return 1
 
     def before_next_page(self):
         """Validation using form data"""
@@ -287,7 +217,7 @@ class HRCoordinator(Page):
         # Load vacancy-specific metadata
         metadata = load_metadata_criteria(self.player.round_number, self.player)
 
-        session_number = self.get_vacancy_session_number()
+        session_number = get_vacancy_session_number(self.player.round_number)
         vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
 
         return {
@@ -318,26 +248,11 @@ class BusinessPartner(Page):
             return self.player.is_business_partner()
         return False
 
-    def should_show_vacancy_session(self):
-        round_num = self.player.round_number
-        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
-            return True
-        return False
-
     def get_timeout_seconds(self):
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
         return vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS
 
     timeout_seconds = property(get_timeout_seconds)
-
-    def get_vacancy_session_number(self):
-        """Calculate session number within the current vacancy (1-6)"""
-        round_num = self.player.round_number
-        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
-            return round_num - C.VACANCY_1_START_ROUND + 1
-        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
-            return round_num - C.VACANCY_2_START_ROUND + 1
-        return 1
 
     def vars_for_template(self):
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
@@ -346,7 +261,7 @@ class BusinessPartner(Page):
         # Load vacancy-specific metadata
         metadata = load_metadata_criteria(self.player.round_number, self.player)
 
-        session_number = self.get_vacancy_session_number()
+        session_number = get_vacancy_session_number(self.player.round_number)
         vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
 
         return {
@@ -373,17 +288,9 @@ class SelfAssessment(Page):
             return False
         return True
 
-    def get_vacancy_session_number(self):
-        round_num = self.player.round_number
-        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
-            return round_num - C.VACANCY_1_START_ROUND + 1
-        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
-            return round_num - C.VACANCY_2_START_ROUND + 1
-        return 1
-
     def vars_for_template(self):
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        session_number = self.get_vacancy_session_number()
+        session_number = get_vacancy_session_number(self.player.round_number)
         vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
 
         return {
@@ -402,17 +309,9 @@ class CognitiveTestInstructions(Page):
             return False
         return True
 
-    def get_vacancy_session_number(self):
-        round_num = self.player.round_number
-        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
-            return round_num - C.VACANCY_1_START_ROUND + 1
-        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
-            return round_num - C.VACANCY_2_START_ROUND + 1
-        return 1
-
     def vars_for_template(self):
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        session_number = self.get_vacancy_session_number()
+        session_number = get_vacancy_session_number(self.player.round_number)
         vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
 
         return {
@@ -433,17 +332,9 @@ class CognitiveTest(Page):
 
         return True
 
-    def get_vacancy_session_number(self):
-        round_num = self.player.round_number
-        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
-            return round_num - C.VACANCY_1_START_ROUND + 1
-        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
-            return round_num - C.VACANCY_2_START_ROUND + 1
-        return 1
-
     def vars_for_template(self):
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        session_number = self.get_vacancy_session_number()
+        session_number = get_vacancy_session_number(self.player.round_number)
         vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
 
         # Generate random Stroop test items
@@ -484,17 +375,9 @@ class CognitiveTestResults(Page):
 
         return True
 
-    def get_vacancy_session_number(self):
-        round_num = self.player.round_number
-        if C.VACANCY_1_START_ROUND <= round_num <= C.VACANCY_1_END_ROUND:
-            return round_num - C.VACANCY_1_START_ROUND + 1
-        elif C.VACANCY_2_START_ROUND <= round_num <= C.VACANCY_2_END_ROUND:
-            return round_num - C.VACANCY_2_START_ROUND + 1
-        return 1
-
     def vars_for_template(self):
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        session_number = self.get_vacancy_session_number()
+        session_number = get_vacancy_session_number(self.player.round_number)
         vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
 
         return {
