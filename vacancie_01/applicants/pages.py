@@ -1,7 +1,7 @@
 from otree.api import *  # Core oTree framework
 from .models import C, get_vacancy_info, get_applicants_data_for_vacancy, \
     load_metadata_criteria, should_show_vacancy_session, get_applicant_ids, \
-    assign_rotating_role, get_vacancy_session_number
+    assign_rotating_role, get_vacancy_session_number    # imports from models.py
 import random  # for StroopTest Items
 from docx import Document  # Word -> HTML converting
 import os  # file paths
