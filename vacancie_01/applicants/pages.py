@@ -680,7 +680,7 @@ class FinalResults(Page):
         }
         return result
 
-
+#Page Sequence of the experiment
 page_sequence = [
     Consent,
     Recruiter,

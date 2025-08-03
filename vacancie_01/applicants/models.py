@@ -9,13 +9,32 @@ Mental Fatigue Experiment - 6 Sessions of 10min digital coworking with role rota
 
 
 class Applicant:
+    """
+    Data container for applicant information and document management.
+    Handles dynamic document path generation for different vacancy periods.
+    """
+
     def __init__(self, applicant_id, name, description, doc_suffix=''):
+        """
+        Initialize applicant with basic information.
+
+        Args:
+        applicant_id (str): Unique identifier ('a', 'b', 'c')
+        name (str): Display name (e.g., 'Applicant A')
+        description (str): Role description or placeholder text
+        doc_suffix (str): Vacancy-specific suffix ('1' or '2', defaults to '')
+        """
         self.id = applicant_id
         self.name = name
         self.description = description
         self.doc_suffix = doc_suffix
 
     def get_documents(self):
+        """
+        Generates file paths for applicant documents based on current vacancy.
+        Returns:
+        dict: Document paths with keys 'cv', 'job_reference', 'cover_letter'
+        """
         return {
             'cv': f'applicants_{self.id}/cv_{self.id}{self.doc_suffix}.pdf',
             'job_reference': f'applicants_{self.id}/job_reference_{self.id}{self.doc_suffix}.pdf',
@@ -23,6 +42,13 @@ class Applicant:
         }
 
     def to_dict(self):
+        """
+        Converts applicant object to dictionary format for template usage.
+        Combines basic applicant data with document paths for easy access in oTree templates and JavaScript code.
+
+        Returns:
+        dict: Complete applicant data including documents
+        """
         return {
             'id': self.id,
             'name': self.name,
@@ -32,6 +58,23 @@ class Applicant:
 
 
 def load_metadata_criteria(round_number=None, player=None):
+    """
+    Loads evaluation criteria from Excel metadata files for current vacancy.
+
+    Reads criteria data including names, categories, relevance levels, and scoring
+    information for all applicants. Supports different metadata files for
+    different vacancy periods.
+
+    Args:
+    round_number (int, optional): Current round to determine vacancy
+    player (Player, optional): Player object for vacancy determination
+
+    Returns:
+    dict: Organized criteria data containing:
+        - criteria: List of all criteria with scores and metadata
+        - categories: List of unique category names
+        - criteria_by_category: Dictionary grouping criteria by category
+    """
     try:
         # Determine which metadata files to use based on vacancy
         if round_number and player:
@@ -39,13 +82,12 @@ def load_metadata_criteria(round_number=None, player=None):
             if vacancy_info:
                 metadata_paths = vacancy_info['metadata_files']
             else:
+                # Fallback to both files if vacancy info not available
                 metadata_paths = ['_static/applicants/metadata1.xlsx', '_static/applicants/metadatanew.xlsx']
-        else:
-            metadata_paths = ['_static/applicants/metadata1.xlsx']
 
+        # Find first existing metadata file from the paths list
         df = None
         file_path = None
-
         for path in metadata_paths:
             if os.path.exists(path):
                 file_path = path
@@ -54,22 +96,24 @@ def load_metadata_criteria(round_number=None, player=None):
         if not file_path:
             raise FileNotFoundError("metadata Excel file not found")
 
+        # Load Excel file with pandas (header=1 means second row contains headers)
         df = pd.read_excel(file_path, header=1)
 
-        criteria_data = []
-        categories = []
+        criteria_data = []  # List of all criteria objects
+        categories = []  # List of unique category names
 
         for index, row in df.iterrows():
             name_value = row.get('requirement_name')
             category_value = row.get('requirement_category')
             relevance_value = row.get('requirement_relevance')
 
-            # Scores für die drei Applicants
             applicant_a_score = row.get('applicant_a_points')
             applicant_b_score = row.get('applicant_b_points')
             applicant_c_score = row.get('applicant_c_points')
 
+            # Only process rows with valid criterion names
             if pd.notna(name_value) and str(name_value).strip():
+                # Build criterion object with all metadata
                 criterion = {
                     'name': str(name_value).strip(),
                     'category': str(category_value).strip() if pd.notna(category_value) else 'general',
@@ -81,18 +125,20 @@ def load_metadata_criteria(round_number=None, player=None):
                     }
                 }
 
-                # Requirement_point_is_X fields for Business Partner
+                # Add Business Partner point descriptions
                 for points in range(9):  # 0-8
                     point_field = f'requirement_point_is_{points}'
                     point_value = row.get(point_field)
                     if pd.notna(point_value):
                         criterion[point_field] = str(point_value).strip()
 
+                # Add criterion to main list
                 criteria_data.append(criterion)
 
                 if criterion['category'] not in categories:
                     categories.append(criterion['category'])
 
+        # Organize criteria by category for template dropdown menus
         criteria_by_category = {}
         for category in categories:
             criteria_by_category[category] = [
@@ -102,7 +148,7 @@ def load_metadata_criteria(round_number=None, player=None):
         return {
             'criteria': criteria_data,
             'categories': categories,
-            'criteria_by_category': criteria_by_category
+            'criteria_by_category': criteria_by_category  # Grouped for dropdowns
         }
 
     except Exception as e:
@@ -114,24 +160,46 @@ def load_metadata_criteria(round_number=None, player=None):
 
 
 def get_vacancy_info(round_number, player):
-    """Returns current vacancy configuration based on round - fixed order: vacancy 1 then vacancy 2"""
+    """
+    Maps round numbers to vacancy periods and returns appropriate configuration.
+
+    Args:
+    round_number (int): Current round number
+    player (Player): Player object (not used but kept for consistency)
+
+    Returns:
+    dict: Vacancy configuration from get_vacancy_config(), or None if outside vacancy rounds
+    """
     from . import models  # Import to avoid circular import
 
     if models.C.VACANCY_1_START_ROUND <= round_number <= models.C.VACANCY_1_END_ROUND:
-
         return get_vacancy_config(1)
 
     elif models.C.VACANCY_2_START_ROUND <= round_number <= models.C.VACANCY_2_END_ROUND:
-
         return get_vacancy_config(2)
 
     else:
-
+        # Round 7 (vacancy 1 results) or 14 (final results) - no active vacancy
         return None
 
 
 def get_vacancy_config(vacancy_number):
-    """Returns configuration for specific vacancy number"""
+    """
+    Provides all vacancy-specific settings including timeouts, file paths,
+    and document suffixes. Different vacancies have different complexity
+    and time constraints.
+
+    Args:
+    vacancy_number (int): Vacancy identifier (1 or 2)
+
+    Returns:
+    dict: Vacancy configuration containing:
+        - vacancy: Vacancy number (1 or 2)
+        - duration_seconds: Session timeout (1800 for vacancy 1, 600 for vacancy 2)
+        - metadata_files: List with Excel metadata file path
+        - doc_suffix: String suffix for document versioning ('1' or '2')
+        - job_desc_file: PDF filename for job description
+    """
     if vacancy_number == 1:
         job_desc_file = 'job_description_1.pdf'
     else:
@@ -147,45 +215,94 @@ def get_vacancy_config(vacancy_number):
 
 
 def get_applicants_data_for_vacancy(vacancy_info=None):
-    """Returns applicant data with appropriate document suffixes"""
+    """
+    Creates applicant objects with appropriate document suffixes for current vacancy.
+
+    Args:
+    vacancy_info (dict, optional): Vacancy configuration from get_vacancy_config().
+                                If None, defaults to vacancy 1 documents.
+
+    Returns:
+    list: List of applicant dictionaries ready for template usage, each containing:
+        - id: Applicant identifier ('a', 'b', 'c')
+        - name: Display name ('Applicant A', 'Applicant B', 'Applicant C')
+        - description: Role description placeholder
+        - documents: Dictionary with CV, job reference, and cover letter paths
+    """
     applicants = []
+
+    # Extract document suffix from vacancy info, default to '1' for vacancy 1
     doc_suffix = vacancy_info['doc_suffix'] if vacancy_info else '1'  # Default to '1'
 
+    # Create three standard applicants with vacancy-specific document suffixes
     applicant_a = Applicant('a', 'Applicant A', 'Recruiter Mask', doc_suffix)
     applicant_b = Applicant('b', 'Applicant B', 'Recruiter Mask', doc_suffix)
     applicant_c = Applicant('c', 'Applicant C', 'Recruiter Mask', doc_suffix)
+
+    # Add all applicants to list
     applicants.extend([applicant_a, applicant_b, applicant_c])
+
+    # Convert applicant objects to dictionaries for template usage
     return [applicant.to_dict() for applicant in applicants]
 
 
 def get_applicant_ids():
-    """Returns dynamic list of applicant IDs"""
+    """
+    Provides consistent applicant IDs used throughout the application
+    for form validation, score checking, and template loops.
+
+    Returns:
+    list: Applicant IDs ['a', 'b', 'c']
+    """
     applicants = get_applicants_data_for_vacancy()
     return [applicant['id'] for applicant in applicants]
 
 
 def should_show_vacancy_session(round_number):
-    """Utility function to determine if vacancy session should be shown"""
+    """
+    Determines if current round should display vacancy task sessions.
+
+    Checks if round number falls within active vacancy periods, excluding
+    results rounds. Used by all task pages to control display logic.
+
+    Args:
+    round_number (int): Current round number to check
+
+    Returns:
+    bool: True if round is a vacancy session, False for results rounds
+    """
     from . import models  # Import to avoid circular import
 
     if models.C.VACANCY_1_START_ROUND <= round_number <= models.C.VACANCY_1_END_ROUND:
         return True
     elif models.C.VACANCY_2_START_ROUND <= round_number <= models.C.VACANCY_2_END_ROUND:
-        return True  # Will check continue_to_second_vacancy in pages that need it
+        return True
     return False
 
 
 def assign_rotating_role(player):
     """
-    Automatically assign rotating role based on player ID and round number
-    Only assigns if no role is currently set to prevent overwriting historical data
+    Uses mathematical rotation to ensure each player experiences all three roles
+    across sessions. Only assigns if no role is currently set to prevent
+    overwriting historical player data when accessing previous rounds.
+
+    Role Rotation Pattern:
+    - Player 1: Recruiter → HR-Coordinator → Business-Partner → Recruiter...
+    - Player 2: HR-Coordinator → Business-Partner → Recruiter → HR-Coordinator...
+    - Player 3: Business-Partner → Recruiter → HR-Coordinator → Business-Partner...
+
+    Args:
+    player (Player): Player object to assign role to
+
+    Returns:
+    str: Assigned role name, or existing role if already set
     """
-    # CRITICAL: Only assign role if not already set
+
     # This prevents overwriting historical player data when accessing in_round()
     if not player.selected_role:
         roles = [C.RECRUITER_ROLE, C.HR_COORDINATOR_ROLE, C.BUSINESS_PARTNER_ROLE]
 
-        # Calculate role index: rotates every round for each player
+        # Calculate role index using modulo for rotation
         role_index = (player.id_in_group - 1 + player.round_number - 1) % 3
         player.selected_role = roles[role_index]
 
@@ -193,23 +310,43 @@ def assign_rotating_role(player):
 
 
 def get_vacancy_session_number(round_number):
+    """
+    Converts absolute round number to relative session number within current vacancy.
+
+    Maps round numbers to session numbers for display purposes:
+    - Vacancy 1: Rounds 1-6 → Sessions 1-6
+    - Vacancy 2: Rounds 8-13 → Sessions 1-6
+
+    Args:
+    round_number (int): Absolute round number from experiment
+
+    Returns:
+    int: Session number within current vacancy (1-6), or 1 if outside vacancy rounds
+    """
     if C.VACANCY_1_START_ROUND <= round_number <= C.VACANCY_1_END_ROUND:
         return round_number - C.VACANCY_1_START_ROUND + 1
     elif C.VACANCY_2_START_ROUND <= round_number <= C.VACANCY_2_END_ROUND:
         return round_number - C.VACANCY_2_START_ROUND + 1
     return 1
 
+
 class C(BaseConstants):
+    """
+    oTree experiment configuration and constants.
+    """
+
+    # oTree experiment configuration and constants.
     NAME_IN_URL = 'mental_fatigue'
     PLAYERS_PER_GROUP = 3
     NUM_ROUNDS = 14
 
-    # Vacancy configurations
+    # Vacancy timing configurations
     VACANCY_1_DURATION_MINUTES = 30  # 30 minutes for vacancy 1
     VACANCY_2_DURATION_MINUTES = 10  # 10 minutes for vacancy 2
     VACANCY_1_DURATION_SECONDS = VACANCY_1_DURATION_MINUTES * 60
     VACANCY_2_DURATION_SECONDS = VACANCY_2_DURATION_MINUTES * 60
 
+    # Round structure configuration
     VACANCY_1_START_ROUND = 1
     VACANCY_1_END_ROUND = 6
     VACANCY_1_RESULTS_ROUND = 7
@@ -219,8 +356,6 @@ class C(BaseConstants):
 
     # Data for templates
     APPLICANTS = get_applicants_data_for_vacancy()
-
-    # Load metadata criteria (default to vacancy 1)
     METADATA = load_metadata_criteria()
     CRITERIA_DATA = METADATA['criteria']
     CATEGORIES = METADATA['categories']
@@ -251,20 +386,23 @@ class C(BaseConstants):
         'c': '#FFCE56'
     }
 
-    # Sessions per vacancy
+    # Sessions configurations
     SESSIONS_PER_VACANCY = 6
 
 
 class Subsession(BaseSubsession):
-    pass
+    pass  # Default Otree subsession functionality
 
 
 class Group(BaseGroup):
-    pass
+    pass  # Default Otree group functionality
 
 
 class Player(BasePlayer):
-    # Role selection for each round
+    """
+    Stores role assignments, performance metrics, self-assessments, and cognitive test results for each player across all rounds.
+    """
+    # Role assignment
     selected_role = models.StringField(
         choices=[
             [C.RECRUITER_ROLE, 'Recruiter'],
@@ -296,7 +434,7 @@ class Player(BasePlayer):
         doc="Number of criteria incorrectly entered (scores or relevance don't match metadata)"
     )
 
-    # Self-assessment after each session
+    # Self-assessment measures
     fatigue_level = models.IntegerField(
         min=1, max=10,
         blank=True,
@@ -337,7 +475,12 @@ class Player(BasePlayer):
         doc="Number of errors in cognitive test"
     )
 
-    # Methods for cleaner templates and logic
+    """
+    Checks if player is assigned a certain Role
+    
+    Returns:
+    bool: True if player is assigned a certain Role 
+    """
     def is_recruiter(self):
         return self.selected_role == C.RECRUITER_ROLE
 
@@ -350,16 +493,19 @@ class Player(BasePlayer):
     def validate_criteria_data(self, criteria_data):
         """
         Validates criteria data against metadata and updates correct/incorrect counters
-        criteria_data: dict with format {criterion_name: {scores: {a: score, b: score, c: score}, relevance: 'low/normal/high'}}
+        Args:
+        criteria_data (dict): Player's criteria data in format:
+            {criterion_name: {scores: {a: score, b: score, c: score}, relevance: 'low/normal/high'}}
         """
         correct_count = 0
         incorrect_count = 0
 
-        # Load current vacancy metadata
+        # Load correct answers from metadata for current vacancy
         metadata = load_metadata_criteria(self.round_number, self)
 
+        # Check each criterion the player evaluated
         for criterion_name, data in criteria_data.items():
-
+            # Find correct answers for this criterion
             criterion_metadata = None
             for criterion in metadata['criteria']:
                 if criterion['name'].strip().lower() == criterion_name.strip().lower():
@@ -367,11 +513,11 @@ class Player(BasePlayer):
                     break
 
             if criterion_metadata:
-                # Prüfe Scores und Relevanz
+                # Validate scores and relevance against correct answers
                 scores_correct = True
                 relevance_correct = True
 
-                # Prüfe Scores für jeden Applicant
+                # Check scores for each applicant
                 for applicant_id in get_applicant_ids():
                     entered_score = data['scores'].get(applicant_id, 0)
                     correct_score = criterion_metadata['scores'].get(f'applicant_{applicant_id}', 0)
@@ -380,24 +526,37 @@ class Player(BasePlayer):
                         scores_correct = False
                         break
 
-                # Prüfe Relevanz
+                # Check relevance level
                 entered_relevance = data.get('relevance', 'normal')
                 correct_relevance = criterion_metadata.get('relevance', 'normal')
 
                 if entered_relevance != correct_relevance:
                     relevance_correct = False
 
-                # Zähle richtig oder falsch
                 if scores_correct and relevance_correct:
                     correct_count += 1
                 else:
                     incorrect_count += 1
 
-        # Update die Felder
+        # Update player's performance counters
         self.criteria_correct_this_session = correct_count
         self.criteria_incorrect_this_session = incorrect_count
 
     def get_cumulative_fatigue_trend(self):
+        """
+        Iterates through previous rounds to build trend data for analysis
+        and visualization. Handles missing data gracefully.
+
+        Returns:
+        list: List of dictionaries containing round-by-round data:
+            - round: Round number
+            - fatigue: Fatigue level (1-10)
+            - mental_effort: Mental effort level (1-10)
+            - concentration: Concentration difficulty (1-10)
+            - motivation: Motivation level (1-10)
+            - cognitive_score: Cognitive test score
+            - cognitive_rt: Cognitive reaction time
+        """
         fatigue_data = []
         for round_num in range(1, self.round_number + 1):
             try:
@@ -412,5 +571,6 @@ class Player(BasePlayer):
                     'cognitive_rt': round_player.cognitive_test_reaction_time
                 })
             except:
+                # Skip rounds with missing data
                 continue
         return fatigue_data
