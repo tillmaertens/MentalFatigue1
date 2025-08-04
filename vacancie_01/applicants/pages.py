@@ -228,7 +228,6 @@ class HRCoordinator(Page):
         Validates player's criteria data against correct answers before proceeding.
         Takes JSON data from frontend, compares it with metadata, and counts how many criteria were evaluated correctly vs incorrectly.
         """
-        import json
 
         try:
             # Get criteria data from hidden form field (sent by JavaScript)
