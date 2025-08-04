@@ -259,7 +259,6 @@ class HRCoordinator(Page):
                 if criterion_metadata:
                     # Check scores and relevance
                     scores_correct = True
-                    relevance_correct = True
 
                     # Check scores for each applicant
                     for applicant_id in get_applicant_ids():
