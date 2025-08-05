@@ -1,7 +1,7 @@
 from otree.api import *  # Core oTree framework
 from .models import C, get_vacancy_info, get_applicants_data_for_vacancy, \
     load_metadata_criteria, should_show_vacancy_session, get_applicant_ids, \
-    assign_rotating_role, get_vacancy_session_number    # imports from models.py
+    assign_static_role  # imports from models.py
 import random  # for StroopTest Items
 from docx import Document  # Word -> HTML converting
 import os  # file paths
@@ -19,6 +19,7 @@ class Consent(Page):
 class Recruiter(Page):
     """
     Reviews applicant information including CVs, job references, and cover letters.
+    Now used in the 4-round structure for both Vacancy 1 (unlimited) and Vacancy 2 (10min).
 
     Data Processing Flow:
     1. Get current vacancy configuration (vacancy 1 or 2)
@@ -30,31 +31,34 @@ class Recruiter(Page):
     Returns:
     dict: Template variables containing:
         - applicants: List of applicant objects with HTML content
-        - session_number: Current session within vacancy (1-6)
-
-        Same for all player Classes:
+        - session_number: Current session (1 or 2)
         - vacancy_number: Which vacancy is active (1 or 2)
-        - remaining_time: Session timeout in seconds
+        - remaining_time: Session timeout in seconds (None for V1, 600 for V2)
         - static_path: Path to static files (PDFs, images)
-        - total_sessions: Total sessions per vacancy (6)
+        - total_sessions: Total number of working sessions (2)
     """
 
     def is_displayed(self):
         """
-        Only shown during active vacancy sessions.
-        Automatically assigns rotating roles and checks if player has Recruiter role.
+        Only shown during active vacancy sessions (rounds 2 and 3).
+        Automatically assigns static roles and checks if player has Recruiter role.
         """
         if not should_show_vacancy_session(self.player.round_number):
             return False
 
         # AUTOMATIC ROLE ASSIGNMENT
-        assign_rotating_role(self.player)
+        assign_static_role(self.player)
         return self.player.is_recruiter()
 
     def get_timeout_seconds(self):
+        """
+        Returns timeout based on vacancy: None for V1 (unlimited), 600s for V2.
+        """
+        if self.player.round_number == C.VACANCY_1_ROUND:
+            return None  # Unlimited time for Vacancy 1
+
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        return vacancy_info[
-            'duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS  # Calcultes timeout based on Vacancie number
+        return vacancy_info['duration_seconds'] if vacancy_info else 600  # 10 min fallback
 
     timeout_seconds = property(get_timeout_seconds)  # Convert method to property for oTree
 
@@ -74,16 +78,15 @@ class Recruiter(Page):
             applicant_data['description'] = self.get_word_content(applicant['id'], doc_suffix)
             applicants_with_content.append(applicant_data)
 
-        session_number = get_vacancy_session_number(self.player.round_number)
         vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
 
         return {
             'applicants': applicants_with_content,
-            'session_number': session_number,
+            'session_number': vacancy_number,  # Session 1 or 2
             'vacancy_number': vacancy_number,
-            'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS,
+            'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else 600,
             'static_path': C.STATIC_APPLICANTS_PATH,
-            'total_sessions': C.SESSIONS_PER_VACANCY
+            'total_sessions': 2  # 2 working sessions total
         }
 
     def get_word_content(self, applicant_id, doc_suffix='1'):
@@ -179,6 +182,7 @@ class Recruiter(Page):
 class HRCoordinator(Page):
     """
     Prepares all data needed for HR Coordinator interface.
+    Now used in the 4-round structure with predefined criteria auto-loading.
 
     Data Processing Flow:
     1. Get current vacancy configuration
@@ -191,6 +195,7 @@ class HRCoordinator(Page):
         dict: Template variables containing:
             - applicants: Full applicant data for evaluation table
             - criteria_data: All criteria for modal selection system
+            - predefined_criteria: Criteria that should be auto-loaded
             - categories/criteria_by_category: Criteria organization for modal
             - relevance_factors: Scoring multipliers (low:1, normal:2, high:3)
             - applicant_colors: Colors for live pie chart display
@@ -208,18 +213,24 @@ class HRCoordinator(Page):
     def is_displayed(self):
         """
         Display logic and automatic role assignment.
-        Uses the same rotating role assignment as other task pages.
+        Uses static role assignment for 4-round structure.
         """
         if not should_show_vacancy_session(self.player.round_number):
             return False
 
         # AUTOMATIC ROLE ASSIGNMENT
-        assign_rotating_role(self.player)
+        assign_static_role(self.player)
         return self.player.is_hr_coordinator()
 
     def get_timeout_seconds(self):
+        """
+        Returns timeout based on vacancy: None for V1 (unlimited), 600s for V2.
+        """
+        if self.player.round_number == C.VACANCY_1_ROUND:
+            return None  # Unlimited time for Vacancy 1
+
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        return vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS
+        return vacancy_info['duration_seconds'] if vacancy_info else 600  # 10 min fallback
 
     timeout_seconds = property(get_timeout_seconds)
 
@@ -301,17 +312,15 @@ class HRCoordinator(Page):
         # Load evaluation criteria and categories from Excel metadata
         metadata = load_metadata_criteria(self.player.round_number, self.player)
 
-        # Calculate session progress
-        session_number = get_vacancy_session_number(self.player.round_number)
         vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
 
         return {
             'applicants': applicants_data,
             'min_score': C.MIN_SCORE,
             'max_score': C.MAX_SCORE,
-            'session_number': session_number,
+            'session_number': vacancy_number,  # Session 1 or 2
             'vacancy_number': vacancy_number,
-            'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS,
+            'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else 600,
             'criteria_data': metadata['criteria'],
             'predefined_criteria': metadata['predefined_criteria'],
             'categories': metadata['categories'],
@@ -321,13 +330,14 @@ class HRCoordinator(Page):
             'static_path': C.STATIC_APPLICANTS_PATH,
             'applicant_colors': C.APPLICANT_COLORS,
             'applicant_ids': get_applicant_ids(),
-            'total_sessions': C.SESSIONS_PER_VACANCY
+            'total_sessions': 2  # 2 working sessions total
         }
 
 
 class BusinessPartner(Page):
     """
     Prepares data for Business Partner requirements catalog interface.
+    Now used in the 4-round structure for both Vacancy 1 and Vacancy 2.
 
     Data Processing Flow:
     1. Get current vacancy configuration
@@ -346,13 +356,19 @@ class BusinessPartner(Page):
 
     def is_displayed(self):
         if should_show_vacancy_session(self.player.round_number):
-            assign_rotating_role(self.player)
+            assign_static_role(self.player)
             return self.player.is_business_partner()
         return False
 
     def get_timeout_seconds(self):
+        """
+        Returns timeout based on vacancy: None for V1 (unlimited), 600s for V2.
+        """
+        if self.player.round_number == C.VACANCY_1_ROUND:
+            return None  # Unlimited time for Vacancy 1
+
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        return vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS
+        return vacancy_info['duration_seconds'] if vacancy_info else 600  # 10 min fallback
 
     timeout_seconds = property(get_timeout_seconds)
 
@@ -365,27 +381,27 @@ class BusinessPartner(Page):
 
         metadata = load_metadata_criteria(self.player.round_number, self.player)
 
-        session_number = get_vacancy_session_number(self.player.round_number)
         vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
 
         return {
             'applicants': applicants_data,
-            'session_number': session_number,
+            'session_number': vacancy_number,  # Session 1 or 2
             'vacancy_number': vacancy_number,
-            'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS,
+            'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else 600,
             'criteria_data': metadata['criteria'],
             'categories': metadata['categories'],
             'criteria_by_category': metadata['criteria_by_category'],
             'static_path': C.STATIC_APPLICANTS_PATH,
             'min_score': C.MIN_SCORE,
             'max_score': C.MAX_SCORE,
-            'total_sessions': C.SESSIONS_PER_VACANCY
+            'total_sessions': 2  # 2 working sessions total
         }
 
 
 class SelfAssessment(Page):
     """
     Post-session questionnaire for measuring mental fatigue and subjective workload.
+    Now shown in all 3 rounds: Baseline (Round 1), After V1 (Round 2), After V2 (Round 3).
 
     Form Fields:
         - fatigue_level: Self-reported fatigue (1=not tired, 10=extremely tired)
@@ -398,58 +414,74 @@ class SelfAssessment(Page):
 
     def is_displayed(self):
         """
-        Shown to ALL players after task sessions, no role assignment needed.
-        Only displayed during active vacancy rounds.
+        Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
         """
-        if not should_show_vacancy_session(self.player.round_number):
-            return False
-        return True
+        return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND]
 
     def vars_for_template(self):
         """
         Prepares session information for self-assessment form.
         """
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        session_number = get_vacancy_session_number(self.player.round_number)
-        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 0  # 0 for baseline
+
+        # Determine session description
+        if self.player.round_number == C.CONSENT_ROUND:
+            session_name = "Baseline"
+            session_number = 0
+        else:
+            session_name = f"Vacancy {vacancy_number}"
+            session_number = vacancy_number
 
         return {
             'session_number': session_number,
+            'session_name': session_name,
             'vacancy_number': vacancy_number,
             'role_played': self.player.selected_role,
-            'total_sessions': C.SESSIONS_PER_VACANCY
+            'total_sessions': 2  # 2 working sessions total
         }
 
 
 class CognitiveTestInstructions(Page):
     """
     Instructions page for cognitive test before actual test execution.
+    Now shown in all 3 measurement rounds.
     """
     timeout_seconds = 20
 
     def is_displayed(self):
-        if not should_show_vacancy_session(self.player.round_number):
-            return False
-        return True
+        """
+        Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
+        """
+        return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND]
 
     def vars_for_template(self):
         """
         Prepares session information for test instructions.
         """
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        session_number = get_vacancy_session_number(self.player.round_number)
-        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 0  # 0 for baseline
+
+        # Determine session description
+        if self.player.round_number == C.CONSENT_ROUND:
+            session_name = "Baseline"
+            session_number = 0
+        else:
+            session_name = f"Vacancy {vacancy_number}"
+            session_number = vacancy_number
 
         return {
             'session_number': session_number,
+            'session_name': session_name,
             'vacancy_number': vacancy_number,
-            'total_sessions': C.SESSIONS_PER_VACANCY
+            'total_sessions': 2  # 2 working sessions total
         }
 
 
 class CognitiveTest(Page):
     """
     Stroop test for measuring cognitive load and performance changes over sessions.
+    Now executed in all 3 measurement rounds for baseline comparison.
 
     Data Processing Flow:
     1. Get current vacancy configuration
@@ -461,7 +493,7 @@ class CognitiveTest(Page):
     Returns:
     dict: Template variables containing:
         - test_items: List of 20 random Stroop test items
-        - test_duration: Test time limit (30 seconds)
+        - test_duration: Test time limit (22 seconds)
 
     Form Fields:
         - cognitive_test_score: Number of correct answers
@@ -470,24 +502,28 @@ class CognitiveTest(Page):
     """
     form_model = 'player'
     form_fields = ['cognitive_test_score', 'cognitive_test_reaction_time', 'cognitive_test_errors']
-    timeout_seconds = 20
+    timeout_seconds = 22
 
     def is_displayed(self):
         """
-        Shown to ALL players after task sessions, no role assignment needed.
-        Only displayed during active vacancy rounds.
+        Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
         """
-        if not should_show_vacancy_session(self.player.round_number):
-            return False
-        return True
+        return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND]
 
     def vars_for_template(self):
         """
         Generates random Stroop test items and prepares test interface.
         """
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        session_number = get_vacancy_session_number(self.player.round_number)
-        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 0  # 0 for baseline
+
+        # Determine session description
+        if self.player.round_number == C.CONSENT_ROUND:
+            session_name = "Baseline"
+            session_number = 0
+        else:
+            session_name = f"Vacancy {vacancy_number}"
+            session_number = vacancy_number
 
         # Generate random Stroop test items
         test_items = []
@@ -511,16 +547,18 @@ class CognitiveTest(Page):
 
         return {
             'test_items': test_items,
-            'test_duration': 30,
+            'test_duration': C.COGNITIVE_TEST_DURATION,
             'session_number': session_number,
+            'session_name': session_name,
             'vacancy_number': vacancy_number,
-            'total_sessions': C.SESSIONS_PER_VACANCY
+            'total_sessions': 2  # 2 working sessions total
         }
 
 
 class CognitiveTestResults(Page):
     """
     Displays results of the completed Stroop test to participants.
+    Now shown in all 3 measurement rounds.
 
     Returns:
         dict: Template variables containing:
@@ -533,85 +571,73 @@ class CognitiveTestResults(Page):
 
     def is_displayed(self):
         """
-        Shown to ALL players after cognitive test completion.
-        Only displayed during active vacancy rounds.
+        Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
         """
-        if not should_show_vacancy_session(self.player.round_number):
-            return False
-        return True
+        return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND]
 
     def vars_for_template(self):
         """
         Loads cognitive test results and prepares results display.
         """
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        session_number = get_vacancy_session_number(self.player.round_number)
-        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 1
+        vacancy_number = vacancy_info['vacancy'] if vacancy_info else 0  # 0 for baseline
+
+        # Determine session description
+        if self.player.round_number == C.CONSENT_ROUND:
+            session_name = "Baseline"
+            session_number = 0
+        else:
+            session_name = f"Vacancy {vacancy_number}"
+            session_number = vacancy_number
 
         return {
             'session_number': session_number,
+            'session_name': session_name,
             'vacancy_number': vacancy_number,
             'score': self.player.field_maybe_none('cognitive_test_score') or 0,
             'reaction_time': self.player.field_maybe_none('cognitive_test_reaction_time') or 0,
             'errors': self.player.field_maybe_none('cognitive_test_errors') or 0,
             'total_questions': C.COGNITIVE_TEST_TOTAL_QUESTIONS,
-            'total_sessions': C.SESSIONS_PER_VACANCY
+            'total_sessions': 2  # 2 working sessions total
         }
 
 
 class FinalResults(Page):
     """
-    Comprehensive results analysis after completing vacancy sessions.
+    Comprehensive results analysis comparing Baseline, Vacancy 1, and Vacancy 2.
 
-    Data Processing Flow:
-    1. Determine which vacancy results to show (1 or 2)
-    2. Collect historical data from all completed sessions
-    3. Extract player performance metrics with null safety
-    4. Calculate fatigue and performance trends over time
-    5. Compute statistical summaries and averages
-    6. Assemble complete results for charts and analysis
+    Analyzes 3 measurement points:
+    - Baseline (Round 1): Before any work tasks
+    - Vacancy 1 (Round 2): After unlimited time session
+    - Vacancy 2 (Round 3): After time-limited session
 
     Returns:
         dict: Template variables containing:
-            - all_sessions: Complete session-by-session data
-            - results_vacancy: Which vacancy results are shown (1 or 2)
-            - total_sessions_completed: Number of completed sessions
-            - average_fatigue: Mean fatigue level across sessions
-            - fatigue_increase: Change from first to last session
-            - cognitive_decline: Performance change over time
-            - average_effort: Mean mental effort reported
-            - average_concentration: Mean concentration difficulty
-            - average_motivation: Mean motivation level
-            - show_next_button: Whether to show continue button (vacancy 1 only)
-            - is_vacancy_1_results: Boolean for template logic
+            - all_sessions: Complete session-by-session data (3 points)
+            - baseline_* : Baseline measurements
+            - v1_*_change: Changes from baseline to V1
+            - v2_*_change: Changes from baseline to V2
+            - trend data and statistical summaries
+            - is_hr_coordinator: Boolean flag for role-specific content
     """
 
     def is_displayed(self):
         """
-        Shown after completing all sessions of a vacancy (rounds 7 and 14).
+        Shown only in final round (Round 4).
         """
-        return (self.player.round_number == C.VACANCY_1_RESULTS_ROUND or
-                self.player.round_number == C.FINAL_RESULTS_ROUND)
+        return self.player.round_number == C.FINAL_RESULTS_ROUND
 
     def vars_for_template(self):
         """
-        Compiles comprehensive results analysis from all completed sessions.
+        Compiles results from 3 measurement points: Baseline, Vacancy 1, Vacancy 2
         """
-        is_vacancy_1_results = self.player.round_number == C.VACANCY_1_RESULTS_ROUND
-        show_next_button = is_vacancy_1_results
 
-        if is_vacancy_1_results:
-            start_round = C.VACANCY_1_START_ROUND  # 1
-            end_round = C.VACANCY_1_END_ROUND  # 6
-            results_vacancy = 1
-        else:
-            start_round = C.VACANCY_2_START_ROUND  # 8
-            end_round = C.VACANCY_2_END_ROUND  # 13
-            results_vacancy = 2
-
-        # Compile results with null safety
+        # Collect data from all 3 measurement rounds
         all_sessions_data = []
-        for round_num in range(start_round, end_round + 1):
+        round_names = ['Baseline', 'Vacancy 1', 'Vacancy 2']
+        measurement_rounds = [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND]
+
+        for i, round_num in enumerate(measurement_rounds):
             try:
                 round_player = self.player.in_round(round_num)
 
@@ -624,17 +650,22 @@ class FinalResults(Page):
                         return default
 
                 session_data = {
-                    'session': round_num - start_round + 1,  # Display as 1-6
-                    'role': safe_get(lambda: round_player.selected_role, 'Unknown'),
+                    'session': i + 1,  # Display as 1-3
+                    'session_name': round_names[i],
+                    'role': safe_get(lambda: round_player.selected_role, 'Baseline' if i == 0 else 'Unknown'),
                     'fatigue_level': safe_get(lambda: round_player.fatigue_level),
                     'mental_effort': safe_get(lambda: round_player.mental_effort),
                     'concentration_difficulty': safe_get(lambda: round_player.concentration_difficulty),
                     'motivation_level': safe_get(lambda: round_player.motivation_level),
                     'cognitive_score': safe_get(lambda: round_player.cognitive_test_score),
                     'cognitive_reaction_time': safe_get(lambda: round_player.cognitive_test_reaction_time),
-                    'criteria_added': safe_get(lambda: round_player.criteria_added_this_session),
-                    'criteria_correct': safe_get(lambda: round_player.criteria_correct_this_session),
-                    'criteria_incorrect': safe_get(lambda: round_player.criteria_incorrect_this_session),
+                    'criteria_added': safe_get(lambda: round_player.criteria_added_this_session) if i > 0 else 0,
+                    # No criteria in baseline
+                    'criteria_correct': safe_get(lambda: round_player.criteria_correct_this_session) if i > 0 else 0,
+                    # No criteria in baseline
+                    'criteria_incorrect': safe_get(
+                        lambda: round_player.criteria_incorrect_this_session) if i > 0 else 0,
+                    # No criteria in baseline
                 }
                 all_sessions_data.append(session_data)
             except Exception as e:
@@ -662,11 +693,21 @@ class FinalResults(Page):
         average_concentration = sum(concentration_values) / len(concentration_values) if concentration_values else 0
         average_motivation = sum(motivation_values) / len(motivation_values) if motivation_values else 0
 
+        # Calculate baseline vs vacancy comparisons
+        baseline_fatigue = fatigue_values[0] if len(fatigue_values) >= 1 else 0
+        v1_fatigue = fatigue_values[1] if len(fatigue_values) >= 2 else 0
+        v2_fatigue = fatigue_values[2] if len(fatigue_values) >= 3 else 0
+
+        baseline_cognitive = cognitive_values[0] if len(cognitive_values) >= 1 else 0
+        v1_cognitive = cognitive_values[1] if len(cognitive_values) >= 2 else 0
+        v2_cognitive = cognitive_values[2] if len(cognitive_values) >= 3 else 0
+
+        # NEW: Check if current player is HR Coordinator
+        is_hr_coordinator = self.player.is_hr_coordinator()
+
         result = {
             # Raw session data for detailed tables and charts
             'all_sessions': all_sessions_data,
-
-            'results_vacancy': results_vacancy,
             'total_sessions_completed': len(all_sessions_data),
             'average_fatigue': average_fatigue,
             'fatigue_increase': fatigue_increase,
@@ -674,12 +715,25 @@ class FinalResults(Page):
             'average_effort': average_effort,
             'average_concentration': average_concentration,
             'average_motivation': average_motivation,
-            'show_next_button': show_next_button,
-            'is_vacancy_1_results': is_vacancy_1_results
+
+            # Baseline comparisons
+            'baseline_fatigue': baseline_fatigue,
+            'v1_fatigue_change': v1_fatigue - baseline_fatigue if baseline_fatigue and v1_fatigue else 0,
+            'v2_fatigue_change': v2_fatigue - baseline_fatigue if baseline_fatigue and v2_fatigue else 0,
+            'baseline_cognitive': baseline_cognitive,
+            'v1_cognitive_change': baseline_cognitive - v1_cognitive if baseline_cognitive and v1_cognitive else 0,
+            'v2_cognitive_change': baseline_cognitive - v2_cognitive if baseline_cognitive and v2_cognitive else 0,
+
+            # NEW: Role-specific flag
+            'is_hr_coordinator': is_hr_coordinator,
+
+            'show_next_button': False,  # This is the final page
+            'is_final_results': True,  # Flag for template logic
         }
         return result
 
-#Page Sequence of the experiment
+
+# Page Sequence for 4-round structure
 page_sequence = [
     Consent,
     Recruiter,

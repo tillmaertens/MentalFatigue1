@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 doc = """
-Mental Fatigue Experiment - 6 Sessions of 10min digital coworking with role rotation (right now 30 for debugging)
+Mental Fatigue Experiment - 4 rounds: Baseline + 2 Vacancies + Results
 """
 
 
@@ -78,7 +78,6 @@ def load_metadata_criteria(round_number=None, player=None):
                 metadata_paths = ['_static/applicants/metadata1.xlsx', '_static/applicants/metadatanew.xlsx']
 
         # Find first existing metadata file from the paths list
-        df = None
         file_path = None
         for path in metadata_paths:
             if os.path.exists(path):
@@ -99,7 +98,7 @@ def load_metadata_criteria(round_number=None, player=None):
             name_value = row.get('requirement_name')
             category_value = row.get('requirement_category')
             relevance_value = row.get('requirement_relevance')
-            need_defined_by = row.get('requirement_need_defined_by')  # New column for predefined check
+            need_defined_by = row.get('requirement_need_defined_by')  # Check for predefined criteria
 
             applicant_a_score = row.get('applicant_a_points')
             applicant_b_score = row.get('applicant_b_points')
@@ -162,33 +161,29 @@ def load_metadata_criteria(round_number=None, player=None):
 
 def get_vacancy_info(round_number, player):
     """
-    Maps round numbers to vacancy periods and returns appropriate configuration.
+    Maps round numbers to vacancy periods for the 4-round structure.
 
     Args:
-    round_number (int): Current round number
+    round_number (int): Current round number (1-4)
     player (Player): Player object (not used but kept for consistency)
 
     Returns:
-    dict: Vacancy configuration from get_vacancy_config(), or None if outside vacancy rounds
+    dict: Vacancy configuration from get_vacancy_config(), or None if baseline/results rounds
     """
     from . import models  # Import to avoid circular import
 
-    if models.C.VACANCY_1_START_ROUND <= round_number <= models.C.VACANCY_1_END_ROUND:
+    if round_number == models.C.VACANCY_1_ROUND:
         return get_vacancy_config(1)
-
-    elif models.C.VACANCY_2_START_ROUND <= round_number <= models.C.VACANCY_2_END_ROUND:
+    elif round_number == models.C.VACANCY_2_ROUND:
         return get_vacancy_config(2)
-
     else:
-        # Round 7 (vacancy 1 results) or 14 (final results) - no active vacancy
+        # Round 1 (consent/baseline) or 4 (final results) - no active vacancy
         return None
 
 
 def get_vacancy_config(vacancy_number):
     """
-    Provides all vacancy-specific settings including timeouts, file paths,
-    and document suffixes. Different vacancies have different complexity
-    and time constraints.
+    Provides vacancy-specific settings with unlimited time for Vacancy 1.
 
     Args:
     vacancy_number (int): Vacancy identifier (1 or 2)
@@ -196,7 +191,7 @@ def get_vacancy_config(vacancy_number):
     Returns:
     dict: Vacancy configuration containing:
         - vacancy: Vacancy number (1 or 2)
-        - duration_seconds: Session timeout (1800 for vacancy 1, 600 for vacancy 2)
+        - duration_seconds: None for vacancy 1 (unlimited), 600 for vacancy 2
         - metadata_files: List with Excel metadata file path
         - doc_suffix: String suffix for document versioning ('1' or '2')
         - job_desc_file: PDF filename for job description
@@ -208,7 +203,7 @@ def get_vacancy_config(vacancy_number):
 
     return {
         'vacancy': vacancy_number,
-        'duration_seconds': 30 * 60 if vacancy_number == 1 else 10 * 60,
+        'duration_seconds': None if vacancy_number == 1 else 10 * 60,  # Unlimited for V1, 10min for V2
         'metadata_files': [f'_static/applicants/metadata{vacancy_number}.xlsx'],
         'doc_suffix': str(vacancy_number),
         'job_desc_file': job_desc_file
@@ -233,7 +228,7 @@ def get_applicants_data_for_vacancy(vacancy_info=None):
     applicants = []
 
     # Extract document suffix from vacancy info, default to '1' for vacancy 1
-    doc_suffix = vacancy_info['doc_suffix'] if vacancy_info else '1'  # Default to '1'
+    doc_suffix = vacancy_info['doc_suffix'] if vacancy_info else '1'
 
     # Create three standard applicants with vacancy-specific document suffixes
     applicant_a = Applicant('a', 'Applicant A', 'Recruiter Mask', doc_suffix)
@@ -263,34 +258,27 @@ def should_show_vacancy_session(round_number):
     """
     Determines if current round should display vacancy task sessions.
 
-    Checks if round number falls within active vacancy periods, excluding
-    results rounds. Used by all task pages to control display logic.
+    Only rounds 2 and 3 are vacancy sessions in the 4-round structure.
 
     Args:
-    round_number (int): Current round number to check
+    round_number (int): Current round number to check (1-4)
 
     Returns:
-    bool: True if round is a vacancy session, False for results rounds
+    bool: True if round is a vacancy session (2 or 3), False otherwise
     """
     from . import models  # Import to avoid circular import
 
-    if models.C.VACANCY_1_START_ROUND <= round_number <= models.C.VACANCY_1_END_ROUND:
-        return True
-    elif models.C.VACANCY_2_START_ROUND <= round_number <= models.C.VACANCY_2_END_ROUND:
-        return True
-    return False
+    return round_number in [models.C.VACANCY_1_ROUND, models.C.VACANCY_2_ROUND]
 
 
-def assign_rotating_role(player):
+def assign_static_role(player):
     """
-    Uses mathematical rotation to ensure each player experiences all three roles
-    across sessions. Only assigns if no role is currently set to prevent
-    overwriting historical player data when accessing previous rounds.
+    Assigns static roles per player based on player ID.
 
-    Role Rotation Pattern:
-    - Player 1: Recruiter → HR-Coordinator → Business-Partner → Recruiter...
-    - Player 2: HR-Coordinator → Business-Partner → Recruiter → HR-Coordinator...
-    - Player 3: Business-Partner → Recruiter → HR-Coordinator → Business-Partner...
+    Each player keeps the same role for both vacancies:
+    - Player 1: Always Recruiter
+    - Player 2: Always HR-Coordinator
+    - Player 3: Always Business-Partner
 
     Args:
     player (Player): Player object to assign role to
@@ -303,57 +291,31 @@ def assign_rotating_role(player):
     if not player.selected_role:
         roles = [C.RECRUITER_ROLE, C.HR_COORDINATOR_ROLE, C.BUSINESS_PARTNER_ROLE]
 
-        # Calculate role index using modulo for rotation
-        role_index = (player.id_in_group - 1 + player.round_number - 1) % 3
+        # Static role assignment based on player ID (no rotation)
+        role_index = (player.id_in_group - 1) % 3
         player.selected_role = roles[role_index]
 
     return player.selected_role
 
 
-def get_vacancy_session_number(round_number):
-    """
-    Converts absolute round number to relative session number within current vacancy.
-
-    Maps round numbers to session numbers for display purposes:
-    - Vacancy 1: Rounds 1-6 → Sessions 1-6
-    - Vacancy 2: Rounds 8-13 → Sessions 1-6
-
-    Args:
-    round_number (int): Absolute round number from experiment
-
-    Returns:
-    int: Session number within current vacancy (1-6), or 1 if outside vacancy rounds
-    """
-    if C.VACANCY_1_START_ROUND <= round_number <= C.VACANCY_1_END_ROUND:
-        return round_number - C.VACANCY_1_START_ROUND + 1
-    elif C.VACANCY_2_START_ROUND <= round_number <= C.VACANCY_2_END_ROUND:
-        return round_number - C.VACANCY_2_START_ROUND + 1
-    return 1
-
-
 class C(BaseConstants):
     """
-    oTree experiment configuration and constants.
+    oTree experiment configuration for 4-round structure with baseline.
     """
 
-    # oTree experiment configuration and constants.
     NAME_IN_URL = 'mental_fatigue'
     PLAYERS_PER_GROUP = 3
-    NUM_ROUNDS = 14
+    NUM_ROUNDS = 4  # Baseline + Vacancy 1 + Vacancy 2 + Results
 
-    # Vacancy timing configurations
-    VACANCY_1_DURATION_MINUTES = 30  # 30 minutes for vacancy 1
-    VACANCY_2_DURATION_MINUTES = 10  # 10 minutes for vacancy 2
-    VACANCY_1_DURATION_SECONDS = VACANCY_1_DURATION_MINUTES * 60
+    # 4-round structure definition
+    CONSENT_ROUND = 1  # Consent + Baseline measurements
+    VACANCY_1_ROUND = 2  # Vacancy 1 (unlimited time)
+    VACANCY_2_ROUND = 3  # Vacancy 2 (10 minutes)
+    FINAL_RESULTS_ROUND = 4  # Final results comparison
+
+    # Only Vacancy 2 has time limit
+    VACANCY_2_DURATION_MINUTES = 10
     VACANCY_2_DURATION_SECONDS = VACANCY_2_DURATION_MINUTES * 60
-
-    # Round structure configuration
-    VACANCY_1_START_ROUND = 1
-    VACANCY_1_END_ROUND = 6
-    VACANCY_1_RESULTS_ROUND = 7
-    VACANCY_2_START_ROUND = 8
-    VACANCY_2_END_ROUND = 13
-    FINAL_RESULTS_ROUND = 14
 
     # Data for templates
     APPLICANTS = get_applicants_data_for_vacancy()
@@ -389,20 +351,21 @@ class C(BaseConstants):
     }
 
     # Sessions configurations
-    SESSIONS_PER_VACANCY = 6
+    SESSIONS_PER_VACANCY = 1  # Only 1 session per vacancy
 
 
 class Subsession(BaseSubsession):
-    pass  # Default Otree subsession functionality
+    pass
 
 
 class Group(BaseGroup):
-    pass  # Default Otree group functionality
+    pass
 
 
 class Player(BasePlayer):
     """
-    Stores role assignments, performance metrics, self-assessments, and cognitive test results for each player across all rounds.
+    Stores role assignments, performance metrics, self-assessments, and cognitive test results
+    for each player across all rounds in the 4-round structure.
     """
     # Role assignment
     selected_role = models.StringField(
@@ -436,7 +399,7 @@ class Player(BasePlayer):
         doc="Number of criteria incorrectly entered (scores or relevance don't match metadata)"
     )
 
-    # Self-assessment measures
+    # Self-assessment measures (collected in all 3 rounds)
     fatigue_level = models.IntegerField(
         min=1, max=10,
         blank=True,
@@ -461,7 +424,7 @@ class Player(BasePlayer):
         doc="Current motivation level (1=very low, 10=very high)"
     )
 
-    # Cognitive Load Test Results
+    # Cognitive Load Test Results (collected in all 3 rounds)
     cognitive_test_score = models.IntegerField(
         blank=True,
         doc="Score on cognitive load test (correct answers)"
@@ -476,13 +439,6 @@ class Player(BasePlayer):
         blank=True,
         doc="Number of errors in cognitive test"
     )
-
-    """
-    Checks if player is assigned a certain Role
-    
-    Returns:
-    bool: True if player is assigned a certain Role 
-    """
 
     def is_recruiter(self):
         return self.selected_role == C.RECRUITER_ROLE

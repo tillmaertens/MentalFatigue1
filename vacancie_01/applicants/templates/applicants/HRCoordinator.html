@@ -709,6 +709,14 @@
                     relevanceSelect.classList.add('incomplete-field');
                 }
             }
+
+            // NEW: Remove red highlighting after 500ms (flash effect)
+            setTimeout(() => {
+                document.querySelectorAll('.incomplete-field').forEach(field => {
+                    field.classList.remove('incomplete-field');
+                });
+            }, 500);
+
         }
 
         // NEW: Update add button state based on completion
