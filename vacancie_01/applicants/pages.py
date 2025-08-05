@@ -469,7 +469,7 @@ class CognitiveTest(Page):
     """
     form_model = 'player'
     form_fields = ['cognitive_test_score', 'cognitive_test_reaction_time', 'cognitive_test_errors']
-    timeout_seconds = 30
+    timeout_seconds = 20
 
     def is_displayed(self):
         """
@@ -497,7 +497,7 @@ class CognitiveTest(Page):
             '#ffff00': 'yellow'
         }
 
-        for i in range(20):
+        for i in range(C.COGNITIVE_TEST_TOTAL_QUESTIONS):
             word = random.choice(C.STROOP_WORDS)
             color_hex = random.choice(C.STROOP_COLORS)
             color_name = color_mapping[color_hex]
@@ -553,7 +553,7 @@ class CognitiveTestResults(Page):
             'score': self.player.field_maybe_none('cognitive_test_score') or 0,
             'reaction_time': self.player.field_maybe_none('cognitive_test_reaction_time') or 0,
             'errors': self.player.field_maybe_none('cognitive_test_errors') or 0,
-            'total_items': 20,
+            'total_questions': C.COGNITIVE_TEST_TOTAL_QUESTIONS,
             'total_sessions': C.SESSIONS_PER_VACANCY
         }
 

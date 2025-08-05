@@ -129,7 +129,7 @@
         <p>Item: <span id="currentItem">1</span> / <span id="totalItems">20</span></p>
     </div>
 
-    <!-- Skip Button for debugging -->
+    {# Debug skip button for development and testing purposes #}
     <div class="skip">
         <button onclick="skipSession()"
                 class="skip-button">
@@ -147,25 +147,31 @@
         <button type="button" class="color-btn yellow-btn" onclick="selectColor('yellow')">YELLOW</button>
     </div>
 
-
+    {# Hidden form fields: Store test results for submission to oTree backend #}
     <input type="hidden" name="cognitive_test_score" id="cognitive_test_score" value="0">
     <input type="hidden" name="cognitive_test_reaction_time" id="cognitive_test_reaction_time" value="0">
     <input type="hidden" name="cognitive_test_errors" id="cognitive_test_errors" value="0">
 
     <script>
 
+        // STROOP TEST IMPLEMENTATION
+
+        // Array of word-color combinations
         const testItems = {{ test_items|safe }};
 
         let currentItemIndex = 0;
         let score = 0;
         let errors = 0;
-        let reactionTimes = [];
+        let reactionTimes = [];     // Array storing reaction time for each answered question
         let testStartTime = 0;
-        let itemStartTime = 0;
-        let testActive = false;
+        let itemStartTime = 0;      // Timestamp when current item is displayed
+        let testActive = false;     // Flag to prevent actions after test completion
 
         document.addEventListener('DOMContentLoaded', function () {
             startTest();
+
+            // Continuously update hidden form fields every second
+            setInterval(updateHiddenFields, 1000);
         });
 
         function startTest() {
@@ -176,6 +182,7 @@
         }
 
         function showNextItem() {
+            // Check if test should end: all items completed or test manually stopped (timeout)
             if (currentItemIndex >= testItems.length || !testActive) {
                 saveResultsAndSubmit();
                 return;
@@ -184,10 +191,11 @@
             const item = testItems[currentItemIndex];
             const testElement = document.getElementById('testItem');
 
-            // Display word in the specified color
+            // Display word text in different color
             testElement.textContent = item.word.toUpperCase();
             testElement.style.color = item.color;
 
+            // Update progress counter and start timing for reaction time measurement
             document.getElementById('currentItem').textContent = currentItemIndex + 1;
             itemStartTime = Date.now();
         }
@@ -195,11 +203,13 @@
         // Skip for debugging
         function skipSession() {
             if (confirm('Skip this session?')) {
+                updateHiddenFields();
                 document.querySelector('form').submit();
             }
         }
 
         function selectColor(selectedColor) {
+            // Prevent actions if test is not active
             if (!testActive) return;
 
             const reactionTime = Date.now() - itemStartTime;
@@ -215,35 +225,47 @@
                 errors++;
             }
 
+            // Update form fields immediately after each answer
+            updateHiddenFields();
+
             currentItemIndex++;
             showNextItem();
         }
 
-        function saveResultsAndSubmit() {
-            testActive = false;
 
+        function updateHiddenFields() {
             const avgReactionTime = reactionTimes.length > 0
                 ? reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length
                 : 0;
 
+            // Calculate total errors including unanswered questions
+            const totalQuestions = testItems.length;
+            const answeredQuestions = score + errors;
+            const unansweredQuestions = totalQuestions - answeredQuestions;
+            const totalErrors = errors + unansweredQuestions;
+
+            // Update hidden form fields that will be submitted to oTree
             document.getElementById('cognitive_test_score').value = score;
             document.getElementById('cognitive_test_reaction_time').value = Math.round(avgReactionTime);
-            document.getElementById('cognitive_test_errors').value = errors;
+            document.getElementById('cognitive_test_errors').value = totalErrors;
+        }
 
+        function saveResultsAndSubmit() {
+            // Prevent multiple submissions
+            testActive = false;
+
+            // Final data update before submission
+            updateHiddenFields();
+
+            // Submit form to oTree backend
             document.querySelector('form').submit();
         }
 
+        // Handle browser crash
         window.addEventListener('beforeunload', function () {
-            if (testActive) {
-                const avgReactionTime = reactionTimes.length > 0
-                    ? reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length
-                    : 0;
-
-                document.getElementById('cognitive_test_score').value = score;
-                document.getElementById('cognitive_test_reaction_time').value = Math.round(avgReactionTime);
-                document.getElementById('cognitive_test_errors').value = errors;
-            }
+            updateHiddenFields();
         });
+
     </script>
 
 {% endblock %}

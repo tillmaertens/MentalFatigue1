@@ -240,7 +240,6 @@
             }
         }
 
-
         .skip {
             background: #dc3545;
             color: white;
@@ -432,50 +431,53 @@
         }
     </style>
 
-    <!-- Skip Button -->
+    {# Debug skip button for development and testing #}
     <div class="skip">
         <button onclick="skipSession()" class="skip-button">
             Skip Session
         </button>
     </div>
 
-    <!-- Session Info Bar -->
+    {# Session progress indicator showing current session within vacancy #}
     <div class="session-info-bar">
         <strong>Session {{ session_number }} of {{ total_sessions }}</strong>
     </div>
 
-    <!-- Main Container -->
+    {# Main layout: Two-panel design mimicking collaborative workspace #}
     <div class="business-partner-container">
-        <!-- Video Meeting -->
+
+        {# Left panel: Video meeting simulation placeholder #}
         <div class="left-panel">
             <div>Video Meeting Placeholder</div>
         </div>
 
-        <!-- Right Panel -->
+        {# Right panel: Contains requirements catalog and document access tools #}
         <div class="right-panel">
 
+            {# Default view: Requirements catalog access and document buttons #}
             <div id="defaultView">
                 <div class="preference-header">Requirements</div>
 
-                <!-- Requirements Catalog Notebook -->
+                {# Requirements catalog notebook: Main interaction element #}
+                {# Clicking opens the interactive requirements browsing interface #}
                 <div class="requirements-notebook" onclick="showRequirementsCatalog()">
                     <img src="{{ static_path }}notebook.png" alt="Job Requirement Catalog"/>
                 </div>
 
-                <!-- Email Button -->
+                {# Email access button: Opens PDF containing relevant email #}
                 <button type="button" class="email-button" onclick="openPDF(event, 'Emails.pdf')" title="Open Emails">
                 </button>
 
-                <!-- Sticky Notes Button -->
+                {# Sticky notes button: Opens image containing notes and reminders #}
                 <button type="button" class="sticky-button" onclick="openImage(event, 'StickyNotes.jpg')"
                         title="Open Sticky Notes">
                 </button>
             </div>
 
-            <!-- Requirements Catalog View -->
+            {# Requirements catalog interface: Hidden by default, shown when notebook is clicked #}
             <div id="requirementsCatalog" style="display: none;">
 
-
+                {# Catalog header with title and close functionality #}
                 <div class="requirements-header">
                     <div class="requirements-title">Requirements Catalog</div>
                     <button type="button" class="close-catalog-btn" onclick="closeRequirementsCatalog()">
@@ -483,23 +485,23 @@
                     </button>
                 </div>
 
-                <!-- Category Selection -->
+                {# Category selection: First level of catalog navigation #}
                 <div class="category-selection">
                     <div class="category-title">Select Category:</div>
                     <div class="category-buttons" id="categoryButtons">
-                        <!-- Will be populated by JavaScript -->
+                        {# Category buttons populated dynamically by JavaScript from backend data #}
                     </div>
                 </div>
 
-                <!-- Criteria Selection -->
+                {# Criteria selection: Second level navigation, shown after category selection #}
                 <div id="criteriaSelection" class="criteria-selection">
                     <div class="category-title">Select Criterion:</div>
                     <div class="criteria-list" id="criteriaList">
-                        <!-- Will be populated by JavaScript -->
+                        {# Criteria list populated dynamically based on selected category #}
                     </div>
                 </div>
 
-                <!-- Selected Criteria and Points Table -->
+                {# Points table: Shows detailed scoring information for selected criterion #}
                 <div id="pointsTableContainer" style="display: none;">
                     <div id="selectedCriteriaTitle" class="selected-criteria"></div>
                     <table class="points-table">
@@ -510,6 +512,7 @@
                         </tr>
                         </thead>
                         <tbody id="pointsTableBody">
+                        {# Table rows populated dynamically with point expressions from metadata #}
                         </tbody>
                     </table>
                 </div>
@@ -518,24 +521,27 @@
         </div>
     </div>
 
-    <!-- JavaScript -->
     <script>
+        // Import evaluation criteria data from Django backend
+        // Contains all requirements with scores, categories, and point expressions
         const criteriaData = {{ criteria_data|safe }};
+
+        // List of all unique categories for navigation
         const categories = {{ categories|safe }};
+
+        // Criteria organized by category for efficient filtering
         const criteriaByCategory = {{ criteria_by_category|safe }};
 
-        // To remove '' and []
+        // Removes formatting artifacts from backend data
         function cleanText(text) {
             if (!text || typeof text !== 'string') return text;
 
             let cleaned = text;
 
-            // Remove square brackets at start and end
             if (cleaned.startsWith('[') && cleaned.endsWith(']')) {
                 cleaned = cleaned.slice(1, -1);
             }
 
-            // Remove quotes at start and end
             if ((cleaned.startsWith("'") && cleaned.endsWith("'")) ||
                 (cleaned.startsWith('"') && cleaned.endsWith('"'))) {
                 cleaned = cleaned.slice(1, -1);
@@ -546,28 +552,34 @@
 
 
         function skipSession() {
+            // Development function: Skip current session for testing
             if (confirm('Skip this session?')) {
                 document.querySelector('form').submit();
             }
         }
 
         function showRequirementsCatalog() {
+            // Transition from default view to requirements catalog interface
+            // Hides main interface and shows interactive catalog
             document.getElementById('defaultView').style.display = 'none';
             document.getElementById('requirementsCatalog').style.display = 'block';
 
-            // Initialize category buttons
+            // Initialize the category selection interface
             initializeCategoryButtons();
         }
 
         function closeRequirementsCatalog() {
+            // Return to default view from requirements catalog
             document.getElementById('defaultView').style.display = 'block';
             document.getElementById('requirementsCatalog').style.display = 'none';
 
-            // Reset selections
+            // Clear all selections and reset interface state
             resetSelections();
         }
 
         function initializeCategoryButtons() {
+            // Creates category selection buttons from backend data
+            // Each category groups related evaluation criteria
             const categoryButtonsContainer = document.getElementById('categoryButtons');
             categoryButtonsContainer.innerHTML = '';
 
@@ -583,29 +595,35 @@
         }
 
         function selectCategory(category, buttonElement) {
-            // Close points table and reset criteria selection
+            // Handles category selection and shows related criteria
+            // Resets previous selections
+
+            // Hide points table from previous selections
             document.getElementById('pointsTableContainer').style.display = 'none';
 
-            // Remove active class from all category buttons
+            // Update button visual states
             document.querySelectorAll('.category-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
 
-            // Add active class to selected button
             buttonElement.classList.add('active');
 
-            // Show criteria for this category
+            // Load and display criteria for selected category
             showCriteriaForCategory(category);
         }
 
         function showCriteriaForCategory(category) {
+            // Populates criteria list based on selected category
+            // Uses criteriaByCategory data structure for efficient filtering
             const criteriaListContainer = document.getElementById('criteriaList');
             const criteriaSelection = document.getElementById('criteriaSelection');
 
             criteriaListContainer.innerHTML = '';
 
+            // Get criteria for this category from backend data structure
             const categoryRequirements = criteriaByCategory[category] || [];
 
+            // Create clickable items for each criterion in the category
             categoryRequirements.forEach(requirement => {
                 const criteriaItem = document.createElement('div');
                 criteriaItem.className = 'criteria-item';
@@ -615,31 +633,37 @@
                 criteriaListContainer.appendChild(criteriaItem);
             });
 
+            // Show the criteria selection interface
             criteriaSelection.classList.add('show');
         }
 
         function selectCriterion(requirement) {
-            // Close previous table (if any)
+            // Handles individual criterion selection and displays detailed information
+            // Transitions from criteria list to detailed points table view
+
+            // Hide previous points table if any
             document.getElementById('pointsTableContainer').style.display = 'none';
 
-            // Hide criteria selection
+            // Hide criteria selection list
             document.getElementById('criteriaSelection').classList.remove('show');
 
-            // Show selected criterion title
             document.getElementById('selectedCriteriaTitle').textContent = requirement.name;
 
-            // Generate points table
+            // Generate and populate the detailed points table
             generatePointsTable(requirement);
 
-            // Show points table
+            // Show the points table interface
             document.getElementById('pointsTableContainer').style.display = 'block';
         }
 
         function generatePointsTable(requirement) {
+            // Creates detailed scoring table for selected criterion
+            // Shows point values and corresponding performance expressions
             const tableBody = document.getElementById('pointsTableBody');
             tableBody.innerHTML = '';
 
-            // Find the full criterion data with scores from metadata
+            // Find complete criterion data from metadata
+            // requirement parameter only contains basic info, need full data for point expressions
             let fullCriterion = null;
             for (let criterion of criteriaData) {
                 if (criterion.name === requirement.name) {
@@ -649,7 +673,7 @@
             }
 
             if (!fullCriterion) {
-                // Show message if no criterion data available
+                // Handle case where criterion data is not available
                 const row = document.createElement('tr');
                 row.innerHTML = '<td colspan="2" style="text-align: center; color: #666;">No data available for this criterion</td>';
                 tableBody.appendChild(row);
@@ -660,14 +684,15 @@
             for (let points = {{ min_score }}; points <= {{ max_score }}; points++) {
                 const pointField = `requirement_point_is_${points}`;
 
-                // Check if this field exists in the criterion
+                // Skip if this point level has no defined expression
                 if (!fullCriterion.hasOwnProperty(pointField)) continue;
 
                 const expression = fullCriterion[pointField];
 
-                // Skip empty expressions or "None"
+                // Skip empty or undefined expressions
                 if (!expression || expression === 'None' || expression.trim() === '') continue;
 
+                // Create table row with expression and corresponding point value
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="expression-cell">${cleanText(expression)}</td>
@@ -676,7 +701,7 @@
                 tableBody.appendChild(row);
             }
 
-            // If no valid rows were added, show message
+            // Show message if no valid point expressions were found
             if (tableBody.children.length === 0) {
                 const row = document.createElement('tr');
                 row.innerHTML = '<td colspan="2" style="text-align: center; color: #666;">No points expressions defined for this criterion</td>';
@@ -685,20 +710,26 @@
         }
 
         function resetSelections() {
+            // Clears all selection states and returns interface to initial state
+            // Called when closing catalog or starting fresh navigation
             document.getElementById('criteriaSelection').classList.remove('show');
             document.getElementById('pointsTableContainer').style.display = 'none';
 
+            // Remove active styling from all category buttons
             document.querySelectorAll('.category-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
         }
 
         function openPDF(event, pdfPath) {
+            // Opens PDF documents in full-screen modal overlay
+            // Prevents event bubbling to avoid triggering parent element clicks
             event.preventDefault();
             event.stopPropagation();
 
             const fullPath = '{{ static_path }}' + pdfPath;
 
+            // Create modal overlay with iframe for PDF display
             const modal = document.createElement('div');
             modal.id = 'pdfModal';
             modal.className = 'pdf-modal-overlay';
@@ -707,6 +738,7 @@
             iframe.src = fullPath;
             iframe.className = 'pdf-iframe';
 
+            // Create close button with multiple close mechanisms
             const closeBtn = document.createElement('button');
             closeBtn.textContent = '× Close';
             closeBtn.className = 'modal-close-btn';
@@ -717,6 +749,7 @@
                 }
             };
 
+            // Multiple ways to close modal: button click, background click, escape key
             closeBtn.onclick = closeModal;
             modal.onclick = (e) => e.target === modal && closeModal();
 
@@ -736,6 +769,7 @@
         }
 
         function openImage(event, imagePath) {
+            // Opens image files in modal overlay with error handling
             event.preventDefault();
             event.stopPropagation();
 
@@ -773,7 +807,7 @@
             };
             document.addEventListener('keydown', handleKeyPress);
 
-            // Optional: Keep error handling
+            // Handle image loading errors gracefully
             img.onerror = () => {
                 img.style.display = 'none';
                 const errorMsg = document.createElement('div');

@@ -1,10 +1,30 @@
 {% block title %}Consent Form{% endblock %}
 
 {% block content %}
-    <div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+    <style>
+        .consent-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .consent-info-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .consent-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+    </style>
+
+    <div class="consent-container">
         <h2>Mental Fatigue Experiment - Consent Form</h2>
 
-        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+        <div class="consent-info-box">
             <h3>Experiment Overview</h3>
             <p>You will participate in a digital coworking simulation with 6 sessions of 10 minutes each.</p>
             <p>We will measure various aspects of mental fatigue and performance.</p>
@@ -18,7 +38,7 @@
             </ul>
         </div>
 
-        <div style="text-align: center; margin: 30px 0;">
+        <div class="consent-section">
             <p><strong>Do you consent to participate in this experiment?</strong></p>
             {% next_button %}
         </div>

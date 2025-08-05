@@ -7,13 +7,13 @@ SESSION_CONFIGS = [
         num_demo_participants=3,
     ),
 ]
-"""
+
 SESSION_CONFIG_DEFAULTS = dict(
-    real_world_currency_per_point=1.00,
+    real_world_currency_per_point=0.00,
     participation_fee=0.00,
     doc="",
 )
-"""
+
 
 # Data stored for each individual participant across all rounds
 PARTICIPANT_FIELDS = [

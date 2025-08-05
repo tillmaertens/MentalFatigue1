@@ -1,135 +1,149 @@
 {% block title %}Cognitive Test Results - Session {{ session_number }}{% endblock %}
 
 {% block content %}
-<style>
-    body {
-        background-color: #FFFFFF;
-        font-family: Arial, sans-serif;
-        padding: 20px;
-        max-width: 700px;
-        margin: 0 auto;
-        text-align: center;
-        color: #333;
-    }
+    <style>
+        body {
+            background-color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+            color: #333;
+        }
 
-    .otree-timer,
-    .alert-warning {
-        background-color: transparent !important;
-        border: none !important;
-        color: #666 !important;
-        font-size: 14px !important;
-        text-align: center !important;
-    }
+        .otree-timer,
+        .alert-warning {
+            background-color: transparent !important;
+            border: none !important;
+            color: #666 !important;
+            font-size: 14px !important;
+            text-align: center !important;
+        }
 
-    .results-container {
-        background-color: #f8f9fa;
-        padding: 30px;
-        border-radius: 5px;
-        margin: 20px 0;
-        border: 1px solid #dee2e6;
-    }
+        .results-container {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #dee2e6;
+        }
 
-    .results-container h3 {
-        color: #333;
-        margin-top: 0;
-        margin-bottom: 20px;
-    }
+        .results-container h3 {
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
 
-    .test-summary {
-        background-color: white;
-        padding: 20px;
-        border-radius: 5px;
-        margin: 20px 0;
-        border: 1px solid #e9ecef;
-    }
+        .test-summary {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #e9ecef;
+        }
 
-    .test-summary h4 {
-        color: #333;
-        margin-top: 0;
-        margin-bottom: 20px;
-    }
+        .test-summary h4 {
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
 
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        margin: 20px 0;
-    }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
 
-    .stat-item {
-        padding: 15px;
-        background-color: #f8f9fa;
-        border-radius: 5px;
-        border: 1px solid #dee2e6;
-    }
+        .stat-item {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
 
-    .stat-value {
-        font-size: 24px;
-        font-weight: bold;
-        color: #333;
-        display: block;
-        margin-bottom: 5px;
-    }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
 
-    .stat-label {
-        font-size: 14px;
-        color: #666;
-        text-transform: uppercase;
-    }
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+        }
 
-    .continue-section {
-        margin-top: 30px;
-    }
+        .continue-section {
+            margin-top: 30px;
+        }
 
-    h1 {
-        color: #333;
-        margin-bottom: 20px;
-    }
-</style>
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+    </style>
 
-<h1>Cognitive Test Results</h1>
+    <h1>Cognitive Test Results</h1>
 
-<div class="results-container">
-    <h3>Test Complete</h3>
+    <div class="results-container">
+        <h3>Test Complete</h3>
 
-    <div class="test-summary">
-        <h4>Your Performance Summary</h4>
+        {# Performance summary section with statistics grid #}
+        <div class="test-summary">
+            <h4>Your Performance Summary</h4>
 
-        <div class="stats-grid">
-            <div class="stat-item">
-                <span class="stat-value">{{ score }}</span>
-                <div class="stat-label">Correct Answers</div>
-            </div>
-            <div class="stat-item">
-                <span class="stat-value">{{ errors }}</span>
-                <div class="stat-label">Errors</div>
-            </div>
-            <div class="stat-item">
-                <span class="stat-value" id="accuracy">0%</span>
-                <div class="stat-label">Accuracy</div>
-            </div>
-            <div class="stat-item">
-                <span class="stat-value">{{ reaction_time }}ms</span>
-                <div class="stat-label">Avg. Reaction Time</div>
+            <div class="stats-grid">
+
+                {# Display correct answers from Django context variable #}
+                <div class="stat-item">
+                    <span class="stat-value">{{ score }}</span>
+                    <div class="stat-label">Correct Answers</div>
+                </div>
+
+                {# Display error count from Django context variable #}
+                <div class="stat-item">
+                    <span class="stat-value">{{ errors }}</span>
+                    <div class="stat-label">Errors</div>
+                </div>
+
+                {# Accuracy percentage - calculated by JavaScript below #}
+                <div class="stat-item">
+                    <span class="stat-value" id="accuracy">0%</span>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+
+                {# Average reaction time from Django context variable #}
+                <div class="stat-item">
+                    <span class="stat-value">{{ reaction_time }}ms</span>
+                    <div class="stat-label">Avg. Reaction Time</div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="continue-section">
-    {% next_button %}
-</div>
+    <div class="continue-section">
+        {% next_button %}
+    </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const score = {{ score }};
-    const errors = {{ errors }};
-    const totalAttempted = score + errors; // Total questions actually answered
+    <script>
 
-    // Calculate accuracy based on attempted items instead of all Items
-    const accuracy = totalAttempted > 0 ? Math.round((score / totalAttempted) * 100) : 0;
-    document.getElementById('accuracy').textContent = accuracy + '%';
-});
-</script>
+        // Wait for DOM to be fully loaded before running script
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get performance data from Django template context
+            const score = {{ score }};
+            const errors = {{ errors }};
+
+            // Calculate total questions attempted (excludes unanswered questions)
+            const totalQuestions = {{ total_questions }};
+            const accuracy = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
+
+            // Update the accuracy display element with calculated percentage
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        });
+    </script>
 
 {% endblock %}

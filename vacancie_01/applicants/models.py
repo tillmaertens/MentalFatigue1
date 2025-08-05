@@ -366,7 +366,8 @@ class C(BaseConstants):
     RELEVANCE_FACTORS = {'low': 1, 'normal': 2, 'high': 3}
 
     # Cognitive Load Test settings
-    COGNITIVE_TEST_DURATION = 30
+    COGNITIVE_TEST_DURATION = 22
+    COGNITIVE_TEST_TOTAL_QUESTIONS = 20
     STROOP_WORDS = ['red', 'blue', 'green', 'yellow']
     STROOP_COLORS = ['#ff0000', '#0000ff', '#00ff00', '#ffff00']
 
