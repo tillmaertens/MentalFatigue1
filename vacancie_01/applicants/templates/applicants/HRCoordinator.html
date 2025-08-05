@@ -531,7 +531,8 @@
             <!-- Job Description and Pie Chart Section -->
             <div class="job-description-section">
                 <div class="job-description-container">
-                    <button type="button" class="job-description-button" onclick="openPDF(event, '{{ job_desc_file }}')">
+                    <button type="button" class="job-description-button"
+                            onclick="openPDF(event, '{{ job_desc_file }}')">
                         Job Description
                     </button>
 
@@ -598,6 +599,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
         const applicantsData = {{ applicants|safe }};
+        const predefinedCriteria = {{ predefined_criteria|safe }};  // NEW: For auto-loading
         const minScore = {{ min_score }};
         const maxScore = {{ max_score }};
         const categories = {{ categories|safe }};
@@ -611,6 +613,19 @@
 
         // Applicant colors for pie chart from backend
         const applicantColors = {{ applicant_colors|safe }};
+
+        // NEW: Validation styles for incomplete criteria
+        const validationStyles = `
+            .incomplete-field {
+                border: 2px solid #dc3545 !important;
+                background-color: #fff5f5 !important;
+            }
+            .add-criteria-btn.disabled {
+                background-color: #6c757d !important;
+                cursor: not-allowed !important;
+                opacity: 0.6;
+            }
+        `;
 
         // Count criteria locally and update hidden form field
         function updateLocalCriteriaCount() {
@@ -631,6 +646,83 @@
             }
         }
 
+        // NEW: Check if all current criteria are complete
+        function areAllCriteriaComplete() {
+            const tbody = document.getElementById('evaluationBody');
+            const rows = tbody.querySelectorAll('tr');
+
+            for (let row of rows) {
+                const criteriaInput = row.querySelector('.criteria-input');
+                const scoreSelects = row.querySelectorAll('.score-select');
+                const relevanceSelect = row.querySelector('.relevance-select');
+
+                // Check if criteria name is empty
+                if (!criteriaInput.value.trim()) {
+                    return false;
+                }
+
+                // Check if any score is empty
+                for (let scoreSelect of scoreSelects) {
+                    if (!scoreSelect.value) {
+                        return false;
+                    }
+                }
+
+                // Check if relevance is empty
+                if (!relevanceSelect.value) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // NEW: Highlight incomplete fields with red border
+        function highlightIncompleteFields() {
+            const tbody = document.getElementById('evaluationBody');
+            const rows = tbody.querySelectorAll('tr');
+
+            // Remove existing validation styles first
+            document.querySelectorAll('.incomplete-field').forEach(field => {
+                field.classList.remove('incomplete-field');
+            });
+
+            for (let row of rows) {
+                const criteriaInput = row.querySelector('.criteria-input');
+                const scoreSelects = row.querySelectorAll('.score-select');
+                const relevanceSelect = row.querySelector('.relevance-select');
+
+                // Check criteria name
+                if (!criteriaInput.value.trim()) {
+                    criteriaInput.classList.add('incomplete-field');
+                }
+
+                // Check scores
+                for (let scoreSelect of scoreSelects) {
+                    if (!scoreSelect.value) {
+                        scoreSelect.classList.add('incomplete-field');
+                    }
+                }
+
+                // Check relevance
+                if (!relevanceSelect.value) {
+                    relevanceSelect.classList.add('incomplete-field');
+                }
+            }
+        }
+
+        // NEW: Update add button state based on completion
+        function updateAddButtonState() {
+            const addButton = document.querySelector('.add-criteria-btn');
+            const allComplete = areAllCriteriaComplete();
+
+            if (allComplete) {
+                addButton.classList.remove('disabled');
+            } else {
+                addButton.classList.add('disabled');
+            }
+        }
+
         function skipSession() {
             if (confirm('Skip this session?')) {
                 // Update fields before submission
@@ -644,10 +736,17 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            // Add validation styles to page
+            const style = document.createElement('style');
+            style.textContent = validationStyles;
+            document.head.appendChild(style);
 
             // Clear any old data to start fresh
             localStorage.removeItem('nutzwertResults');
             localStorage.removeItem('evaluationData');
+
+            // NEW: Auto-load predefined criteria
+            loadPredefinedCriteria();
 
             // Initialize pie chart
             initializePieChart();
@@ -659,10 +758,27 @@
             startRealTimeUpdates();
         });
 
+        // NEW: Load predefined criteria automatically on page load
+        function loadPredefinedCriteria() {
+            if (predefinedCriteria && predefinedCriteria.length > 0) {
+                predefinedCriteria.forEach(criterion => {
+                    addCriteriaRow(criterion.name, {}, '');
+                });
+                updateAddButtonState();  // Check if add button should be disabled
+            }
+        }
+
         // Update the showFilterSelection function
         function showFilterSelection(event) {
             event.preventDefault();
             event.stopPropagation();
+
+            // NEW: Check if all criteria are complete before allowing new ones
+            if (!areAllCriteriaComplete()) {
+                highlightIncompleteFields();
+                return false;  // Don't show modal if incomplete
+            }
+
             showCriteriaModal();
             return false;
         }
@@ -714,7 +830,7 @@
         }
 
         function selectCriteriaFromModal(requirement) {
-            addCriteriaRow(requirement.name, {}, 'normal');
+            addCriteriaRow(requirement.name, {}, '');  // Same defaults as predefined
             closeCriteriaModal();
         }
 
@@ -731,6 +847,9 @@
                 relevanceOptions += `<option value="${option}" ${selected}>${option}</option>`;
             });
 
+            // Always add empty option first and mark as selected if relevance is empty
+            relevanceOptions = `<option value="" ${!relevance ? 'selected' : ''}>-</option>` + relevanceOptions;
+
             // Build the row HTML
             let rowHTML = `
     <td>
@@ -743,10 +862,10 @@
 
             // Score dropdown for each applicant
             applicantsData.forEach(applicant => {
-                const score = scores[applicant.id] || '';
+                const score = scores[applicant.id];
 
-                // Build score dropdown options
-                let scoreOptions = '<option value="">-</option>';
+                // Build score dropdown options - default to empty when no score provided
+                let scoreOptions = `<option value="" ${score === undefined || score === '' ? 'selected' : ''}>-</option>`;
                 for (let i = minScore; i <= maxScore; i++) {
                     const selected = score == i ? 'selected' : '';
                     scoreOptions += `<option value="${i}" ${selected}>${i}</option>`;
@@ -792,6 +911,11 @@
                     updateCriterionData(criteriaCount);
                 }, 100);
             }
+
+            // NEW: Update button state after adding row
+            setTimeout(() => {
+                updateAddButtonState();
+            }, 100);
         }
 
         function deleteCriteria(id) {
@@ -815,11 +939,15 @@
                     clearTimeout(saveTimeouts[`criteria-${id}`]);
                     delete saveTimeouts[`criteria-${id}`];
                 }
+
+                // NEW: Update button state after deletion
+                updateAddButtonState();
             }
         }
 
         function saveRelevance(criteriaId) {
             updateCriterionData(criteriaId);
+            updateAddButtonState();  // NEW: Check completion after relevance change
         }
 
         function debouncedSaveCriterion(id) {
@@ -835,6 +963,7 @@
 
         function saveCriterion(id) {
             updateCriterionData(id);
+            updateAddButtonState();  // NEW: Check completion after criterion name change
         }
 
         function saveScore(applicantId, criteriaId) {
@@ -848,6 +977,7 @@
 
             // Update the criterion data )for Pie chart)
             updateCriterionData(criteriaId);
+            updateAddButtonState();  // NEW: Check completion after score change
         }
 
         function updateCriterionData(criteriaId) {

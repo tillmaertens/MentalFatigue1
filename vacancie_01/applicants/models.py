@@ -60,17 +60,10 @@ def load_metadata_criteria(round_number=None, player=None):
     """
     Loads evaluation criteria from Excel metadata files for current vacancy.
 
-    Reads criteria data including names, categories, relevance levels, and scoring
-    information for all applicants. Supports different metadata files for
-    different vacancy periods.
-
-    Args:
-    round_number (int, optional): Current round to determine vacancy
-    player (Player, optional): Player object for vacancy determination
-
     Returns:
     dict: Organized criteria data containing:
         - criteria: List of all criteria with scores and metadata
+        - predefined_criteria: List of criteria that should be pre-loaded in HR interface
         - categories: List of unique category names
         - criteria_by_category: Dictionary grouping criteria by category
     """
@@ -99,12 +92,14 @@ def load_metadata_criteria(round_number=None, player=None):
         df = pd.read_excel(file_path, header=1)
 
         criteria_data = []  # List of all criteria objects
+        predefined_criteria = []  # List of predefined criteria for auto-loading
         categories = []  # List of unique category names
 
         for index, row in df.iterrows():
             name_value = row.get('requirement_name')
             category_value = row.get('requirement_category')
             relevance_value = row.get('requirement_relevance')
+            need_defined_by = row.get('requirement_need_defined_by')  # New column for predefined check
 
             applicant_a_score = row.get('applicant_a_points')
             applicant_b_score = row.get('applicant_b_points')
@@ -117,6 +112,7 @@ def load_metadata_criteria(round_number=None, player=None):
                     'name': str(name_value).strip(),
                     'category': str(category_value).strip() if pd.notna(category_value) else 'general',
                     'relevance': str(relevance_value).strip() if pd.notna(relevance_value) else 'normal',
+                    'need_defined_by': str(need_defined_by).strip() if pd.notna(need_defined_by) else 'tender',
                     'scores': {
                         'applicant_a': int(applicant_a_score) if pd.notna(applicant_a_score) else 0,
                         'applicant_b': int(applicant_b_score) if pd.notna(applicant_b_score) else 0,
@@ -134,6 +130,10 @@ def load_metadata_criteria(round_number=None, player=None):
                 # Add criterion to main list
                 criteria_data.append(criterion)
 
+                # Check if this criterion should be predefined in HR interface
+                if need_defined_by and str(need_defined_by).strip().lower() == 'predefined':
+                    predefined_criteria.append(criterion)
+
                 if criterion['category'] not in categories:
                     categories.append(criterion['category'])
 
@@ -146,13 +146,15 @@ def load_metadata_criteria(round_number=None, player=None):
 
         return {
             'criteria': criteria_data,
+            'predefined_criteria': predefined_criteria,
             'categories': categories,
-            'criteria_by_category': criteria_by_category  # Grouped for dropdowns
+            'criteria_by_category': criteria_by_category
         }
 
     except Exception as e:
         return {
             'criteria': [],
+            'predefined_criteria': [],
             'categories': [],
             'criteria_by_category': {}
         }
@@ -481,6 +483,7 @@ class Player(BasePlayer):
     Returns:
     bool: True if player is assigned a certain Role 
     """
+
     def is_recruiter(self):
         return self.selected_role == C.RECRUITER_ROLE
 

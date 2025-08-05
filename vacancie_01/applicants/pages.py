@@ -313,6 +313,7 @@ class HRCoordinator(Page):
             'vacancy_number': vacancy_number,
             'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else C.VACANCY_1_DURATION_SECONDS,
             'criteria_data': metadata['criteria'],
+            'predefined_criteria': metadata['predefined_criteria'],
             'categories': metadata['categories'],
             'criteria_by_category': metadata['criteria_by_category'],
             'relevance_factors': C.RELEVANCE_FACTORS,
