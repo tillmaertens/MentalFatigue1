@@ -2,204 +2,208 @@
 
 {% block content %}
 
-<style>
-    body {
-        background-color: #FFFFFF;
-        font-family: Arial, Helvetica, sans-serif;
-        padding: 20px;
-        max-width: 800px;
-        margin: 0 auto;
-    }
+    <style>
+        body {
+            background-color: #FFFFFF;
+            font-family: Arial, Helvetica, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
 
-    .session-info {
-    padding: 20px;
-    text-align: center;
-}
+        .session-info {
+            padding: 20px;
+            text-align: center;
+        }
 
-    .assessment-form {
-        background-color: #f8f9fa;
-        padding: 30px;
-        border-radius: 10px;
-        border: 1px solid #e9ecef;
-    }
+        .assessment-form {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
 
-    .question-group {
-        margin-bottom: 30px;
-        padding: 20px;
-        background-color: white;
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
-    }
+        .question-group {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
 
-    .question-label {
-        font-size: 18px;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 15px;
-        display: block;
-    }
+        .question-label {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: block;
+        }
 
-    .scale-labels {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-        font-size: 12px;
-        color: #666;
-        margin-bottom: 10px;
-    }
+        .scale-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
 
-    .scale-inputs {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-    }
+        .scale-inputs {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
 
-    .scale-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 5px;
-    }
+        .scale-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
 
-    .scale-item input[type="radio"] {
-        transform: scale(1.2);
-        margin: 0;
-    }
+        .scale-item input[type="radio"] {
+            transform: scale(1.2);
+            margin: 0;
+        }
 
-    .scale-item label {
-        font-size: 14px;
-        font-weight: bold;
-        color: #333;
-        margin: 0;
-    }
+        .scale-item label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
 
-    .submit-section {
-        text-align: center;
-        margin-top: 10px;
-        padding: 20px;
-    }
+        .submit-section {
+            text-align: center;
+            margin-top: 10px;
+            padding: 20px;
+        }
 
-    h1, h2 {
-        text-align: center;
-        color: #333;
-    }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
 
-    .required {
-        color: #dc3545;
-    }
-</style>
+        .required {
+            color: #dc3545;
+        }
+    </style>
 
-<div class="session-info">
-    <p><strong>Role played:</strong> {{ role_played }}</p>
-    <p>Please evaluate your experience during this session</p>
-</div>
+    {# Session context information showing role played and instructions #}
+    <div class="session-info">
+        <p><strong>Role played:</strong> {{ role_played }}</p>
+        <p>Please evaluate your experience during this session</p>
+    </div>
 
-<div class="assessment-form">
+    <div class="assessment-form">
 
-    <!-- Fatigue Level -->
-    <div class="question-group">
-        <label class="question-label">
-            How tired/fatigued did you feel? <span class="required">*</span>
-        </label>
-        <div class="scale-labels">
-            <span>Not tired at all</span>
-            <span>Extremely tired</span>
-        </div>
-        <div class="scale-inputs">
-            {% for i in "1234567890" %}
-                {% if i != "0" %}
+        {# Fatigue Level Assessment: Maps to Player.fatigue_level field #}
+        <div class="question-group">
+            <label class="question-label">
+                How tired/fatigued did you feel? <span class="required">*</span>
+            </label>
+            <div class="scale-labels">
+                <span>Not tired at all</span>
+                <span>Extremely tired</span>
+            </div>
+            <div class="scale-inputs">
+                {% for i in "1234567890" %}
+                    {% if i != "0" %}
+                        <div class="scale-item">
+                            <input type="radio" name="fatigue_level" value="{{ i }}" id="fatigue_{{ i }}" required>
+                            <label for="fatigue_{{ i }}">{{ i }}</label>
+                        </div>
+                    {% endif %}
+                {% endfor %}
                 <div class="scale-item">
-                    <input type="radio" name="fatigue_level" value="{{ i }}" id="fatigue_{{ i }}" required>
-                    <label for="fatigue_{{ i }}">{{ i }}</label>
+                    <input type="radio" name="fatigue_level" value="10" id="fatigue_10" required>
+                    <label for="fatigue_10">10</label>
                 </div>
-                {% endif %}
-            {% endfor %}
-            <div class="scale-item">
-                <input type="radio" name="fatigue_level" value="10" id="fatigue_10" required>
-                <label for="fatigue_10">10</label>
+            </div>
+        </div>
+
+        {# Mental Effort Assessment: Maps to Player.mental_effort field #}
+        <div class="question-group">
+            <label class="question-label">
+                How much mental effort did the task require? <span class="required">*</span>
+            </label>
+            <div class="scale-labels">
+                <span>Very low effort</span>
+                <span>Very high effort</span>
+            </div>
+            <div class="scale-inputs">
+                {% for i in "1234567890" %}
+                    {% if i != "0" %}
+                        <div class="scale-item">
+                            <input type="radio" name="mental_effort" value="{{ i }}" id="effort_{{ i }}" required>
+                            <label for="effort_{{ i }}">{{ i }}</label>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                <div class="scale-item">
+                    <input type="radio" name="mental_effort" value="10" id="effort_10" required>
+                    <label for="effort_10">10</label>
+                </div>
+            </div>
+        </div>
+
+        {# Concentration Difficulty Assessment: Maps to Player.concentration_difficulty field #}
+        <div class="question-group">
+            <label class="question-label">
+                How difficult was it to concentrate? <span class="required">*</span>
+            </label>
+            <div class="scale-labels">
+                <span>Very easy</span>
+                <span>Very difficult</span>
+            </div>
+            <div class="scale-inputs">
+                {% for i in "1234567890" %}
+                    {% if i != "0" %}
+                        <div class="scale-item">
+                            <input type="radio" name="concentration_difficulty" value="{{ i }}"
+                                   id="concentration_{{ i }}" required>
+                            <label for="concentration_{{ i }}">{{ i }}</label>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                <div class="scale-item">
+                    <input type="radio" name="concentration_difficulty" value="10" id="concentration_10" required>
+                    <label for="concentration_10">10</label>
+                </div>
+            </div>
+        </div>
+
+        {# Motivation Level Assessment: Maps to Player.motivation_level field #}
+        <div class="question-group">
+            <label class="question-label">
+                How motivated did you feel? <span class="required">*</span>
+            </label>
+            <div class="scale-labels">
+                <span>Very low motivation</span>
+                <span>Very high motivation</span>
+            </div>
+            <div class="scale-inputs">
+                {% for i in "1234567890" %}
+                    {% if i != "0" %}
+                        <div class="scale-item">
+                            <input type="radio" name="motivation_level" value="{{ i }}" id="motivation_{{ i }}"
+                                   required>
+                            <label for="motivation_{{ i }}">{{ i }}</label>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                <div class="scale-item">
+                    <input type="radio" name="motivation_level" value="10" id="motivation_10" required>
+                    <label for="motivation_10">10</label>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Mental Effort -->
-    <div class="question-group">
-        <label class="question-label">
-            How much mental effort did the task require? <span class="required">*</span>
-        </label>
-        <div class="scale-labels">
-            <span>Very low effort</span>
-            <span>Very high effort</span>
-        </div>
-        <div class="scale-inputs">
-            {% for i in "1234567890" %}
-                {% if i != "0" %}
-                <div class="scale-item">
-                    <input type="radio" name="mental_effort" value="{{ i }}" id="effort_{{ i }}" required>
-                    <label for="effort_{{ i }}">{{ i }}</label>
-                </div>
-                {% endif %}
-            {% endfor %}
-            <div class="scale-item">
-                <input type="radio" name="mental_effort" value="10" id="effort_10" required>
-                <label for="effort_10">10</label>
-            </div>
-        </div>
+    {# Form submission area with oTree next button #}
+    <div class="submit-section">
+        <p>Please answer all questions before continuing.</p>
+        {% next_button %}
     </div>
-
-    <!-- Concentration Difficulty -->
-    <div class="question-group">
-        <label class="question-label">
-            How difficult was it to concentrate? <span class="required">*</span>
-        </label>
-        <div class="scale-labels">
-            <span>Very easy</span>
-            <span>Very difficult</span>
-        </div>
-        <div class="scale-inputs">
-            {% for i in "1234567890" %}
-                {% if i != "0" %}
-                <div class="scale-item">
-                    <input type="radio" name="concentration_difficulty" value="{{ i }}" id="concentration_{{ i }}" required>
-                    <label for="concentration_{{ i }}">{{ i }}</label>
-                </div>
-                {% endif %}
-            {% endfor %}
-            <div class="scale-item">
-                <input type="radio" name="concentration_difficulty" value="10" id="concentration_10" required>
-                <label for="concentration_10">10</label>
-            </div>
-        </div>
-    </div>
-
-    <!-- Motivation Level -->
-    <div class="question-group">
-        <label class="question-label">
-            How motivated did you feel? <span class="required">*</span>
-        </label>
-        <div class="scale-labels">
-            <span>Very low motivation</span>
-            <span>Very high motivation</span>
-        </div>
-        <div class="scale-inputs">
-            {% for i in "1234567890" %}
-                {% if i != "0" %}
-                <div class="scale-item">
-                    <input type="radio" name="motivation_level" value="{{ i }}" id="motivation_{{ i }}" required>
-                    <label for="motivation_{{ i }}">{{ i }}</label>
-                </div>
-                {% endif %}
-            {% endfor %}
-            <div class="scale-item">
-                <input type="radio" name="motivation_level" value="10" id="motivation_10" required>
-                <label for="motivation_10">10</label>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="submit-section">
-    <p>Please answer all questions before continuing.</p>
-    {% next_button %}
-</div>
 
 {% endblock %}
