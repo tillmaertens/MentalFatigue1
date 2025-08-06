@@ -40,8 +40,7 @@ class Recruiter(Page):
 
     def is_displayed(self):
         """
-        Only shown during active vacancy sessions (rounds 2 and 3).
-        Automatically assigns static roles and checks if player has Recruiter role.
+        Shows recruiter interface only during vacancy rounds with role assignment.
         """
         if not should_show_vacancy_session(self.player.round_number):
             return False
@@ -400,14 +399,14 @@ class BusinessPartner(Page):
 
 class SelfAssessment(Page):
     """
-    Post-session questionnaire for measuring mental fatigue and subjective workload.
+    Post-session questionnaire for measuring mental fatigue and subjective workload (on a scale of 1 - 10).
     Now shown in all 3 rounds: Baseline (Round 1), After V1 (Round 2), After V2 (Round 3).
 
     Form Fields:
-        - fatigue_level: Self-reported fatigue (1=not tired, 10=extremely tired)
-        - mental_effort: Mental effort required (1=very low, 10=very high)
-        - concentration_difficulty: Difficulty concentrating (1=easy, 10=difficult)
-        - motivation_level: Current motivation (1=very low, 10=very high)
+        - fatigue_level
+        - mental_effort
+        - concentration_difficulty
+        - motivation_level
     """
     form_model = 'player'
     form_fields = ['fatigue_level', 'mental_effort', 'concentration_difficulty', 'motivation_level']

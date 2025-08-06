@@ -305,13 +305,13 @@ class C(BaseConstants):
 
     NAME_IN_URL = 'mental_fatigue'
     PLAYERS_PER_GROUP = 3
-    NUM_ROUNDS = 4  # Baseline + Vacancy 1 + Vacancy 2 + Results
+    NUM_ROUNDS = 4
 
     # 4-round structure definition
-    CONSENT_ROUND = 1  # Consent + Baseline measurements
-    VACANCY_1_ROUND = 2  # Vacancy 1 (unlimited time)
-    VACANCY_2_ROUND = 3  # Vacancy 2 (10 minutes)
-    FINAL_RESULTS_ROUND = 4  # Final results comparison
+    CONSENT_ROUND = 1
+    VACANCY_1_ROUND = 2  # Unlimited time
+    VACANCY_2_ROUND = 3  # 10 minutes
+    FINAL_RESULTS_ROUND = 4
 
     # Only Vacancy 2 has time limit
     VACANCY_2_DURATION_MINUTES = 10
@@ -351,7 +351,7 @@ class C(BaseConstants):
     }
 
     # Sessions configurations
-    SESSIONS_PER_VACANCY = 1  # Only 1 session per vacancy
+    SESSIONS_PER_VACANCY = 1
 
 
 class Subsession(BaseSubsession):

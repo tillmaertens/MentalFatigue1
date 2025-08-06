@@ -1,7 +1,6 @@
 {% block title %}Final Results - Mental Fatigue Experiment{% endblock %}
 
 {% block content %}
-<!-- PLOTLY CDN HINZUFÜGEN (oben) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.29.1/plotly.min.js"></script>
 
 <style>
@@ -68,7 +67,6 @@
         font-weight: bold;
     }
 
-    /* NEUE CHART STYLES HINZUFÜGEN */
     .charts-section {
         margin: 30px 0;
     }
@@ -108,7 +106,6 @@
 
     .session-row {
         display: grid;
-        /* ERWEITERT: 8 statt 6 Spalten */
         grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
         padding: 15px 20px;
         border-bottom: 1px solid #e9ecef;
@@ -232,7 +229,6 @@
         border: 1px solid #e9ecef;
     }
 
-    /* NEUE BUTTON STYLES */
     .next-button-container {
         text-align: center;
         margin: 30px 0;
@@ -253,7 +249,6 @@
         cursor: pointer;
     }
 
-    /* TASK PERFORMANCE STYLES */
     .task-performance {
         margin: 30px 0;
     }
@@ -278,16 +273,16 @@
     }
 </style>
 
-<!-- FORM TAG HINZUFÜGEN -->
 <form method="post">
 
+{# Experiment completion header with participant acknowledgment #}
 <div class="completion-header">
     <h1>Experiment Complete</h1>
     <div class="completion-badge">Mental Fatigue Study - All {{ total_sessions_completed }} Sessions Completed</div>
     <p>Thank you for your participation in this comprehensive study</p>
 </div>
 
-<!-- ZWEI ZUSÄTZLICHE STAT CARDS -->
+{# Summary statistics dashboard for key dependent variables #}
 <div class="summary-stats">
     <div class="stat-card">
         <span class="stat-value">{{ total_sessions_completed }}</span>
@@ -305,7 +300,6 @@
         <span class="stat-value" id="cognitiveChange">{{ cognitive_decline }}</span>
         <div class="stat-label">Performance Change</div>
     </div>
-    <!-- NEUE CARDS -->
     <div class="stat-card">
         <span class="stat-value" id="avgEffort">-</span>
         <div class="stat-label">Avg Mental Effort</div>
@@ -316,7 +310,7 @@
     </div>
 </div>
 
-<!-- TASK PERFORMANCE SECTION - Only for HR Coordinators -->
+{# Task performance analysis section - role-specific results display #}
 {% if is_hr_coordinator %}
 <div class="task-performance">
     <div class="section-title">Task Performance Analysis</div>
@@ -341,13 +335,14 @@
 </div>
 {% endif %}
 
-<!-- NEUE CHARTS SECTION EINFÜGEN -->
+{# Data visualization section for research findings presentation #}
 <div class="charts-section">
     <div class="chart-container">
         <div class="chart-title">Performance Trends Over Sessions</div>
         <div id="performanceChart" style="width:100%;height:400px;"></div>
     </div>
 
+    {# Fatigue-performance correlation analysis for HR Coordinator role #}
     {% if is_hr_coordinator %}
     <div class="chart-container">
         <div class="chart-title">Fatigue vs Task Accuracy</div>
@@ -356,12 +351,12 @@
     {% endif %}
 </div>
 
+{# Session-by-session results table with comprehensive metrics #}
 <div class="sessions-table">
     <div class="table-header">
         Session-by-Session Results
     </div>
 
-    <!-- ERWEITERTE HEADER ROW -->
     <div class="session-row row-header">
         <div><strong>Session</strong></div>
         <div><strong>Role</strong></div>
@@ -369,7 +364,6 @@
         <div><strong>Mental Effort</strong></div>
         <div><strong>Concentration</strong></div>
         <div><strong>Motivation</strong></div>
-        <!-- NEUE SPALTEN -->
         <div><strong>Test Score</strong></div>
         <div><strong>Reaction Time</strong></div>
     </div>
@@ -384,13 +378,13 @@
         <div class="session-data" data-effort="{{ session.mental_effort }}">{{ session.mental_effort }}/10</div>
         <div class="session-data" data-concentration="{{ session.concentration_difficulty }}">{{ session.concentration_difficulty }}/10</div>
         <div class="session-data" data-motivation="{{ session.motivation_level }}">{{ session.motivation_level }}/10</div>
-        <!-- NEUE SPALTEN -->
         <div class="session-data">{% if session.cognitive_score %}{{ session.cognitive_score }}/20{% else %}-{% endif %}</div>
         <div class="session-data" data-reaction-time="{{ session.cognitive_reaction_time }}">{% if session.cognitive_reaction_time %}-{% else %}-{% endif %}</div>
     </div>
     {% endfor %}
 </div>
 
+{# Trend analysis dashboard with statistical interpretation #}
 <div class="trend-analysis">
     <div class="trend-card">
         <div class="trend-title">Fatigue Progression</div>
@@ -438,7 +432,6 @@
         {% endif %}
     </div>
 
-    <!-- ZWEI NEUE TREND CARDS -->
     <div class="trend-card">
         <div class="trend-title">Mental Effort</div>
         <div class="trend-indicator trend-negative">
@@ -456,6 +449,7 @@
     </div>
 </div>
 
+{# Research context and findings summary for participant debriefing #}
 <div class="debriefing">
     <h3>About This Research</h3>
     <p><strong>Purpose:</strong> This study investigated how mental fatigue develops during extended collaborative work sessions and how it affects cognitive performance.</p>
@@ -473,11 +467,11 @@
     </ul>
 </div>
 
+{# Participant appreciation and research impact statement #}
 <div class="thank-you">
     <h2>Thank You</h2>
     <p><strong>Your participation is invaluable for advancing our understanding of mental fatigue in digital work environments.</strong></p>
 
-    <!-- Optional -->
     <p>The data you provided will contribute to:</p>
     <ul>
         <li>Designing better break schedules for knowledge workers</li>
@@ -494,7 +488,7 @@
     </div>
 </div>
 
-<!-- SUBMIT BUTTON KORREKT PLATZIERT -->
+{# Continue button for multi-vacancy experiments #}
 {% if show_next_button %}
 <div class="next-button-container">
     <h3>Ready to Continue?</h3>
@@ -507,10 +501,12 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize results display with statistical calculations
     const avgFatigue = {{ average_fatigue }};
     const fatigueIncrease = {{ fatigue_increase }};
     const cognitiveDecline = {{ cognitive_decline }};
 
+    // Update summary statistics with formatted values
     const avgElement = document.getElementById('avgFatigue');
     if (avgElement) {
         avgElement.textContent = avgFatigue.toFixed(1);
@@ -528,6 +524,7 @@ document.addEventListener('DOMContentLoaded', function() {
         cognitiveElement.textContent = cognitiveDecline > 0 ? '-' + formattedCognitive : formattedCognitive;
     }
 
+    // Update trend indicators with precise change values
     const fatigue1 = document.getElementById('fatigueIncrease1');
     if (fatigue1) fatigue1.textContent = '+' + fatigueIncrease.toFixed(1) + ' points';
 
@@ -546,6 +543,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const cognitive3 = document.getElementById('cognitiveDecline3');
     if (cognitive3) cognitive3.textContent = '+' + Math.abs(cognitiveDecline).toFixed(1) + ' points';
 
+    // Clean and format session data display values
     const sessionDataElements = document.querySelectorAll('.session-data');
     sessionDataElements.forEach(function(element) {
         const text = element.textContent.trim();
@@ -553,7 +551,7 @@ document.addEventListener('DOMContentLoaded', function() {
             element.textContent = '-';
         }
 
-        // Format reaction time
+        // Format reaction time data for readability
         const reactionTime = element.getAttribute('data-reaction-time');
         if (reactionTime && reactionTime !== 'None' && reactionTime !== 'null') {
             const formattedTime = Math.round(parseFloat(reactionTime));
@@ -561,6 +559,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Display current completion timestamp
     const now = new Date();
     const dateString = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
     const dateElement = document.getElementById('completionDate');
@@ -568,7 +567,7 @@ document.addEventListener('DOMContentLoaded', function() {
         dateElement.textContent = dateString;
     }
 
-    // NEUE CHART FUNKTIONALITÄT
+    // Generate session data for longitudinal analysis visualization
     const sessionData = [
         {% for session in all_sessions %}
         {
@@ -585,14 +584,14 @@ document.addEventListener('DOMContentLoaded', function() {
         {% endfor %}
     ];
 
-    // Filter clean data
+    // Filter valid data points for reliable trend analysis
     const cleanData = sessionData.filter(d =>
         d.fatigue !== null && d.effort !== null &&
         d.concentration !== null && d.motivation !== null
     );
 
     if (cleanData.length > 1) {
-        // Create Multi-Line Chart
+        // Create multi-variable trend visualization using Plotly
         const traces = [
             {
                 x: cleanData.map(d => d.session),
@@ -633,21 +632,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
         Plotly.newPlot('performanceChart', traces, layout, {responsive: true});
 
-        // Calculate additional metrics
+        // Calculate additional trend metrics for comprehensive analysis
         const firstSession = cleanData[0];
         const lastSession = cleanData[cleanData.length - 1];
 
-        // Update effort trend
         const effortChange = lastSession.effort - firstSession.effort;
         document.getElementById('effortTrend').textContent =
             (effortChange > 0 ? '+' : '') + effortChange.toFixed(1) + ' points';
 
-        // Update motivation trend
         const motivationChange = lastSession.motivation - firstSession.motivation;
         document.getElementById('motivationTrend').textContent =
             (motivationChange > 0 ? '+' : '') + motivationChange.toFixed(1) + ' points';
 
-        // Update averages
+        // Calculate session averages for overall performance assessment
         const avgEffort = cleanData.reduce((sum, d) => sum + d.effort, 0) / cleanData.length;
         const avgMotivation = cleanData.reduce((sum, d) => sum + d.motivation, 0) / cleanData.length;
 
@@ -655,25 +652,25 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('avgMotivation').textContent = avgMotivation.toFixed(1);
     }
 
-    // TASK PERFORMANCE CALCULATIONS - Only for HR Coordinators
+    // Generate task performance analysis for HR Coordinator role
     {% if is_hr_coordinator %}
     const sessionsWithCriteria = sessionData.filter(d =>
         d.session && (d.criteriaCorrect > 0 || d.criteriaIncorrect > 0)
     );
 
     if (sessionsWithCriteria.length > 0) {
+        // Calculate evaluation accuracy metrics for decision quality analysis
         const totalCorrect = sessionsWithCriteria.reduce((sum, d) => sum + (d.criteriaCorrect || 0), 0);
         const totalIncorrect = sessionsWithCriteria.reduce((sum, d) => sum + (d.criteriaIncorrect || 0), 0);
         const totalCriteria = totalCorrect + totalIncorrect;
         const accuracyRate = totalCriteria > 0 ? (totalCorrect / totalCriteria * 100) : 0;
 
-        // Update Task Performance Cards
         document.getElementById('totalCriteria').textContent = totalCriteria;
         document.getElementById('correctCriteria').textContent = totalCorrect;
         document.getElementById('incorrectCriteria').textContent = totalIncorrect;
         document.getElementById('accuracyRate').textContent = accuracyRate.toFixed(1) + '%';
 
-        // CREATE CORRELATION CHART (Fatigue vs Accuracy)
+        // Create fatigue-performance correlation scatter plot for research analysis
         const correlationData = sessionsWithCriteria.map(d => {
             const sessionTotal = (d.criteriaCorrect || 0) + (d.criteriaIncorrect || 0);
             const sessionAccuracy = sessionTotal > 0 ? (d.criteriaCorrect || 0) / sessionTotal * 100 : 0;
@@ -725,7 +722,7 @@ document.addEventListener('DOMContentLoaded', function() {
             Plotly.newPlot('correlationChart', [correlationTrace], correlationLayout, {responsive: true});
         }
     } else {
-        // No criteria data available
+        // Handle missing task performance data
         document.getElementById('totalCriteria').textContent = '-';
         document.getElementById('correctCriteria').textContent = '-';
         document.getElementById('incorrectCriteria').textContent = '-';

@@ -485,19 +485,16 @@
                     </button>
                 </div>
 
-                {# Category selection: First level of catalog navigation #}
+                {# Two-level navigation: Category → Criterion selection for requirements catalog #}
                 <div class="category-selection">
                     <div class="category-title">Select Category:</div>
                     <div class="category-buttons" id="categoryButtons">
-                        {# Category buttons populated dynamically by JavaScript from backend data #}
                     </div>
                 </div>
 
-                {# Criteria selection: Second level navigation, shown after category selection #}
                 <div id="criteriaSelection" class="criteria-selection">
                     <div class="category-title">Select Criterion:</div>
                     <div class="criteria-list" id="criteriaList">
-                        {# Criteria list populated dynamically based on selected category #}
                     </div>
                 </div>
 
@@ -595,10 +592,7 @@
         }
 
         function selectCategory(category, buttonElement) {
-            // Handles category selection and shows related criteria
-            // Resets previous selections
-
-            // Hide points table from previous selections
+            // Switch to selected category and load its criteria
             document.getElementById('pointsTableContainer').style.display = 'none';
 
             // Update button visual states
