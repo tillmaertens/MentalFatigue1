@@ -316,7 +316,8 @@
     </div>
 </div>
 
-<!-- TASK PERFORMANCE SECTION -->
+<!-- TASK PERFORMANCE SECTION - Only for HR Coordinators -->
+{% if is_hr_coordinator %}
 <div class="task-performance">
     <div class="section-title">Task Performance Analysis</div>
     <div class="performance-stats">
@@ -338,6 +339,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 <!-- NEUE CHARTS SECTION EINFÜGEN -->
 <div class="charts-section">
@@ -346,10 +348,12 @@
         <div id="performanceChart" style="width:100%;height:400px;"></div>
     </div>
 
+    {% if is_hr_coordinator %}
     <div class="chart-container">
         <div class="chart-title">Fatigue vs Task Accuracy</div>
         <div id="correlationChart" style="width:100%;height:400px;"></div>
     </div>
+    {% endif %}
 </div>
 
 <div class="sessions-table">
@@ -651,7 +655,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('avgMotivation').textContent = avgMotivation.toFixed(1);
     }
 
-    // TASK PERFORMANCE CALCULATIONS
+    // TASK PERFORMANCE CALCULATIONS - Only for HR Coordinators
+    {% if is_hr_coordinator %}
     const sessionsWithCriteria = sessionData.filter(d =>
         d.session && (d.criteriaCorrect > 0 || d.criteriaIncorrect > 0)
     );
@@ -726,6 +731,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('incorrectCriteria').textContent = '-';
         document.getElementById('accuracyRate').textContent = '-';
     }
+    {% endif %}
 });
 </script>
 

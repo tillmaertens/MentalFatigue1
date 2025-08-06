@@ -702,8 +702,8 @@ class FinalResults(Page):
         v1_cognitive = cognitive_values[1] if len(cognitive_values) >= 2 else 0
         v2_cognitive = cognitive_values[2] if len(cognitive_values) >= 3 else 0
 
-        # NEW: Check if current player is HR Coordinator
-        is_hr_coordinator = self.player.is_hr_coordinator()
+        # NEW: Check if current player is HR Coordinator (Player 2)
+        is_hr_coordinator = self.player.id_in_group == 2
 
         result = {
             # Raw session data for detailed tables and charts
