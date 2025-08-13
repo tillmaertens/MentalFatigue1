@@ -353,14 +353,12 @@ class C(BaseConstants):
     # Sessions configurations
     SESSIONS_PER_VACANCY = 1
 
-
 class Subsession(BaseSubsession):
     pass
 
 
 class Group(BaseGroup):
     pass
-
 
 class Player(BasePlayer):
     """

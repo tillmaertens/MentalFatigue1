@@ -1,7 +1,7 @@
 from otree.api import *  # Core oTree framework
 from .models import C, get_vacancy_info, get_applicants_data_for_vacancy, \
     load_metadata_criteria, should_show_vacancy_session, get_applicant_ids, \
-    assign_static_role  # imports from models.py
+    assign_static_role # imports from models.py
 import random  # for StroopTest Items
 from docx import Document  # Word -> HTML converting
 import os  # file paths
@@ -12,7 +12,6 @@ class Consent(Page):
 
     def is_displayed(self):
         return self.player.round_number == 1  # only shown in the very first round
-
 
 # MAIN TASK PAGES
 
