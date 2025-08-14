@@ -826,7 +826,11 @@
 
         // Video Meeting Integration
         document.addEventListener('DOMContentLoaded', function () {
-            initializeVideoMeeting();
+            {% if C.DEBUG_MODE %}
+                showDebugMode();
+            {% else %}
+                initializeVideoMeeting();
+            {% endif %}
         });
 
         function initializeVideoMeeting() {

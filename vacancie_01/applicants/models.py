@@ -353,6 +353,8 @@ class C(BaseConstants):
     # Sessions configurations
     SESSIONS_PER_VACANCY = 1
 
+    DEBUG_MODE = False
+
 class Subsession(BaseSubsession):
     pass
 
