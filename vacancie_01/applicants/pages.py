@@ -18,10 +18,10 @@ class Consent(Page):
 class Recruiter(Page):
     """
     Reviews applicant information including CVs, job references, and cover letters.
-    Now used in the 4-round structure for both Vacancy 1 (unlimited) and Vacancy 2 (10min).
+    Now used in the 5-round structure for all vacancies
 
     Data Processing Flow:
-    1. Get current vacancy configuration (vacancy 1 or 2)
+    1. Get current vacancy configuration
     2. Load basic applicant data (names, document paths)
     3. Load and convert Word documents to HTML for each applicant
     4. Calculate session numbering and progress indicators
@@ -30,11 +30,11 @@ class Recruiter(Page):
     Returns:
     dict: Template variables containing:
         - applicants: List of applicant objects with HTML content
-        - session_number: Current session (1 or 2)
-        - vacancy_number: Which vacancy is active (1 or 2)
-        - remaining_time: Session timeout in seconds (None for V1, 600 for V2)
+        - session_number: Current session
+        - vacancy_number: Which vacancy is active
+        - remaining_time: Session timeout in seconds
         - static_path: Path to static files (PDFs, images)
-        - total_sessions: Total number of working sessions (2)
+        - total_sessions: Total number of working sessions (3)
     """
 
     def is_displayed(self):
@@ -50,7 +50,7 @@ class Recruiter(Page):
 
     def get_timeout_seconds(self):
         """
-        Returns timeout based on vacancy: None for V1 (unlimited), 600s for V2.
+        Returns timeout based on vacancy
         """
         if self.player.round_number == C.VACANCY_1_ROUND:
             return None  # Unlimited time for Vacancy 1
@@ -80,11 +80,11 @@ class Recruiter(Page):
 
         return {
             'applicants': applicants_with_content,
-            'session_number': vacancy_number,  # Session 1 or 2
+            'session_number': vacancy_number,
             'vacancy_number': vacancy_number,
             'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else 600,
             'static_path': C.STATIC_APPLICANTS_PATH,
-            'total_sessions': 2  # 2 working sessions total
+            'total_sessions': 3  # 2 working sessions total
         }
 
     def get_word_content(self, applicant_id, doc_suffix='1'):
@@ -93,7 +93,7 @@ class Recruiter(Page):
 
         Args:
             applicant_id (str): Applicant identifier ('a', 'b', or 'c')
-            doc_suffix (str): Vacancy-specific suffix ('1' or '2')
+            doc_suffix (str): Vacancy-specific suffix
 
         Returns:
             str: HTML content for web display, or error message if file not found
@@ -180,7 +180,7 @@ class Recruiter(Page):
 class HRCoordinator(Page):
     """
     Prepares all data needed for HR Coordinator interface.
-    Now used in the 4-round structure with predefined criteria auto-loading.
+    Now used in the 5-round structure with predefined criteria auto-loading.
 
     Data Processing Flow:
     1. Get current vacancy configuration
@@ -316,7 +316,7 @@ class HRCoordinator(Page):
             'applicants': applicants_data,
             'min_score': C.MIN_SCORE,
             'max_score': C.MAX_SCORE,
-            'session_number': vacancy_number,  # Session 1 or 2
+            'session_number': vacancy_number,
             'vacancy_number': vacancy_number,
             'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else 600,
             'criteria_data': metadata['criteria'],
@@ -328,7 +328,7 @@ class HRCoordinator(Page):
             'static_path': C.STATIC_APPLICANTS_PATH,
             'applicant_colors': C.APPLICANT_COLORS,
             'applicant_ids': get_applicant_ids(),
-            'total_sessions': 2  # 2 working sessions total
+            'total_sessions': 3
         }
 
 
@@ -392,7 +392,7 @@ class BusinessPartner(Page):
             'static_path': C.STATIC_APPLICANTS_PATH,
             'min_score': C.MIN_SCORE,
             'max_score': C.MAX_SCORE,
-            'total_sessions': 2  # 2 working sessions total
+            'total_sessions': 3
         }
 
 
@@ -436,7 +436,7 @@ class SelfAssessment(Page):
             'session_name': session_name,
             'vacancy_number': vacancy_number,
             'role_played': self.player.selected_role,
-            'total_sessions': 2  # 2 working sessions total
+            'total_sessions': 3
         }
 
 
@@ -472,7 +472,7 @@ class CognitiveTestInstructions(Page):
             'session_number': session_number,
             'session_name': session_name,
             'vacancy_number': vacancy_number,
-            'total_sessions': 2  # 2 working sessions total
+            'total_sessions': 3
         }
 
 
@@ -549,7 +549,7 @@ class CognitiveTest(Page):
             'session_number': session_number,
             'session_name': session_name,
             'vacancy_number': vacancy_number,
-            'total_sessions': 2  # 2 working sessions total
+            'total_sessions': 3
         }
 
 
@@ -596,7 +596,7 @@ class CognitiveTestResults(Page):
             'reaction_time': self.player.field_maybe_none('cognitive_test_reaction_time') or 0,
             'errors': self.player.field_maybe_none('cognitive_test_errors') or 0,
             'total_questions': C.COGNITIVE_TEST_TOTAL_QUESTIONS,
-            'total_sessions': 2  # 2 working sessions total
+            'total_sessions': 3
         }
 
 
@@ -604,10 +604,11 @@ class FinalResults(Page):
     """
     Comprehensive results analysis comparing Baseline, Vacancy 1, and Vacancy 2.
 
-    Analyzes 3 measurement points:
+    Analyzes 4 measurement points:
     - Baseline (Round 1): Before any work tasks
     - Vacancy 1 (Round 2): After unlimited time session
     - Vacancy 2 (Round 3): After time-limited session
+    - Vacancy 3 (Round 4): After time-limited session
 
     Returns:
         dict: Template variables containing:
@@ -621,7 +622,7 @@ class FinalResults(Page):
 
     def is_displayed(self):
         """
-        Shown only in final round (Round 4).
+        Shown only in final round (Round 5).
         """
         return self.player.round_number == C.FINAL_RESULTS_ROUND
 
@@ -632,8 +633,8 @@ class FinalResults(Page):
 
         # Collect data from all 3 measurement rounds
         all_sessions_data = []
-        round_names = ['Baseline', 'Vacancy 1', 'Vacancy 2']
-        measurement_rounds = [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND]
+        round_names = ['Baseline', 'Vacancy 1', 'Vacancy 2', 'Vacancy 3']
+        measurement_rounds = [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND]
 
         for i, round_num in enumerate(measurement_rounds):
             try:
@@ -648,7 +649,7 @@ class FinalResults(Page):
                         return default
 
                 session_data = {
-                    'session': i + 1,  # Display as 1-3
+                    'session': i + 1,  # Display as 1-4
                     'session_name': round_names[i],
                     'role': safe_get(lambda: round_player.selected_role, 'Baseline' if i == 0 else 'Unknown'),
                     'fatigue_level': safe_get(lambda: round_player.fatigue_level),
@@ -695,12 +696,14 @@ class FinalResults(Page):
         baseline_fatigue = fatigue_values[0] if len(fatigue_values) >= 1 else 0
         v1_fatigue = fatigue_values[1] if len(fatigue_values) >= 2 else 0
         v2_fatigue = fatigue_values[2] if len(fatigue_values) >= 3 else 0
+        v3_fatigue = fatigue_values[3] if len(fatigue_values) >= 4 else 0
 
         baseline_cognitive = cognitive_values[0] if len(cognitive_values) >= 1 else 0
         v1_cognitive = cognitive_values[1] if len(cognitive_values) >= 2 else 0
         v2_cognitive = cognitive_values[2] if len(cognitive_values) >= 3 else 0
+        v3_cognitive = cognitive_values[3] if len(cognitive_values) >= 4 else 0
 
-        # NEW: Check if current player is HR Coordinator (Player 2)
+        # Check if current player is HR Coordinator (Player 2)
         is_hr_coordinator = self.player.id_in_group == 2
 
         result = {
@@ -718,20 +721,22 @@ class FinalResults(Page):
             'baseline_fatigue': baseline_fatigue,
             'v1_fatigue_change': v1_fatigue - baseline_fatigue if baseline_fatigue and v1_fatigue else 0,
             'v2_fatigue_change': v2_fatigue - baseline_fatigue if baseline_fatigue and v2_fatigue else 0,
+            'v3_fatigue_change': v3_fatigue - baseline_fatigue if baseline_fatigue and v3_fatigue else 0,
             'baseline_cognitive': baseline_cognitive,
             'v1_cognitive_change': baseline_cognitive - v1_cognitive if baseline_cognitive and v1_cognitive else 0,
             'v2_cognitive_change': baseline_cognitive - v2_cognitive if baseline_cognitive and v2_cognitive else 0,
+            'v3_cognitive_change': baseline_cognitive - v3_cognitive if baseline_cognitive and v3_cognitive else 0,
 
-            # NEW: Role-specific flag
+            # Role-specific flag
             'is_hr_coordinator': is_hr_coordinator,
 
-            'show_next_button': False,  # This is the final page
-            'is_final_results': True,  # Flag for template logic
+            'show_next_button': False,
+            'is_final_results': True,
         }
         return result
 
 
-# Page Sequence for 4-round structure
+# Page Sequence for 5-round structure
 page_sequence = [
     Consent,
     Recruiter,

@@ -74,7 +74,7 @@ def load_metadata_criteria(round_number=None, player=None):
             if vacancy_info:
                 metadata_paths = vacancy_info['metadata_files']
             else:
-                # Fallback to both files if vacancy info not available
+                # Fallback to all three files if vacancy info not available
                 metadata_paths = ['_static/applicants/metadata1.xlsx', '_static/applicants/metadatanew.xlsx']
 
         # Find first existing metadata file from the paths list
@@ -161,10 +161,10 @@ def load_metadata_criteria(round_number=None, player=None):
 
 def get_vacancy_info(round_number, player):
     """
-    Maps round numbers to vacancy periods for the 4-round structure.
+    Maps round numbers to vacancy periods for the 5-round structure.
 
     Args:
-    round_number (int): Current round number (1-4)
+    round_number (int): Current round number (1-5)
     player (Player): Player object (not used but kept for consistency)
 
     Returns:
@@ -176,8 +176,10 @@ def get_vacancy_info(round_number, player):
         return get_vacancy_config(1)
     elif round_number == models.C.VACANCY_2_ROUND:
         return get_vacancy_config(2)
+    elif round_number == models.C.VACANCY_3_ROUND:
+        return get_vacancy_config(3)
     else:
-        # Round 1 (consent/baseline) or 4 (final results) - no active vacancy
+        # Round 1 (consent/baseline) or 5 (final results) - no active vacancy
         return None
 
 
@@ -186,24 +188,27 @@ def get_vacancy_config(vacancy_number):
     Provides vacancy-specific settings with unlimited time for Vacancy 1.
 
     Args:
-    vacancy_number (int): Vacancy identifier (1 or 2)
+    vacancy_number (int): Vacancy identifier (1,2 or 3)
 
     Returns:
     dict: Vacancy configuration containing:
-        - vacancy: Vacancy number (1 or 2)
-        - duration_seconds: None for vacancy 1 (unlimited), 600 for vacancy 2
+        - vacancy: Vacancy number (1,2 or 3)
+        - duration_seconds: None for vacancy 1 (unlimited), 600 for vacancy 2 and 3
         - metadata_files: List with Excel metadata file path
-        - doc_suffix: String suffix for document versioning ('1' or '2')
+        - doc_suffix: String suffix for document versioning ('1' or '2' or '3')
         - job_desc_file: PDF filename for job description
     """
     if vacancy_number == 1:
         job_desc_file = 'job_description_1.pdf'
-    else:
+    elif vacancy_number == 2:
         job_desc_file = 'job_description_2.pdf'
+    else:
+        job_desc_file = 'job_description_3.pdf'
+
 
     return {
         'vacancy': vacancy_number,
-        'duration_seconds': None if vacancy_number == 1 else 10 * 60,  # Unlimited for V1, 10min for V2
+        'duration_seconds': None if vacancy_number == 1 else 10 * 60,  # Unlimited for V1, 10min for V2, V3
         'metadata_files': [f'_static/applicants/metadata{vacancy_number}.xlsx'],
         'doc_suffix': str(vacancy_number),
         'job_desc_file': job_desc_file
@@ -258,17 +263,17 @@ def should_show_vacancy_session(round_number):
     """
     Determines if current round should display vacancy task sessions.
 
-    Only rounds 2 and 3 are vacancy sessions in the 4-round structure.
+    Only rounds 2, 3, 4 are vacancy sessions in the 5-round structure.
 
     Args:
-    round_number (int): Current round number to check (1-4)
+    round_number (int): Current round number to check (1-5)
 
     Returns:
-    bool: True if round is a vacancy session (2 or 3), False otherwise
+    bool: True if round is a vacancy session (2, 3, 4), False otherwise
     """
     from . import models  # Import to avoid circular import
 
-    return round_number in [models.C.VACANCY_1_ROUND, models.C.VACANCY_2_ROUND]
+    return round_number in [models.C.VACANCY_1_ROUND, models.C.VACANCY_2_ROUND, models.C.VACANCY_3_ROUND]
 
 
 def assign_static_role(player):
@@ -305,17 +310,21 @@ class C(BaseConstants):
 
     NAME_IN_URL = 'mental_fatigue'
     PLAYERS_PER_GROUP = 3
-    NUM_ROUNDS = 4
+    NUM_ROUNDS = 5
 
     # 4-round structure definition
     CONSENT_ROUND = 1
     VACANCY_1_ROUND = 2  # Unlimited time
     VACANCY_2_ROUND = 3  # 10 minutes
-    FINAL_RESULTS_ROUND = 4
+    VACANCY_3_ROUND = 4  # 10 minutes
+    FINAL_RESULTS_ROUND = 5
 
-    # Only Vacancy 2 has time limit
+    # Only Vacancy 2 adn 3 have time limits
     VACANCY_2_DURATION_MINUTES = 10
     VACANCY_2_DURATION_SECONDS = VACANCY_2_DURATION_MINUTES * 60
+
+    VACANCY_3_DURATION_MINUTES = 10
+    VACANCY_3_DURATION_SECONDS = VACANCY_2_DURATION_MINUTES * 60
 
     # Data for templates
     APPLICANTS = get_applicants_data_for_vacancy()
@@ -353,7 +362,7 @@ class C(BaseConstants):
     # Sessions configurations
     SESSIONS_PER_VACANCY = 1
 
-    DEBUG_MODE = False
+    DEBUG_MODE = True
 
 class Subsession(BaseSubsession):
     pass
@@ -365,7 +374,7 @@ class Group(BaseGroup):
 class Player(BasePlayer):
     """
     Stores role assignments, performance metrics, self-assessments, and cognitive test results
-    for each player across all rounds in the 4-round structure.
+    for each player across all rounds in the 5-round structure.
     """
     # Role assignment
     selected_role = models.StringField(
