@@ -1,7 +1,7 @@
 from otree.api import *  # Core oTree framework
 from .models import C, get_vacancy_info, get_applicants_data_for_vacancy, \
     load_metadata_criteria, should_show_vacancy_session, get_applicant_ids, \
-    assign_static_role # imports from models.py
+    assign_static_role  # imports from models.py
 import random  # for StroopTest Items
 from docx import Document  # Word -> HTML converting
 import os  # file paths
@@ -12,6 +12,7 @@ class Consent(Page):
 
     def is_displayed(self):
         return self.player.round_number == 1  # only shown in the very first round
+
 
 # MAIN TASK PAGES
 
@@ -414,7 +415,7 @@ class SelfAssessment(Page):
         """
         Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
         """
-        return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND]
+        return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND]
 
     def vars_for_template(self):
         """
@@ -451,7 +452,7 @@ class CognitiveTestInstructions(Page):
         """
         Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
         """
-        return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND]
+        return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND]
 
     def vars_for_template(self):
         """
@@ -506,7 +507,7 @@ class CognitiveTest(Page):
         """
         Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
         """
-        return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND]
+        return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND]
 
     def vars_for_template(self):
         """
@@ -571,7 +572,7 @@ class CognitiveTestResults(Page):
         """
         Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
         """
-        return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND]
+        return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND]
 
     def vars_for_template(self):
         """
@@ -626,21 +627,41 @@ class FinalResults(Page):
         """
         return self.player.round_number == C.FINAL_RESULTS_ROUND
 
+    # Final Results Page - Updated vars_for_template() method
     def vars_for_template(self):
         """
-        Compiles results from 3 measurement points: Baseline, Vacancy 1, Vacancy 2
+        Compiles results with separate baseline and task progression analysis
         """
 
-        # Collect data from all 3 measurement rounds
-        all_sessions_data = []
-        round_names = ['Baseline', 'Vacancy 1', 'Vacancy 2', 'Vacancy 3']
-        measurement_rounds = [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND]
+        # Separate baseline from task sessions
+        baseline_round = C.CONSENT_ROUND
+        task_rounds = [C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND]
 
-        for i, round_num in enumerate(measurement_rounds):
+        # Extract baseline data separately
+        try:
+            baseline_player = self.player.in_round(baseline_round)
+            baseline_data = {
+                'fatigue_level': baseline_player.fatigue_level or 0,
+                'mental_energy': baseline_player.mental_effort or 0,  # "energy" in baseline
+                'concentration_ability': baseline_player.concentration_difficulty or 0,  # "ability" in baseline
+                'motivation_level': baseline_player.motivation_level or 0,
+                'cognitive_score': baseline_player.cognitive_test_score or 0,
+                'cognitive_reaction_time': baseline_player.cognitive_test_reaction_time or 0
+            }
+        except:
+            baseline_data = {
+                'fatigue_level': 0, 'mental_energy': 0, 'concentration_ability': 0,
+                'motivation_level': 0, 'cognitive_score': 0, 'cognitive_reaction_time': 0
+            }
+
+        # Collect task session data (V1, V2, V3)
+        task_sessions_data = []
+        task_names = ['Vacancy 1', 'Vacancy 2', 'Vacancy 3']
+
+        for i, round_num in enumerate(task_rounds):
             try:
                 round_player = self.player.in_round(round_num)
 
-                # Safe access with try-except for oTree fields
                 def safe_get(field_func, default=0):
                     try:
                         value = field_func()
@@ -649,83 +670,87 @@ class FinalResults(Page):
                         return default
 
                 session_data = {
-                    'session': i + 1,  # Display as 1-4
-                    'session_name': round_names[i],
-                    'role': safe_get(lambda: round_player.selected_role, 'Baseline' if i == 0 else 'Unknown'),
+                    'session': i + 1,  # 1, 2, 3
+                    'session_name': task_names[i],
+                    'role': safe_get(lambda: round_player.selected_role, 'Unknown'),
                     'fatigue_level': safe_get(lambda: round_player.fatigue_level),
                     'mental_effort': safe_get(lambda: round_player.mental_effort),
                     'concentration_difficulty': safe_get(lambda: round_player.concentration_difficulty),
                     'motivation_level': safe_get(lambda: round_player.motivation_level),
                     'cognitive_score': safe_get(lambda: round_player.cognitive_test_score),
                     'cognitive_reaction_time': safe_get(lambda: round_player.cognitive_test_reaction_time),
-                    'criteria_added': safe_get(lambda: round_player.criteria_added_this_session) if i > 0 else 0,
-                    # No criteria in baseline
-                    'criteria_correct': safe_get(lambda: round_player.criteria_correct_this_session) if i > 0 else 0,
-                    # No criteria in baseline
-                    'criteria_incorrect': safe_get(
-                        lambda: round_player.criteria_incorrect_this_session) if i > 0 else 0,
-                    # No criteria in baseline
+                    'criteria_added': safe_get(lambda: round_player.criteria_added_this_session),
+                    'criteria_correct': safe_get(lambda: round_player.criteria_correct_this_session),
+                    'criteria_incorrect': safe_get(lambda: round_player.criteria_incorrect_this_session),
                 }
-                all_sessions_data.append(session_data)
+                task_sessions_data.append(session_data)
             except Exception as e:
-                # Skip sessions with data access errors
                 continue
 
-        # Extract valid values for trend calculations with null safety
-        fatigue_values = [s['fatigue_level'] for s in all_sessions_data if
-                          s['fatigue_level'] and s['fatigue_level'] > 0]
-        cognitive_values = [s['cognitive_score'] for s in all_sessions_data if
-                            s['cognitive_score'] and s['cognitive_score'] > 0]
-        effort_values = [s['mental_effort'] for s in all_sessions_data if s['mental_effort'] and s['mental_effort'] > 0]
-        concentration_values = [s['concentration_difficulty'] for s in all_sessions_data if
-                                s['concentration_difficulty'] and s['concentration_difficulty'] > 0]
-        motivation_values = [s['motivation_level'] for s in all_sessions_data if
-                             s['motivation_level'] and s['motivation_level'] > 0]
+        # Calculate task progression metrics (V1 → V2 → V3)
+        if len(task_sessions_data) >= 2:
+            # Extract valid values for trend calculations
+            fatigue_values = [s['fatigue_level'] for s in task_sessions_data if s['fatigue_level'] > 0]
+            cognitive_values = [s['cognitive_score'] for s in task_sessions_data if s['cognitive_score'] > 0]
+            effort_values = [s['mental_effort'] for s in task_sessions_data if s['mental_effort'] > 0]
+            concentration_values = [s['concentration_difficulty'] for s in task_sessions_data if
+                                    s['concentration_difficulty'] > 0]
+            motivation_values = [s['motivation_level'] for s in task_sessions_data if s['motivation_level'] > 0]
 
-        # Safe calculations
-        average_fatigue = sum(fatigue_values) / len(fatigue_values) if fatigue_values else 0
-        fatigue_increase = fatigue_values[-1] - fatigue_values[0] if len(fatigue_values) >= 2 else 0
-        cognitive_decline = cognitive_values[0] - cognitive_values[-1] if len(cognitive_values) >= 2 else 0
+            # Task progression analysis (first task → last task)
+            task_fatigue_increase = fatigue_values[-1] - fatigue_values[0] if len(fatigue_values) >= 2 else 0
+            task_cognitive_decline = cognitive_values[0] - cognitive_values[-1] if len(cognitive_values) >= 2 else 0
+            task_effort_increase = effort_values[-1] - effort_values[0] if len(effort_values) >= 2 else 0
+            task_motivation_change = motivation_values[-1] - motivation_values[0] if len(motivation_values) >= 2 else 0
 
-        # Additional averages
-        average_effort = sum(effort_values) / len(effort_values) if effort_values else 0
-        average_concentration = sum(concentration_values) / len(concentration_values) if concentration_values else 0
-        average_motivation = sum(motivation_values) / len(motivation_values) if motivation_values else 0
-
-        # Calculate baseline vs vacancy comparisons
-        baseline_fatigue = fatigue_values[0] if len(fatigue_values) >= 1 else 0
-        v1_fatigue = fatigue_values[1] if len(fatigue_values) >= 2 else 0
-        v2_fatigue = fatigue_values[2] if len(fatigue_values) >= 3 else 0
-        v3_fatigue = fatigue_values[3] if len(fatigue_values) >= 4 else 0
-
-        baseline_cognitive = cognitive_values[0] if len(cognitive_values) >= 1 else 0
-        v1_cognitive = cognitive_values[1] if len(cognitive_values) >= 2 else 0
-        v2_cognitive = cognitive_values[2] if len(cognitive_values) >= 3 else 0
-        v3_cognitive = cognitive_values[3] if len(cognitive_values) >= 4 else 0
+            # Averages across task sessions only
+            average_task_fatigue = sum(fatigue_values) / len(fatigue_values) if fatigue_values else 0
+            average_task_effort = sum(effort_values) / len(effort_values) if effort_values else 0
+            average_task_concentration = sum(concentration_values) / len(
+                concentration_values) if concentration_values else 0
+            average_task_motivation = sum(motivation_values) / len(motivation_values) if motivation_values else 0
+        else:
+            task_fatigue_increase = task_cognitive_decline = task_effort_increase = task_motivation_change = 0
+            average_task_fatigue = average_task_effort = average_task_concentration = average_task_motivation = 0
 
         # Check if current player is HR Coordinator (Player 2)
         is_hr_coordinator = self.player.id_in_group == 2
 
         result = {
-            # Raw session data for detailed tables and charts
-            'all_sessions': all_sessions_data,
-            'total_sessions_completed': len(all_sessions_data),
-            'average_fatigue': average_fatigue,
-            'fatigue_increase': fatigue_increase,
-            'cognitive_decline': cognitive_decline,
-            'average_effort': average_effort,
-            'average_concentration': average_concentration,
-            'average_motivation': average_motivation,
+            # Baseline data (separate section)
+            'baseline_data': baseline_data,
 
-            # Baseline comparisons
-            'baseline_fatigue': baseline_fatigue,
-            'v1_fatigue_change': v1_fatigue - baseline_fatigue if baseline_fatigue and v1_fatigue else 0,
-            'v2_fatigue_change': v2_fatigue - baseline_fatigue if baseline_fatigue and v2_fatigue else 0,
-            'v3_fatigue_change': v3_fatigue - baseline_fatigue if baseline_fatigue and v3_fatigue else 0,
-            'baseline_cognitive': baseline_cognitive,
-            'v1_cognitive_change': baseline_cognitive - v1_cognitive if baseline_cognitive and v1_cognitive else 0,
-            'v2_cognitive_change': baseline_cognitive - v2_cognitive if baseline_cognitive and v2_cognitive else 0,
-            'v3_cognitive_change': baseline_cognitive - v3_cognitive if baseline_cognitive and v3_cognitive else 0,
+            # Task sessions data for progression analysis
+            'task_sessions': task_sessions_data,
+            'total_task_sessions': len(task_sessions_data),
+
+            # Task progression metrics (V1 → V2 → V3)
+            'task_fatigue_increase': task_fatigue_increase,
+            'task_cognitive_decline': task_cognitive_decline,
+            'task_effort_increase': task_effort_increase,
+            'task_motivation_change': task_motivation_change,
+
+            # Task session averages
+            'average_task_fatigue': average_task_fatigue,
+            'average_task_effort': average_task_effort,
+            'average_task_concentration': average_task_concentration,
+            'average_task_motivation': average_task_motivation,
+
+            # Individual task session values for detailed comparison
+            'v1_fatigue': fatigue_values[0] if len(fatigue_values) >= 1 else 0,
+            'v2_fatigue': fatigue_values[1] if len(fatigue_values) >= 2 else 0,
+            'v3_fatigue': fatigue_values[2] if len(fatigue_values) >= 3 else 0,
+
+            'v1_cognitive': cognitive_values[0] if len(cognitive_values) >= 1 else 0,
+            'v2_cognitive': cognitive_values[1] if len(cognitive_values) >= 2 else 0,
+            'v3_cognitive': cognitive_values[2] if len(cognitive_values) >= 3 else 0,
+
+            # Inter-vacancy changes
+            'v1_to_v2_fatigue_change': fatigue_values[1] - fatigue_values[0] if len(fatigue_values) >= 2 else 0,
+            'v2_to_v3_fatigue_change': fatigue_values[2] - fatigue_values[1] if len(fatigue_values) >= 3 else 0,
+
+            'v1_to_v2_cognitive_change': cognitive_values[0] - cognitive_values[1] if len(cognitive_values) >= 2 else 0,
+            'v2_to_v3_cognitive_change': cognitive_values[1] - cognitive_values[2] if len(cognitive_values) >= 3 else 0,
 
             # Role-specific flag
             'is_hr_coordinator': is_hr_coordinator,

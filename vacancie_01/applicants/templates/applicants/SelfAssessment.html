@@ -16,6 +16,14 @@
             text-align: center;
         }
 
+        .baseline-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
         .assessment-form {
             background-color: #f8f9fa;
             padding: 30px;
@@ -91,16 +99,29 @@
 
     {# Session context information showing role played and instructions #}
     <div class="session-info">
-        <p><strong>Role played:</strong> {{ role_played }}</p>
-        <p>Please evaluate your experience during this session</p>
+        {% if session_number == 0 %}
+            <h2>Baseline Assessment</h2>
+            <div class="baseline-info">
+                <p><strong>Initial Measurement</strong></p>
+                <p>Please evaluate how you feel right now, before starting any work tasks</p>
+            </div>
+        {% else %}
+            <h2>Post-Session Assessment</h2>
+            <p><strong>Role played:</strong> {{ role_played }}</p>
+            <p>Please evaluate your experience during {{ session_name }}</p>
+        {% endif %}
     </div>
 
     <div class="assessment-form">
 
-        {# Fatigue Level Assessment: Maps to Player.fatigue_level field #}
+        {# Fatigue Level Assessment: Conditional questions based on session type #}
         <div class="question-group">
             <label class="question-label">
-                How tired/fatigued did you feel? <span class="required">*</span>
+                {% if session_number == 0 %}
+                    How tired/fatigued do you feel right now? <span class="required">*</span>
+                {% else %}
+                    How tired/fatigued did you feel during this session? <span class="required">*</span>
+                {% endif %}
             </label>
             <div class="scale-labels">
                 <span>Not tired at all</span>
@@ -122,14 +143,23 @@
             </div>
         </div>
 
-        {# Mental Effort Assessment: Maps to Player.mental_effort field #}
+        {# Mental Effort Assessment: Baseline vs Task-specific wording #}
         <div class="question-group">
             <label class="question-label">
-                How much mental effort did the task require? <span class="required">*</span>
+                {% if session_number == 0 %}
+                    What is your current mental energy level? <span class="required">*</span>
+                {% else %}
+                    How much mental effort did the task require? <span class="required">*</span>
+                {% endif %}
             </label>
             <div class="scale-labels">
-                <span>Very low effort</span>
-                <span>Very high effort</span>
+                {% if session_number == 0 %}
+                    <span>Very low energy</span>
+                    <span>Very high energy</span>
+                {% else %}
+                    <span>Very low effort</span>
+                    <span>Very high effort</span>
+                {% endif %}
             </div>
             <div class="scale-inputs">
                 {% for i in "1234567890" %}
@@ -147,14 +177,23 @@
             </div>
         </div>
 
-        {# Concentration Difficulty Assessment: Maps to Player.concentration_difficulty field #}
+        {# Concentration Assessment: General ability vs Task-specific difficulty #}
         <div class="question-group">
             <label class="question-label">
-                How difficult was it to concentrate? <span class="required">*</span>
+                {% if session_number == 0 %}
+                    How is your general ability to concentrate today? <span class="required">*</span>
+                {% else %}
+                    How difficult was it to concentrate during the task? <span class="required">*</span>
+                {% endif %}
             </label>
             <div class="scale-labels">
-                <span>Very easy</span>
-                <span>Very difficult</span>
+                {% if session_number == 0 %}
+                    <span>Very poor concentration</span>
+                    <span>Excellent concentration</span>
+                {% else %}
+                    <span>Very easy</span>
+                    <span>Very difficult</span>
+                {% endif %}
             </div>
             <div class="scale-inputs">
                 {% for i in "1234567890" %}
@@ -173,10 +212,14 @@
             </div>
         </div>
 
-        {# Motivation Level Assessment: Maps to Player.motivation_level field #}
+        {# Motivation Level Assessment: Current state vs Task-specific motivation #}
         <div class="question-group">
             <label class="question-label">
-                How motivated did you feel? <span class="required">*</span>
+                {% if session_number == 0 %}
+                    How motivated do you feel for the upcoming tasks? <span class="required">*</span>
+                {% else %}
+                    How motivated did you feel during this session? <span class="required">*</span>
+                {% endif %}
             </label>
             <div class="scale-labels">
                 <span>Very low motivation</span>
@@ -200,9 +243,13 @@
         </div>
     </div>
 
-    {# Form submission area with oTree next button #}
+    {# Form submission area with contextual instructions #}
     <div class="submit-section">
-        <p>Please answer all questions before continuing.</p>
+        {% if session_number == 0 %}
+            <p>Please answer all questions about your current state before continuing.</p>
+        {% else %}
+            <p>Please answer all questions about your experience during this session before continuing.</p>
+        {% endif %}
         {% next_button %}
     </div>
 

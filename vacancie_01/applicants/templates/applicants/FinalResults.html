@@ -1,735 +1,635 @@
 {% block title %}Final Results - Mental Fatigue Experiment{% endblock %}
 
 {% block content %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.29.1/plotly.min.js"></script>
-
-<style>
-    body {
-        background-color: #FFFFFF;
-        font-family: Arial, sans-serif;
-        padding: 20px;
-        max-width: 1000px;
-        margin: 0 auto;
-        color: #333;
-    }
-
-    .completion-header {
-        background-color: #f8f9fa;
-        padding: 40px;
-        border-radius: 5px;
-        text-align: center;
-        margin-bottom: 30px;
-        border: 1px solid #dee2e6;
-    }
-
-    .completion-header h1 {
-        color: #333;
-        margin: 0 0 15px 0;
-    }
-
-    .completion-badge {
-        background-color: white;
-        padding: 10px 20px;
-        border-radius: 5px;
-        font-size: 16px;
-        margin: 10px 0;
-        display: inline-block;
-        border: 1px solid #e9ecef;
-    }
-
-    .summary-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-
-    .stat-card {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        padding: 25px;
-        text-align: center;
-    }
-
-    .stat-value {
-        font-size: 36px;
-        font-weight: bold;
-        color: #007bff;
-        display: block;
-        margin-bottom: 10px;
-    }
-
-    .stat-label {
-        font-size: 14px;
-        color: #666;
-        text-transform: uppercase;
-        font-weight: bold;
-    }
-
-    .charts-section {
-        margin: 30px 0;
-    }
-
-    .chart-container {
-        background-color: white;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        padding: 20px;
-        margin-bottom: 30px;
-    }
-
-    .chart-title {
-        font-size: 20px;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-
-    .sessions-table {
-        background-color: white;
-        border-radius: 5px;
-        overflow: hidden;
-        border: 1px solid #dee2e6;
-        margin: 30px 0;
-    }
-
-    .table-header {
-        background-color: #f8f9fa;
-        padding: 20px;
-        text-align: center;
-        font-size: 20px;
-        font-weight: bold;
-        border-bottom: 1px solid #dee2e6;
-    }
-
-    .session-row {
-        display: grid;
-        grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
-        padding: 15px 20px;
-        border-bottom: 1px solid #e9ecef;
-        align-items: center;
-    }
-
-    .session-row:nth-child(even) {
-        background-color: #f8f9fa;
-    }
-
-    .row-header {
-        background-color: #e9ecef;
-        font-weight: bold;
-        border-bottom: 2px solid #dee2e6;
-    }
-
-    .role-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: bold;
-        text-align: center;
-        background-color: #007bff;
-        color: white;
-    }
-
-    .trend-analysis {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-        margin: 30px 0;
-    }
-
-    .trend-card {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        padding: 20px;
-    }
-
-    .trend-title {
-        font-size: 18px;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 15px;
-        text-align: center;
-    }
-
-    .trend-indicator {
-        font-size: 24px;
-        font-weight: bold;
-        text-align: center;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 10px 0;
-        background-color: white;
-        border: 1px solid #e9ecef;
-    }
-
-    .trend-positive {
-        color: #28a745;
-    }
-
-    .trend-negative {
-        color: #dc3545;
-    }
-
-    .trend-stable {
-        color: #6c757d;
-    }
-
-    .debriefing {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        padding: 30px;
-        margin: 30px 0;
-    }
-
-    .debriefing h3 {
-        color: #333;
-        margin-top: 0;
-    }
-
-    .debriefing ul {
-        margin: 15px 0;
-        padding-left: 20px;
-    }
-
-    .debriefing li {
-        margin: 8px 0;
-        color: #555;
-    }
-
-    .thank-you {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        padding: 30px;
-        margin: 30px 0;
-        text-align: center;
-    }
-
-    .thank-you h2 {
-        color: #333;
-        margin-top: 0;
-    }
-
-    .thank-you ul {
-        text-align: left;
-        display: inline-block;
-        margin: 20px 0;
-    }
-
-    .experiment-info {
-        margin-top: 30px;
-        padding: 20px;
-        background-color: white;
-        border-radius: 5px;
-        border: 1px solid #e9ecef;
-    }
-
-    .next-button-container {
-        text-align: center;
-        margin: 30px 0;
-        padding: 20px;
-        background-color: #f8f9fa;
-        border-radius: 5px;
-        border: 1px solid #dee2e6;
-    }
-
-    .next-button {
-        background-color: #28a745;
-        color: white;
-        padding: 15px 30px;
-        border: none;
-        border-radius: 5px;
-        font-size: 18px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-
-    .task-performance {
-        margin: 30px 0;
-    }
-
-    .section-title {
-        font-size: 24px;
-        font-weight: bold;
-        color: #333;
-        text-align: center;
-        margin-bottom: 25px;
-        padding: 15px;
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-    }
-
-    .performance-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-bottom: 20px;
-    }
-</style>
-
-<form method="post">
-
-{# Experiment completion header with participant acknowledgment #}
-<div class="completion-header">
-    <h1>Experiment Complete</h1>
-    <div class="completion-badge">Mental Fatigue Study - All {{ total_sessions_completed }} Sessions Completed</div>
-    <p>Thank you for your participation in this comprehensive study</p>
-</div>
-
-{# Summary statistics dashboard for key dependent variables #}
-<div class="summary-stats">
-    <div class="stat-card">
-        <span class="stat-value">{{ total_sessions_completed }}</span>
-        <div class="stat-label">Sessions Completed</div>
-    </div>
-    <div class="stat-card">
-        <span class="stat-value" id="avgFatigue">{{ average_fatigue }}</span>
-        <div class="stat-label">Average Fatigue Level</div>
-    </div>
-    <div class="stat-card">
-        <span class="stat-value" id="fatigueChange">{{ fatigue_increase }}</span>
-        <div class="stat-label">Fatigue Change</div>
-    </div>
-    <div class="stat-card">
-        <span class="stat-value" id="cognitiveChange">{{ cognitive_decline }}</span>
-        <div class="stat-label">Performance Change</div>
-    </div>
-    <div class="stat-card">
-        <span class="stat-value" id="avgEffort">-</span>
-        <div class="stat-label">Avg Mental Effort</div>
-    </div>
-    <div class="stat-card">
-        <span class="stat-value" id="avgMotivation">-</span>
-        <div class="stat-label">Avg Motivation</div>
-    </div>
-</div>
-
-{# Task performance analysis section - role-specific results display #}
-{% if is_hr_coordinator %}
-<div class="task-performance">
-    <div class="section-title">Task Performance Analysis</div>
-    <div class="performance-stats">
-        <div class="stat-card">
-            <span class="stat-value" id="totalCriteria">0</span>
-            <div class="stat-label">Total Criteria Evaluated</div>
-        </div>
-        <div class="stat-card">
-            <span class="stat-value" id="correctCriteria">0</span>
-            <div class="stat-label">Correctly Assessed</div>
-        </div>
-        <div class="stat-card">
-            <span class="stat-value" id="incorrectCriteria">0</span>
-            <div class="stat-label">Assessment Errors</div>
-        </div>
-        <div class="stat-card">
-            <span class="stat-value" id="accuracyRate">0%</span>
-            <div class="stat-label">Overall Accuracy</div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-{# Data visualization section for research findings presentation #}
-<div class="charts-section">
-    <div class="chart-container">
-        <div class="chart-title">Performance Trends Over Sessions</div>
-        <div id="performanceChart" style="width:100%;height:400px;"></div>
-    </div>
-
-    {# Fatigue-performance correlation analysis for HR Coordinator role #}
-    {% if is_hr_coordinator %}
-    <div class="chart-container">
-        <div class="chart-title">Fatigue vs Task Accuracy</div>
-        <div id="correlationChart" style="width:100%;height:400px;"></div>
-    </div>
-    {% endif %}
-</div>
-
-{# Session-by-session results table with comprehensive metrics #}
-<div class="sessions-table">
-    <div class="table-header">
-        Session-by-Session Results
-    </div>
-
-    <div class="session-row row-header">
-        <div><strong>Session</strong></div>
-        <div><strong>Role</strong></div>
-        <div><strong>Fatigue</strong></div>
-        <div><strong>Mental Effort</strong></div>
-        <div><strong>Concentration</strong></div>
-        <div><strong>Motivation</strong></div>
-        <div><strong>Test Score</strong></div>
-        <div><strong>Reaction Time</strong></div>
-    </div>
-
-    {% for session in all_sessions %}
-    <div class="session-row">
-        <div><strong>{{ session.session }}</strong></div>
-        <div>
-            <span class="role-badge">{{ session.role }}</span>
-        </div>
-        <div class="session-data" data-fatigue="{{ session.fatigue_level }}">{{ session.fatigue_level }}/10</div>
-        <div class="session-data" data-effort="{{ session.mental_effort }}">{{ session.mental_effort }}/10</div>
-        <div class="session-data" data-concentration="{{ session.concentration_difficulty }}">{{ session.concentration_difficulty }}/10</div>
-        <div class="session-data" data-motivation="{{ session.motivation_level }}">{{ session.motivation_level }}/10</div>
-        <div class="session-data">{% if session.cognitive_score %}{{ session.cognitive_score }}/20{% else %}-{% endif %}</div>
-        <div class="session-data" data-reaction-time="{{ session.cognitive_reaction_time }}">{% if session.cognitive_reaction_time %}-{% else %}-{% endif %}</div>
-    </div>
-    {% endfor %}
-</div>
-
-{# Trend analysis dashboard with statistical interpretation #}
-<div class="trend-analysis">
-    <div class="trend-card">
-        <div class="trend-title">Fatigue Progression</div>
-        {% if fatigue_increase > 1 %}
-        <div class="trend-indicator trend-negative">
-            Significant Increase<br>
-            <small id="fatigueIncrease1">+{{ fatigue_increase }} points</small>
-        </div>
-        <p>Your fatigue levels increased noticeably over the sessions.</p>
-        {% elif fatigue_increase > -1 %}
-        <div class="trend-indicator trend-stable">
-            Stable<br>
-            <small id="fatigueIncrease2">{{ fatigue_increase }} points</small>
-        </div>
-        <p>Your fatigue levels remained relatively stable throughout the experiment.</p>
-        {% else %}
-        <div class="trend-indicator trend-positive">
-            Decreased<br>
-            <small id="fatigueIncrease3">{{ fatigue_increase }} points</small>
-        </div>
-        <p>Your fatigue levels decreased over time.</p>
-        {% endif %}
-    </div>
-
-    <div class="trend-card">
-        <div class="trend-title">Cognitive Performance</div>
-        {% if cognitive_decline > 1 %}
-        <div class="trend-indicator trend-negative">
-            Performance Decline<br>
-            <small id="cognitiveDecline1">-{{ cognitive_decline }} points</small>
-        </div>
-        <p>Your cognitive performance declined over sessions, indicating mental fatigue effects.</p>
-        {% elif cognitive_decline > -1 %}
-        <div class="trend-indicator trend-stable">
-            Stable Performance<br>
-            <small id="cognitiveDecline2">{{ cognitive_decline }} points</small>
-        </div>
-        <p>Your cognitive performance remained consistent throughout the experiment.</p>
-        {% else %}
-        <div class="trend-indicator trend-positive">
-            Performance Improved<br>
-            <small id="cognitiveDecline3">+{{ cognitive_decline }} points</small>
-        </div>
-        <p>Your cognitive performance improved over time, showing learning effects.</p>
-        {% endif %}
-    </div>
-
-    <div class="trend-card">
-        <div class="trend-title">Mental Effort</div>
-        <div class="trend-indicator trend-negative">
-            <span id="effortTrend">+0.0 points</span>
-        </div>
-        <p id="effortDescription">Mental effort required increased.</p>
-    </div>
-
-    <div class="trend-card">
-        <div class="trend-title">Motivation Level</div>
-        <div class="trend-indicator trend-negative">
-            <span id="motivationTrend">-0.0 points</span>
-        </div>
-        <p id="motivationDescription">Motivation levels decreased.</p>
-    </div>
-</div>
-
-{# Research context and findings summary for participant debriefing #}
-<div class="debriefing">
-    <h3>About This Research</h3>
-    <p><strong>Purpose:</strong> This study investigated how mental fatigue develops during extended collaborative work sessions and how it affects cognitive performance.</p>
-
-    <p><strong>Your Contribution:</strong> Your data will help researchers understand:</p>
-    <ul>
-        <li>How fatigue accumulates during digital collaboration</li>
-    </ul>
-
-    <p><strong>Key Findings from Your Sessions:</strong></p>
-    <ul>
-        <li>You completed {{ total_sessions_completed }} full collaborative sessions</li>
-        <li>Your fatigue levels {% if fatigue_increase > 0 %}increased{% elif fatigue_increase < 0 %}decreased{% else %}remained stable{% endif %} over time</li>
-        <li>Your cognitive performance {% if cognitive_decline > 0 %}declined{% elif cognitive_decline < 0 %}improved{% else %}remained stable{% endif %} across sessions</li>
-    </ul>
-</div>
-
-{# Participant appreciation and research impact statement #}
-<div class="thank-you">
-    <h2>Thank You</h2>
-    <p><strong>Your participation is invaluable for advancing our understanding of mental fatigue in digital work environments.</strong></p>
-
-    <p>The data you provided will contribute to:</p>
-    <ul>
-        <li>Designing better break schedules for knowledge workers</li>
-        <li>Developing fatigue-aware collaboration tools</li>
-        <li>Understanding optimal task rotation strategies</li>
-        <li>Creating personalized workload management systems</li>
-    </ul>
-
-    <p><em>If you have any questions about this research, please contact the research team.</em></p>
-
-    <div class="experiment-info">
-        <strong>Experiment ID:</strong> {{ player.participant.code }}<br>
-        <strong>Completion Date:</strong> <span id="completionDate"></span>
-    </div>
-</div>
-
-{# Continue button for multi-vacancy experiments #}
-{% if show_next_button %}
-<div class="next-button-container">
-    <h3>Ready to Continue?</h3>
-    <p>Proceed to the second vacancy with different applicants and criteria.</p>
-    <button type="submit" class="next-button">Continue to Vacancy 2</button>
-</div>
-{% endif %}
-
-</form>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize results display with statistical calculations
-    const avgFatigue = {{ average_fatigue }};
-    const fatigueIncrease = {{ fatigue_increase }};
-    const cognitiveDecline = {{ cognitive_decline }};
-
-    // Update summary statistics with formatted values
-    const avgElement = document.getElementById('avgFatigue');
-    if (avgElement) {
-        avgElement.textContent = avgFatigue.toFixed(1);
-    }
-
-    const fatigueElement = document.getElementById('fatigueChange');
-    if (fatigueElement) {
-        const formattedFatigue = fatigueIncrease.toFixed(1);
-        fatigueElement.textContent = fatigueIncrease > 0 ? '+' + formattedFatigue : formattedFatigue;
-    }
-
-    const cognitiveElement = document.getElementById('cognitiveChange');
-    if (cognitiveElement) {
-        const formattedCognitive = cognitiveDecline.toFixed(1);
-        cognitiveElement.textContent = cognitiveDecline > 0 ? '-' + formattedCognitive : formattedCognitive;
-    }
-
-    // Update trend indicators with precise change values
-    const fatigue1 = document.getElementById('fatigueIncrease1');
-    if (fatigue1) fatigue1.textContent = '+' + fatigueIncrease.toFixed(1) + ' points';
-
-    const fatigue2 = document.getElementById('fatigueIncrease2');
-    if (fatigue2) fatigue2.textContent = fatigueIncrease.toFixed(1) + ' points';
-
-    const fatigue3 = document.getElementById('fatigueIncrease3');
-    if (fatigue3) fatigue3.textContent = fatigueIncrease.toFixed(1) + ' points';
-
-    const cognitive1 = document.getElementById('cognitiveDecline1');
-    if (cognitive1) cognitive1.textContent = '-' + cognitiveDecline.toFixed(1) + ' points';
-
-    const cognitive2 = document.getElementById('cognitiveDecline2');
-    if (cognitive2) cognitive2.textContent = cognitiveDecline.toFixed(1) + ' points';
-
-    const cognitive3 = document.getElementById('cognitiveDecline3');
-    if (cognitive3) cognitive3.textContent = '+' + Math.abs(cognitiveDecline).toFixed(1) + ' points';
-
-    // Clean and format session data display values
-    const sessionDataElements = document.querySelectorAll('.session-data');
-    sessionDataElements.forEach(function(element) {
-        const text = element.textContent.trim();
-        if (text === 'null/10' || text === 'None/10' || text === '/10' || text === 'undefined/10' || text.startsWith('null') || text.startsWith('None')) {
-            element.textContent = '-';
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.29.1/plotly.min.js"></script>
+
+    <style>
+        body {
+            background-color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            color: #333;
         }
 
-        // Format reaction time data for readability
-        const reactionTime = element.getAttribute('data-reaction-time');
-        if (reactionTime && reactionTime !== 'None' && reactionTime !== 'null') {
-            const formattedTime = Math.round(parseFloat(reactionTime));
-            element.textContent = formattedTime + 'ms';
+        .completion-header {
+            background-color: #f8f9fa;
+            padding: 40px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 30px;
+            border: 1px solid #dee2e6;
         }
-    });
 
-    // Display current completion timestamp
-    const now = new Date();
-    const dateString = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
-    const dateElement = document.getElementById('completionDate');
-    if (dateElement) {
-        dateElement.textContent = dateString;
-    }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
 
-    // Generate session data for longitudinal analysis visualization
-    const sessionData = [
-        {% for session in all_sessions %}
-        {
-            session: {{ session.session }},
-            fatigue: {% if session.fatigue_level %}{{ session.fatigue_level }}{% else %}null{% endif %},
-            effort: {% if session.mental_effort %}{{ session.mental_effort }}{% else %}null{% endif %},
-            concentration: {% if session.concentration_difficulty %}{{ session.concentration_difficulty }}{% else %}null{% endif %},
-            motivation: {% if session.motivation_level %}{{ session.motivation_level }}{% else %}null{% endif %},
-            score: {% if session.cognitive_score %}{{ session.cognitive_score }}{% else %}null{% endif %},
-            reactionTime: {% if session.cognitive_reaction_time %}{{ session.cognitive_reaction_time }}{% else %}null{% endif %},
-            criteriaCorrect: {% if session.criteria_correct %}{{ session.criteria_correct }}{% else %}0{% endif %},
-            criteriaIncorrect: {% if session.criteria_incorrect %}{{ session.criteria_incorrect }}{% else %}0{% endif %}
-        }{% if session.session != total_sessions_completed %},{% endif %}
-        {% endfor %}
-    ];
+        .stat-card {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 25px;
+            text-align: center;
+        }
 
-    // Filter valid data points for reliable trend analysis
-    const cleanData = sessionData.filter(d =>
-        d.fatigue !== null && d.effort !== null &&
-        d.concentration !== null && d.motivation !== null
-    );
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #007bff;
+            display: block;
+            margin-bottom: 10px;
+        }
 
-    if (cleanData.length > 1) {
-        // Create multi-variable trend visualization using Plotly
-        const traces = [
-            {
-                x: cleanData.map(d => d.session),
-                y: cleanData.map(d => d.fatigue),
-                mode: 'lines+markers',
-                name: 'Fatigue',
-                line: {color: '#dc3545', width: 3}
-            },
-            {
-                x: cleanData.map(d => d.session),
-                y: cleanData.map(d => d.effort),
-                mode: 'lines+markers',
-                name: 'Mental Effort',
-                line: {color: '#fd7e14', width: 3}
-            },
-            {
-                x: cleanData.map(d => d.session),
-                y: cleanData.map(d => d.concentration),
-                mode: 'lines+markers',
-                name: 'Concentration',
-                line: {color: '#ffc107', width: 3}
-            },
-            {
-                x: cleanData.map(d => d.session),
-                y: cleanData.map(d => d.motivation),
-                mode: 'lines+markers',
-                name: 'Motivation',
-                line: {color: '#28a745', width: 3}
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .charts-section {
+            margin: 30px 0;
+        }
+
+        .chart-container {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .results-table {
+            background-color: white;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid #dee2e6;
+            margin: 30px 0;
+        }
+
+        .table-header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .section-divider {
+            background-color: #e9ecef;
+            padding: 10px 20px;
+            font-weight: bold;
+            color: #495057;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .session-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            align-items: center;
+        }
+
+        .session-row:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .row-header {
+            background-color: #e9ecef;
+            font-weight: bold;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            background-color: #007bff;
+            color: white;
+        }
+
+        .baseline-badge {
+            background-color: #6c757d;
+        }
+
+        .trend-analysis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .trend-card {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+        }
+
+        .trend-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .trend-indicator {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            background-color: white;
+            border: 1px solid #e9ecef;
+        }
+
+        .trend-positive {
+            color: #28a745;
+        }
+
+        .trend-negative {
+            color: #dc3545;
+        }
+
+        .trend-stable {
+            color: #6c757d;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+
+        .task-performance {
+            margin: 30px 0;
+        }
+
+        .performance-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .debriefing {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .thank-you {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .experiment-info {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+    </style>
+
+    <form method="post">
+
+        {# Experiment completion header #}
+        <div class="completion-header">
+            <h1>Experiment Complete</h1>
+            <div class="completion-badge">Mental Fatigue Study - All {{ total_task_sessions }} Work Sessions + Baseline
+                Completed
+            </div>
+            <p>Thank you for your participation in this comprehensive study</p>
+        </div>
+
+        {# Task progression summary statistics #}
+        <div class="section-title">Work Task Progression (Vacancy 1 → Vacancy 2 → Vacancy 3)</div>
+        <div class="summary-stats">
+            <div class="stat-card">
+                <span class="stat-value">{{ total_task_sessions }}</span>
+                <div class="stat-label">Work Sessions Completed</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="avgTaskFatigue">{{ average_task_fatigue }}</span>
+                <div class="stat-label">Average Task Fatigue</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="taskFatigueChange">{{ task_fatigue_increase }}</span>
+                <div class="stat-label">Fatigue Progression</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="taskCognitiveChange">{{ task_cognitive_decline }}</span>
+                <div class="stat-label">Performance Change</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="avgTaskEffort">{{ average_task_effort }}</span>
+                <div class="stat-label">Avg Mental Effort</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="avgTaskMotivation">{{ average_task_motivation }}</span>
+                <div class="stat-label">Avg Motivation</div>
+            </div>
+        </div>
+
+        {# Task performance analysis section - role-specific results display #}
+        {% if is_hr_coordinator %}
+            <div class="task-performance">
+                <div class="section-title">Task Performance Analysis</div>
+                <div class="performance-stats">
+                    <div class="stat-card">
+                        <span class="stat-value" id="totalCriteria">0</span>
+                        <div class="stat-label">Total Criteria Evaluated</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="correctCriteria">0</span>
+                        <div class="stat-label">Correctly Assessed</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="incorrectCriteria">0</span>
+                        <div class="stat-label">Assessment Errors</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="accuracyRate">0%</span>
+                        <div class="stat-label">Overall Accuracy</div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {# Data visualization section for task progression trends #}
+        <div class="charts-section">
+            <div class="chart-container">
+                <div class="chart-title">Task Progression Trends (Vacancy 1 → 2 → 3)</div>
+                <div id="taskProgressionChart" style="width:100%;height:400px;"></div>
+            </div>
+
+            {# Fatigue-performance correlation analysis for HR Coordinator role #}
+            {% if is_hr_coordinator %}
+                <div class="chart-container">
+                    <div class="chart-title">Task Fatigue vs Performance Accuracy</div>
+                    <div id="correlationChart" style="width:100%;height:400px;"></div>
+                </div>
+            {% endif %}
+        </div>
+
+        {# Complete results table with baseline and task sessions #}
+        <div class="results-table">
+            <div class="table-header">
+                Complete Session Results
+            </div>
+
+            <div class="session-row row-header">
+                <div><strong>Session</strong></div>
+                <div><strong>Role/Type</strong></div>
+                <div><strong>Fatigue</strong></div>
+                <div><strong>Mental Effort/Energy</strong></div>
+                <div><strong>Concentration</strong></div>
+                <div><strong>Motivation</strong></div>
+                <div><strong>Test Score</strong></div>
+                <div><strong>Reaction Time</strong></div>
+            </div>
+
+            {# Baseline row #}
+            <div class="section-divider">Baseline Measurement</div>
+            <div class="session-row">
+                <div><strong>Baseline</strong></div>
+                <div><span class="role-badge baseline-badge">Pre-Task</span></div>
+                <div>{{ baseline_data.fatigue_level }}/10</div>
+                <div>{{ baseline_data.mental_energy }}/10</div>
+                <div>{{ baseline_data.concentration_ability }}/10</div>
+                <div>{{ baseline_data.motivation_level }}/10</div>
+                <div>{% if baseline_data.cognitive_score %}{{ baseline_data.cognitive_score }}/20{% else %}
+                    -{% endif %}</div>
+                <div>{% if baseline_data.cognitive_reaction_time %}{{ baseline_data.cognitive_reaction_time }}
+                    ms{% else %}-{% endif %}</div>
+            </div>
+
+            {# Task sessions rows #}
+            <div class="section-divider">Work Task Sessions</div>
+            {% for session in task_sessions %}
+                <div class="session-row">
+                    <div><strong>{{ session.session_name }}</strong></div>
+                    <div><span class="role-badge">{{ session.role }}</span></div>
+                    <div class="session-data"
+                         data-fatigue="{{ session.fatigue_level }}">{{ session.fatigue_level }}/10
+                    </div>
+                    <div class="session-data" data-effort="{{ session.mental_effort }}">{{ session.mental_effort }}/10
+                    </div>
+                    <div class="session-data"
+                         data-concentration="{{ session.concentration_difficulty }}">{{ session.concentration_difficulty }}/10
+                    </div>
+                    <div class="session-data"
+                         data-motivation="{{ session.motivation_level }}">{{ session.motivation_level }}/10
+                    </div>
+                    <div class="session-data">
+                        {% if session.cognitive_score %}{{ session.cognitive_score }}/20{% else %}-{% endif %}</div>
+                    <div class="session-data" data-reaction-time="{{ session.cognitive_reaction_time }}">
+                        {% if session.cognitive_reaction_time %}{{ session.cognitive_reaction_time }}ms{% else %}
+                            -{% endif %}</div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {# Task progression trend analysis #}
+        <div class="trend-analysis">
+            <div class="trend-card">
+                <div class="trend-title">Fatigue Progression</div>
+                {% if task_fatigue_increase > 1 %}
+                    <div class="trend-indicator trend-negative">
+                        Significant Increase<br>
+                        <small id="taskFatigueIncrease1">+{{ task_fatigue_increase }} points</small>
+                    </div>
+                    <p>Your fatigue levels increased across the work sessions.</p>
+                {% elif task_fatigue_increase > -1 %}
+                    <div class="trend-indicator trend-stable">
+                        Stable<br>
+                        <small id="taskFatigueIncrease2">{{ task_fatigue_increase }} points</small>
+                    </div>
+                    <p>Your fatigue levels remained relatively stable during work tasks.</p>
+                {% else %}
+                    <div class="trend-indicator trend-positive">
+                        Decreased<br>
+                        <small id="taskFatigueIncrease3">{{ task_fatigue_increase }} points</small>
+                    </div>
+                    <p>Your fatigue levels decreased during work sessions.</p>
+                {% endif %}
+            </div>
+
+            <div class="trend-card">
+                <div class="trend-title">Cognitive Performance</div>
+                {% if task_cognitive_decline > 1 %}
+                    <div class="trend-indicator trend-negative">
+                        Performance Decline<br>
+                        <small id="taskCognitiveDecline1">-{{ task_cognitive_decline }} points</small>
+                    </div>
+                    <p>Your cognitive performance declined across work sessions.</p>
+                {% elif task_cognitive_decline > -1 %}
+                    <div class="trend-indicator trend-stable">
+                        Stable Performance<br>
+                        <small id="taskCognitiveDecline2">{{ task_cognitive_decline }} points</small>
+                    </div>
+                    <p>Your cognitive performance remained consistent during work tasks.</p>
+                {% else %}
+                    <div class="trend-indicator trend-positive">
+                        Performance Improved<br>
+                        <small id="taskCognitiveDecline3">+{{ task_cognitive_decline }} points</small>
+                    </div>
+                    <p>Your cognitive performance improved across work sessions.</p>
+                {% endif %}
+            </div>
+
+            <div class="trend-card">
+                <div class="trend-title">Mental Effort</div>
+                <div class="trend-indicator">
+                    <span id="effortTrend">{{ task_effort_increase }} points</span>
+                </div>
+                <p id="effortDescription">Average effort required across tasks.</p>
+            </div>
+
+            <div class="trend-card">
+                <div class="trend-title">Motivation Level</div>
+                <div class="trend-indicator">
+                    <span id="motivationTrend">{{ task_motivation_change }} points</span>
+                </div>
+                <p id="motivationDescription">Motivation change during work sessions.</p>
+            </div>
+        </div>
+
+        {# Research context and findings summary #}
+        <div class="debriefing">
+            <h3>About This Research</h3>
+            <p><strong>Purpose:</strong> This study investigated how mental fatigue develops during extended
+                collaborative work sessions and how it affects cognitive performance.</p>
+
+            <p><strong>Your Contribution:</strong> Your data will help researchers understand:</p>
+            <ul>
+                <li>How fatigue accumulates during digital collaboration across multiple work sessions</li>
+                <li>The relationship between subjective fatigue and objective cognitive performance</li>
+                <li>Individual differences in fatigue susceptibility and recovery</li>
+            </ul>
+
+            <p><strong>Key Findings from Your Sessions:</strong></p>
+            <ul>
+                <li>You completed {{ total_task_sessions }} full collaborative work sessions</li>
+                <li>Your task fatigue levels {% if task_fatigue_increase > 0 %}
+                    increased{% elif task_fatigue_increase < 0 %}decreased{% else %}remained stable{% endif %} across
+                    work sessions
+                </li>
+                <li>Your cognitive performance {% if task_cognitive_decline > 0 %}
+                    declined{% elif task_cognitive_decline < 0 %}improved{% else %}remained stable{% endif %} during the
+                    experiment
+                </li>
+            </ul>
+        </div>
+
+        {# Participant appreciation and research impact statement #}
+        <div class="thank-you">
+            <h2>Thank You</h2>
+            <p><strong>Your participation is invaluable for advancing our understanding of mental fatigue in digital
+                work environments.</strong></p>
+
+            <p>The data you provided will contribute to:</p>
+            <ul>
+                <li>Designing better break schedules for knowledge workers</li>
+                <li>Developing fatigue-aware collaboration tools</li>
+                <li>Understanding optimal task rotation strategies</li>
+                <li>Creating personalized workload management systems</li>
+            </ul>
+
+            <div class="experiment-info">
+                <strong>Experiment ID:</strong> {{ player.participant.code }}<br>
+                <strong>Completion Date:</strong> <span id="completionDate"></span>
+            </div>
+        </div>
+
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Format summary statistics with proper decimal places
+            const avgTaskFatigue = {{ average_task_fatigue }};
+            const taskFatigueIncrease = {{ task_fatigue_increase }};
+            const taskCognitiveDecline = {{ task_cognitive_decline }};
+            const avgTaskEffort = {{ average_task_effort }};
+            const avgTaskMotivation = {{ average_task_motivation }};
+
+            // Update summary statistics
+            document.getElementById('avgTaskFatigue').textContent = avgTaskFatigue.toFixed(1);
+            document.getElementById('taskFatigueChange').textContent =
+                (taskFatigueIncrease > 0 ? '+' : '') + taskFatigueIncrease.toFixed(1);
+            document.getElementById('taskCognitiveChange').textContent =
+                (taskCognitiveDecline > 0 ? '-' : '') + taskCognitiveDecline.toFixed(1);
+            document.getElementById('avgTaskEffort').textContent = avgTaskEffort.toFixed(1);
+            document.getElementById('avgTaskMotivation').textContent = avgTaskMotivation.toFixed(1);
+
+            // Display current completion timestamp
+            const now = new Date();
+            const dateString = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+            document.getElementById('completionDate').textContent = dateString;
+
+            // Generate task session data for visualization (excluding baseline)
+            const taskSessionData = [
+                {% for session in task_sessions %}
+                    {
+                        session: {{ session.session }},
+                        name: "{{ session.session_name }}",
+                        fatigue: {% if session.fatigue_level %}{{ session.fatigue_level }}{% else %}null{% endif %},
+                        effort: {% if session.mental_effort %}{{ session.mental_effort }}{% else %}null{% endif %},
+                        concentration: {% if session.concentration_difficulty %}{{ session.concentration_difficulty }}{% else %}null{% endif %},
+                        motivation: {% if session.motivation_level %}{{ session.motivation_level }}{% else %}null{% endif %},
+                        score: {% if session.cognitive_score %}{{ session.cognitive_score }}{% else %}null{% endif %},
+                        reactionTime: {% if session.cognitive_reaction_time %}{{ session.cognitive_reaction_time }}{% else %}null{% endif %},
+                        criteriaCorrect: {% if session.criteria_correct %}{{ session.criteria_correct }}{% else %}0{% endif %},
+                        criteriaIncorrect: {% if session.criteria_incorrect %}{{ session.criteria_incorrect }}{% else %}0{% endif %}
+                    },
+                {% endfor %}
+            ];
+
+            // Filter valid data points for reliable trend analysis
+            const validTaskData = taskSessionData.filter(d =>
+                d.fatigue !== null && d.effort !== null &&
+                d.concentration !== null && d.motivation !== null
+            );
+
+            if (validTaskData.length > 1) {
+                // Create task progression visualization using Plotly
+                const traces = [
+                    {
+                        x: validTaskData.map(d => d.name),
+                        y: validTaskData.map(d => d.fatigue),
+                        mode: 'lines+markers',
+                        name: 'Fatigue',
+                        line: {color: '#dc3545', width: 3},
+                        marker: {size: 8}
+                    },
+                    {
+                        x: validTaskData.map(d => d.name),
+                        y: validTaskData.map(d => d.effort),
+                        mode: 'lines+markers',
+                        name: 'Mental Effort',
+                        line: {color: '#fd7e14', width: 3},
+                        marker: {size: 8}
+                    },
+                    {
+                        x: validTaskData.map(d => d.name),
+                        y: validTaskData.map(d => d.concentration),
+                        mode: 'lines+markers',
+                        name: 'Concentration Difficulty',
+                        line: {color: '#ffc107', width: 3},
+                        marker: {size: 8}
+                    },
+                    {
+                        x: validTaskData.map(d => d.name),
+                        y: validTaskData.map(d => d.motivation),
+                        mode: 'lines+markers',
+                        name: 'Motivation',
+                        line: {color: '#28a745', width: 3},
+                        marker: {size: 8}
+                    }
+                ];
+
+                const layout = {
+                    xaxis: {title: 'Work Session'},
+                    yaxis: {title: 'Rating (1-10)', range: [0, 10]},
+                    legend: {orientation: 'h', y: -0.2},
+                    margin: {l: 60, r: 40, t: 40, b: 80}
+                };
+
+                Plotly.newPlot('taskProgressionChart', traces, layout, {responsive: true});
             }
-        ];
 
-        const layout = {
-            xaxis: {title: 'Session Number', dtick: 1},
-            yaxis: {title: 'Rating (1-10)', range: [0, 10]},
-            legend: {orientation: 'h', y: -0.2},
-            margin: {l: 60, r: 40, t: 40, b: 80}
-        };
+            // Generate task performance analysis for HR Coordinator role
+            {% if is_hr_coordinator %}
+                const sessionsWithCriteria = taskSessionData.filter(d =>
+                    d.session && (d.criteriaCorrect > 0 || d.criteriaIncorrect > 0)
+                );
 
-        Plotly.newPlot('performanceChart', traces, layout, {responsive: true});
+                if (sessionsWithCriteria.length > 0) {
+                    // Calculate evaluation accuracy metrics
+                    const totalCorrect = sessionsWithCriteria.reduce((sum, d) => sum + (d.criteriaCorrect || 0), 0);
+                    const totalIncorrect = sessionsWithCriteria.reduce((sum, d) => sum + (d.criteriaIncorrect || 0), 0);
+                    const totalCriteria = totalCorrect + totalIncorrect;
+                    const accuracyRate = totalCriteria > 0 ? (totalCorrect / totalCriteria * 100) : 0;
 
-        // Calculate additional trend metrics for comprehensive analysis
-        const firstSession = cleanData[0];
-        const lastSession = cleanData[cleanData.length - 1];
+                    document.getElementById('totalCriteria').textContent = totalCriteria;
+                    document.getElementById('correctCriteria').textContent = totalCorrect;
+                    document.getElementById('incorrectCriteria').textContent = totalIncorrect;
+                    document.getElementById('accuracyRate').textContent = accuracyRate.toFixed(1) + '%';
 
-        const effortChange = lastSession.effort - firstSession.effort;
-        document.getElementById('effortTrend').textContent =
-            (effortChange > 0 ? '+' : '') + effortChange.toFixed(1) + ' points';
+                    // Create fatigue-performance correlation for task sessions
+                    const correlationData = sessionsWithCriteria.map(d => {
+                        const sessionTotal = (d.criteriaCorrect || 0) + (d.criteriaIncorrect || 0);
+                        const sessionAccuracy = sessionTotal > 0 ? (d.criteriaCorrect || 0) / sessionTotal * 100 : 0;
+                        return {
+                            session: d.session,
+                            fatigue: d.fatigue || 0,
+                            accuracy: sessionAccuracy,
+                            name: d.name
+                        };
+                    }).filter(d => d.fatigue > 0);
 
-        const motivationChange = lastSession.motivation - firstSession.motivation;
-        document.getElementById('motivationTrend').textContent =
-            (motivationChange > 0 ? '+' : '') + motivationChange.toFixed(1) + ' points';
+                    if (correlationData.length > 1) {
+                        const correlationTrace = {
+                            x: correlationData.map(d => d.fatigue),
+                            y: correlationData.map(d => d.accuracy),
+                            mode: 'markers+lines',
+                            type: 'scatter',
+                            name: 'Accuracy vs Fatigue',
+                            text: correlationData.map(d => d.name),
+                            marker: {
+                                size: 12,
+                                color: correlationData.map(d => d.session),
+                                colorscale: 'Viridis',
+                                showscale: true,
+                                colorbar: {title: 'Session'}
+                            },
+                            line: {color: '#007bff', width: 2}
+                        };
 
-        // Calculate session averages for overall performance assessment
-        const avgEffort = cleanData.reduce((sum, d) => sum + d.effort, 0) / cleanData.length;
-        const avgMotivation = cleanData.reduce((sum, d) => sum + d.motivation, 0) / cleanData.length;
+                        const correlationLayout = {
+                            xaxis: {title: 'Fatigue Level (1-10)', range: [0, 10]},
+                            yaxis: {title: 'Task Accuracy (%)', range: [0, 100]},
+                            margin: {l: 60, r: 60, t: 40, b: 60}
+                        };
 
-        document.getElementById('avgEffort').textContent = avgEffort.toFixed(1);
-        document.getElementById('avgMotivation').textContent = avgMotivation.toFixed(1);
-    }
-
-    // Generate task performance analysis for HR Coordinator role
-    {% if is_hr_coordinator %}
-    const sessionsWithCriteria = sessionData.filter(d =>
-        d.session && (d.criteriaCorrect > 0 || d.criteriaIncorrect > 0)
-    );
-
-    if (sessionsWithCriteria.length > 0) {
-        // Calculate evaluation accuracy metrics for decision quality analysis
-        const totalCorrect = sessionsWithCriteria.reduce((sum, d) => sum + (d.criteriaCorrect || 0), 0);
-        const totalIncorrect = sessionsWithCriteria.reduce((sum, d) => sum + (d.criteriaIncorrect || 0), 0);
-        const totalCriteria = totalCorrect + totalIncorrect;
-        const accuracyRate = totalCriteria > 0 ? (totalCorrect / totalCriteria * 100) : 0;
-
-        document.getElementById('totalCriteria').textContent = totalCriteria;
-        document.getElementById('correctCriteria').textContent = totalCorrect;
-        document.getElementById('incorrectCriteria').textContent = totalIncorrect;
-        document.getElementById('accuracyRate').textContent = accuracyRate.toFixed(1) + '%';
-
-        // Create fatigue-performance correlation scatter plot for research analysis
-        const correlationData = sessionsWithCriteria.map(d => {
-            const sessionTotal = (d.criteriaCorrect || 0) + (d.criteriaIncorrect || 0);
-            const sessionAccuracy = sessionTotal > 0 ? (d.criteriaCorrect || 0) / sessionTotal * 100 : 0;
-            return {
-                session: d.session,
-                fatigue: d.fatigue || 0,
-                accuracy: sessionAccuracy
-            };
-        }).filter(d => d.fatigue > 0);
-
-        if (correlationData.length > 1) {
-            const correlationTrace = {
-                x: correlationData.map(d => d.fatigue),
-                y: correlationData.map(d => d.accuracy),
-                mode: 'markers+lines',
-                type: 'scatter',
-                name: 'Accuracy vs Fatigue',
-                marker: {
-                    size: 12,
-                    color: correlationData.map(d => d.session),
-                    colorscale: 'Viridis',
-                    showscale: true,
-                    colorbar: {title: 'Session'}
-                },
-                line: {color: '#007bff', width: 2}
-            };
-
-            const correlationLayout = {
-                xaxis: {
-                    title: 'Fatigue Level (1-10)',
-                    range: [0, 10],
-                    dtick: 1
-                },
-                yaxis: {
-                    title: 'Task Accuracy (%)',
-                    range: [0, 100],
-                    dtick: 20
-                },
-                margin: {l: 60, r: 60, t: 40, b: 60},
-                annotations: [{
-                    x: correlationData[0].fatigue,
-                    y: correlationData[0].accuracy,
-                    text: `Session ${correlationData[0].session}`,
-                    showarrow: true,
-                    arrowhead: 2
-                }]
-            };
-
-            Plotly.newPlot('correlationChart', [correlationTrace], correlationLayout, {responsive: true});
-        }
-    } else {
-        // Handle missing task performance data
-        document.getElementById('totalCriteria').textContent = '-';
-        document.getElementById('correctCriteria').textContent = '-';
-        document.getElementById('incorrectCriteria').textContent = '-';
-        document.getElementById('accuracyRate').textContent = '-';
-    }
-    {% endif %}
-});
-</script>
+                        Plotly.newPlot('correlationChart', [correlationTrace], correlationLayout, {responsive: true});
+                    }
+                }
+            {% endif %}
+        });
+    </script>
 
 {% endblock %}
