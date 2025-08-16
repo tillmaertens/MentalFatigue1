@@ -396,6 +396,29 @@ class BusinessPartner(Page):
             'total_sessions': 3
         }
 
+class WaitForVacancy(WaitPage):
+    """
+    Waits for all players before a vacancy session starts.
+    Ensures that all roles (Recruiter, HR Coordinator, Business Partner)
+    begin the work session simultaneously.
+    """
+
+    def is_displayed(self):
+        """
+        Only displayed before main work sessions (Vacancy 1, 2, 3).
+        """
+        return should_show_vacancy_session(self.player.round_number)
+
+    def after_all_players_arrive(self):
+        """
+        Executed when all players have arrived.
+        Add setup code here if needed.
+        """
+        pass
+
+    title_text = "Synchronization"
+    body_text = "Waiting for other players to join the session..."
+
 
 class SelfAssessment(Page):
     """
@@ -761,9 +784,9 @@ class FinalResults(Page):
         return result
 
 
-# Page Sequence for 5-round structure
 page_sequence = [
     Consent,
+    WaitForVacancy,
     Recruiter,
     HRCoordinator,
     BusinessPartner,
