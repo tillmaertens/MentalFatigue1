@@ -336,14 +336,14 @@ class HRCoordinator(Page):
 class BusinessPartner(Page):
     """
     Prepares data for Business Partner requirements catalog interface.
-    Now used in the 4-round structure for both Vacancy 1 and Vacancy 2.
 
     Data Processing Flow:
     1. Get current vacancy configuration
     2. Load basic applicant data (not used directly in interface)
     3. Load criteria metadata for requirements catalog
     4. Calculate session numbering and progress indicators
-    5. Assemble catalog data for template rendering
+    5. Generate vacancy-specific file paths for emails and sticky notes
+    6. Assemble catalog data for template rendering
 
     Returns:
         dict: Template variables containing:
@@ -351,6 +351,8 @@ class BusinessPartner(Page):
             - categories: Criteria categories for navigation
             - criteria_by_category: Grouped criteria for category selection
             - min_score/max_score: Score range for criteria viewing (0-8)
+            - email_file: Vacancy-specific email PDF filename
+            - sticky_notes_file: Vacancy-specific sticky notes image filename
     """
 
     def is_displayed(self):
@@ -361,7 +363,7 @@ class BusinessPartner(Page):
 
     def get_timeout_seconds(self):
         """
-        Returns timeout based on vacancy: None for V1 (unlimited), 600s for V2.
+        Returns timeout based on vacancy: None for V1 (unlimited), 600s for V2 and V3.
         """
         if self.player.round_number == C.VACANCY_1_ROUND:
             return None  # Unlimited time for Vacancy 1
@@ -374,6 +376,7 @@ class BusinessPartner(Page):
     def vars_for_template(self):
         """
         Prepares data for Business Partner requirements catalog interface.
+        Now includes vacancy-specific email and sticky notes files.
         """
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
         applicants_data = get_applicants_data_for_vacancy(vacancy_info)
@@ -384,7 +387,7 @@ class BusinessPartner(Page):
 
         return {
             'applicants': applicants_data,
-            'session_number': vacancy_number,  # Session 1 or 2
+            'session_number': vacancy_number,
             'vacancy_number': vacancy_number,
             'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else 600,
             'criteria_data': metadata['criteria'],
@@ -393,7 +396,9 @@ class BusinessPartner(Page):
             'static_path': C.STATIC_APPLICANTS_PATH,
             'min_score': C.MIN_SCORE,
             'max_score': C.MAX_SCORE,
-            'total_sessions': 3
+            'total_sessions': 3,
+            'email_file': f'Email_{vacancy_number}.pdf',
+            'sticky_notes_file': f'StickyNotes_{vacancy_number}.jpg'
         }
 
 class WaitForVacancy(WaitPage):

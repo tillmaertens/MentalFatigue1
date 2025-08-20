@@ -470,11 +470,12 @@
                 </div>
 
                 {# Email access button: Opens PDF containing relevant email #}
-                <button type="button" class="email-button" onclick="openPDF(event, 'Emails.pdf')" title="Open Emails">
+                <button type="button" class="email-button" onclick="openPDF(event, '{{ email_file }}')"
+                        title="Open Emails">
                 </button>
 
                 {# Sticky notes button: Opens image containing notes and reminders #}
-                <button type="button" class="sticky-button" onclick="openImage(event, 'StickyNotes.jpg')"
+                <button type="button" class="sticky-button" onclick="openImage(event, '{{ sticky_notes_file }}')"
                         title="Open Sticky Notes">
                 </button>
             </div>
@@ -749,6 +750,18 @@
                 }
             };
 
+            iframe.onerror = () => {
+                iframe.style.display = 'none';
+                const errorMsg = document.createElement('div');
+                errorMsg.textContent = `PDF file not found: ${pdfPath}`;
+                errorMsg.className = 'error-message';
+                errorMsg.style.color = 'white';
+                errorMsg.style.fontSize = '18px';
+                errorMsg.style.textAlign = 'center';
+                errorMsg.style.padding = '20px';
+                modal.appendChild(errorMsg);
+            };
+
             // Multiple ways to close modal: button click, background click, escape key
             closeBtn.onclick = closeModal;
             modal.onclick = (e) => e.target === modal && closeModal();
@@ -794,6 +807,18 @@
                 if (document.getElementById('imageModal')) {
                     document.body.removeChild(modal);
                 }
+            };
+
+            img.onerror = () => {
+                img.style.display = 'none';
+                const errorMsg = document.createElement('div');
+                errorMsg.textContent = `Image file not found: ${imagePath}`;
+                errorMsg.className = 'error-message';
+                errorMsg.style.color = 'white';
+                errorMsg.style.fontSize = '18px';
+                errorMsg.style.textAlign = 'center';
+                errorMsg.style.padding = '20px';
+                imageContainer.appendChild(errorMsg);
             };
 
             closeBtn.onclick = closeModal;
