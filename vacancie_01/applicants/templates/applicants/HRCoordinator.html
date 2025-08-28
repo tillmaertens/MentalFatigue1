@@ -503,7 +503,7 @@
     </style>
 
     {# Debug skip button for development and testing #}
-    {% if C.DEBUG_MODE %}
+    {% if C.DEBUG_MODE or vacancy_number == 1 %}
         <div class="skip">
             <button onclick="skipSession()" class="skip-button">
                 Skip Session
