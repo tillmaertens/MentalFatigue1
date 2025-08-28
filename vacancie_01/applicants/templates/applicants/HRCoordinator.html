@@ -503,11 +503,13 @@
     </style>
 
     {# Debug skip button for development and testing #}
-    <div class="skip">
-        <button onclick="skipSession()" class="skip-button">
-            Skip Session
-        </button>
-    </div>
+    {% if C.DEBUG_MODE %}
+        <div class="skip">
+            <button onclick="skipSession()" class="skip-button">
+                Skip Session
+            </button>
+        </div>
+    {% endif %}
 
     {# Session progress indicator #}
     <div class="session-info-bar">
@@ -722,15 +724,17 @@
             }
         }
 
-        function skipSession() {
-            // Development utility for testing session flow
-            if (confirm('Skip this session?')) {
-                updateLocalCriteriaCount();
-                setTimeout(() => {
-                    document.querySelector('form').submit();
-                }, 100);
+        {% if C.DEBUG_MODE %}
+            function skipSession() {
+                // Development utility for testing session flow
+                if (confirm('Skip this session?')) {
+                    updateLocalCriteriaCount();
+                    setTimeout(() => {
+                        document.querySelector('form').submit();
+                    }, 100);
+                }
             }
-        }
+        {% endif %}
 
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize HR Coordinator evaluation interface

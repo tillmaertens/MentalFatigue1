@@ -130,12 +130,13 @@
     </div>
 
     {# Debug skip button for development and testing purposes #}
-    <div class="skip">
-        <button onclick="skipSession()"
-                class="skip-button">
-            Skip Session
-        </button>
-    </div>
+    {% if C.DEBUG_MODE %}
+        <div class="skip">
+            <button onclick="skipSession()" class="skip-button">
+                Skip Session
+            </button>
+        </div>
+    {% endif %}
 
 
     <div id="testItem"></div>
@@ -201,12 +202,14 @@
         }
 
         // Skip for debugging
-        function skipSession() {
-            if (confirm('Skip this session?')) {
-                updateHiddenFields();
-                document.querySelector('form').submit();
+        {% if C.DEBUG_MODE %}
+            function skipSession() {
+                if (confirm('Skip this session?')) {
+                    updateHiddenFields();
+                    document.querySelector('form').submit();
+                }
             }
-        }
+        {% endif %}
 
         function selectColor(selectedColor) {
             // Prevent actions if test is not active

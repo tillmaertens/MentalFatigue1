@@ -437,11 +437,13 @@
     </style>
 
     {# Debug skip button for development and testing #}
-    <div class="skip">
-        <button onclick="skipSession()" class="skip-button">
-            Skip Session
-        </button>
-    </div>
+    {% if C.DEBUG_MODE %}
+        <div class="skip">
+            <button onclick="skipSession()" class="skip-button">
+                Skip Session
+            </button>
+        </div>
+    {% endif %}
 
     {# Session progress indicator showing current session within vacancy #}
     <div class="session-info-bar">
@@ -555,12 +557,14 @@
         }
 
 
-        function skipSession() {
-            // Development function: Skip current session for testing
-            if (confirm('Skip this session?')) {
-                document.querySelector('form').submit();
+        {% if C.DEBUG_MODE %}
+            function skipSession() {
+                // Development function: Skip current session for testing
+                if (confirm('Skip this session?')) {
+                    document.querySelector('form').submit();
+                }
             }
-        }
+        {% endif %}
 
         function showRequirementsCatalog() {
             // Transition from default view to requirements catalog interface

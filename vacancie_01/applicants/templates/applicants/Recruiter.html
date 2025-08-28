@@ -253,11 +253,13 @@
     </style>
 
     {# Debug skip button for development #}
-    <div class="skip">
-        <button onclick="skipSession()" class="skip-button">
-            Skip Session
-        </button>
-    </div>
+    {% if C.DEBUG_MODE %}
+        <div class="skip">
+            <button onclick="skipSession()" class="skip-button">
+                Skip Session
+            </button>
+        </div>
+    {% endif %}
 
     {# Session progress indicator #}
     <div class="session-info-bar">
@@ -341,12 +343,14 @@
             event.target.classList.add('active');
         }
 
-        function skipSession() {
-            // Development utility for session testing
-            if (confirm('Skip this session?')) {
-                document.querySelector('form').submit();
+        {% if C.DEBUG_MODE %}
+            function skipSession() {
+                // Development utility for session testing
+                if (confirm('Skip this session?')) {
+                    document.querySelector('form').submit();
+                }
             }
-        }
+        {% endif %}
 
         function openPDF(event, pdfPath) {
             // Open applicant documents in modal overlay for detailed examination
