@@ -791,10 +791,28 @@
             modal.classList.remove('show');
         }
 
+        function getUsedCriteriaNames() {
+            // Get all currently used criteria names from the evaluation table
+            const usedCriteria = [];
+            const criteriaInputs = document.querySelectorAll('.criteria-input');
+
+            criteriaInputs.forEach(input => {
+                const criterionName = input.value.trim();
+                if (criterionName) {
+                    usedCriteria.push(criterionName.toLowerCase());
+                }
+            });
+
+            return usedCriteria;
+        }
+
         function populateModalCategories() {
-            // Build category-based criteria selection interface
+            // Build category-based criteria selection interface with filtering
             const container = document.getElementById('modalCategories');
             container.innerHTML = '';
+
+            // Get currently used criteria names for filtering
+            const usedCriteria = getUsedCriteriaNames();
 
             categories.forEach(category => {
                 const categoryDiv = document.createElement('div');
@@ -808,22 +826,31 @@
                 criteriaList.className = 'modal-criteria-list';
 
                 const categoryRequirements = criteriaByCategory[category] || [];
-                categoryRequirements.forEach(requirement => {
-                    const criteriaItem = document.createElement('div');
-                    criteriaItem.className = 'modal-criteria-item';
-                    criteriaItem.textContent = requirement.name;
-                    criteriaItem.onclick = () => selectCriteriaFromModal(requirement);
-                    criteriaList.appendChild(criteriaItem);
+
+                // Filter out already used criteria
+                const availableRequirements = categoryRequirements.filter(requirement => {
+                    return !usedCriteria.includes(requirement.name.toLowerCase());
                 });
 
-                categoryDiv.appendChild(titleDiv);
-                categoryDiv.appendChild(criteriaList);
-                container.appendChild(categoryDiv);
+                // Only show category if it has available criteria
+                if (availableRequirements.length > 0) {
+                    availableRequirements.forEach(requirement => {
+                        const criteriaItem = document.createElement('div');
+                        criteriaItem.className = 'modal-criteria-item';
+                        criteriaItem.textContent = requirement.name;
+                        criteriaItem.onclick = () => selectCriteriaFromModal(requirement);
+                        criteriaList.appendChild(criteriaItem);
+                    });
+
+                    categoryDiv.appendChild(titleDiv);
+                    categoryDiv.appendChild(criteriaList);
+                    container.appendChild(categoryDiv);
+                }
             });
         }
 
         function selectCriteriaFromModal(requirement) {
-            // Add selected criterion to evaluation table
+            // Add selected criterion to evaluation table and refresh modal
             addCriteriaRow(requirement.name, {}, '');
             closeCriteriaModal();
         }

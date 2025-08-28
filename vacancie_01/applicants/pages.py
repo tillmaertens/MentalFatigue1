@@ -401,6 +401,7 @@ class BusinessPartner(Page):
             'sticky_notes_file': f'StickyNotes_{vacancy_number}.jpg'
         }
 
+
 class WaitForVacancy(WaitPage):
     """
     Waits for all players before a vacancy session starts.
@@ -697,19 +698,30 @@ class FinalResults(Page):
                     except:
                         return default
 
+                # Get criteria data from HR Coordinator in the same group
+                try:
+                    hr_coordinator = round_player.group.get_player_by_id(2)
+                    criteria_added = safe_get(lambda: hr_coordinator.criteria_added_this_session)
+                    criteria_correct = safe_get(lambda: hr_coordinator.criteria_correct_this_session)
+                    criteria_incorrect = safe_get(lambda: hr_coordinator.criteria_incorrect_this_session)
+                except:
+                    criteria_added = criteria_correct = criteria_incorrect = 0
+
                 session_data = {
-                    'session': i + 1,  # 1, 2, 3
+                    'session': i + 1,
                     'session_name': task_names[i],
                     'role': safe_get(lambda: round_player.selected_role, 'Unknown'),
+                    # Individual player data (fatigue, cognitive performance)
                     'fatigue_level': safe_get(lambda: round_player.fatigue_level),
                     'mental_effort': safe_get(lambda: round_player.mental_effort),
                     'concentration_difficulty': safe_get(lambda: round_player.concentration_difficulty),
                     'motivation_level': safe_get(lambda: round_player.motivation_level),
                     'cognitive_score': safe_get(lambda: round_player.cognitive_test_score),
                     'cognitive_reaction_time': safe_get(lambda: round_player.cognitive_test_reaction_time),
-                    'criteria_added': safe_get(lambda: round_player.criteria_added_this_session),
-                    'criteria_correct': safe_get(lambda: round_player.criteria_correct_this_session),
-                    'criteria_incorrect': safe_get(lambda: round_player.criteria_incorrect_this_session),
+                    # Criteria data from HR Coordinator (shared across all players)
+                    'criteria_added': criteria_added,
+                    'criteria_correct': criteria_correct,
+                    'criteria_incorrect': criteria_incorrect,
                 }
                 task_sessions_data.append(session_data)
             except Exception as e:

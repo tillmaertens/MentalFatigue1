@@ -264,30 +264,28 @@
             </div>
         </div>
 
-        {# Task performance analysis section - role-specific results display #}
-        {% if is_hr_coordinator %}
-            <div class="task-performance">
-                <div class="section-title">Task Performance Analysis</div>
-                <div class="performance-stats">
-                    <div class="stat-card">
-                        <span class="stat-value" id="totalCriteria">0</span>
-                        <div class="stat-label">Total Criteria Evaluated</div>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-value" id="correctCriteria">0</span>
-                        <div class="stat-label">Correctly Assessed</div>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-value" id="incorrectCriteria">0</span>
-                        <div class="stat-label">Assessment Errors</div>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-value" id="accuracyRate">0%</span>
-                        <div class="stat-label">Overall Accuracy</div>
-                    </div>
+        {# Task performance analysis section#}
+        <div class="task-performance">
+            <div class="section-title">Task Performance Analysis</div>
+            <div class="performance-stats">
+                <div class="stat-card">
+                    <span class="stat-value" id="totalCriteria">0</span>
+                    <div class="stat-label">Total Criteria Evaluated</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="correctCriteria">0</span>
+                    <div class="stat-label">Correctly Assessed</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="incorrectCriteria">0</span>
+                    <div class="stat-label">Assessment Errors</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="accuracyRate">0%</span>
+                    <div class="stat-label">Overall Accuracy</div>
                 </div>
             </div>
-        {% endif %}
+        </div>
 
         {# Data visualization section for task progression trends #}
         <div class="charts-section">
@@ -297,12 +295,10 @@
             </div>
 
             {# Fatigue-performance correlation analysis for HR Coordinator role #}
-            {% if is_hr_coordinator %}
-                <div class="chart-container">
-                    <div class="chart-title">Task Fatigue vs Performance Accuracy</div>
-                    <div id="correlationChart" style="width:100%;height:400px;"></div>
-                </div>
-            {% endif %}
+            <div class="chart-container">
+                <div class="chart-title">Task Fatigue vs Performance Accuracy</div>
+                <div id="correlationChart" style="width:100%;height:400px;"></div>
+            </div>
         </div>
 
         {# Complete results table with baseline and task sessions #}
@@ -572,63 +568,61 @@
             }
 
             // Generate task performance analysis for HR Coordinator role
-            {% if is_hr_coordinator %}
-                const sessionsWithCriteria = taskSessionData.filter(d =>
-                    d.session && (d.criteriaCorrect > 0 || d.criteriaIncorrect > 0)
-                );
+            const sessionsWithCriteria = taskSessionData.filter(d =>
+                d.session && (d.criteriaCorrect > 0 || d.criteriaIncorrect > 0)
+            );
 
-                if (sessionsWithCriteria.length > 0) {
-                    // Calculate evaluation accuracy metrics
-                    const totalCorrect = sessionsWithCriteria.reduce((sum, d) => sum + (d.criteriaCorrect || 0), 0);
-                    const totalIncorrect = sessionsWithCriteria.reduce((sum, d) => sum + (d.criteriaIncorrect || 0), 0);
-                    const totalCriteria = totalCorrect + totalIncorrect;
-                    const accuracyRate = totalCriteria > 0 ? (totalCorrect / totalCriteria * 100) : 0;
+            if (sessionsWithCriteria.length > 0) {
+                // Calculate evaluation accuracy metrics
+                const totalCorrect = sessionsWithCriteria.reduce((sum, d) => sum + (d.criteriaCorrect || 0), 0);
+                const totalIncorrect = sessionsWithCriteria.reduce((sum, d) => sum + (d.criteriaIncorrect || 0), 0);
+                const totalCriteria = totalCorrect + totalIncorrect;
+                const accuracyRate = totalCriteria > 0 ? (totalCorrect / totalCriteria * 100) : 0;
 
-                    document.getElementById('totalCriteria').textContent = totalCriteria;
-                    document.getElementById('correctCriteria').textContent = totalCorrect;
-                    document.getElementById('incorrectCriteria').textContent = totalIncorrect;
-                    document.getElementById('accuracyRate').textContent = accuracyRate.toFixed(1) + '%';
+                document.getElementById('totalCriteria').textContent = totalCriteria;
+                document.getElementById('correctCriteria').textContent = totalCorrect;
+                document.getElementById('incorrectCriteria').textContent = totalIncorrect;
+                document.getElementById('accuracyRate').textContent = accuracyRate.toFixed(1) + '%';
 
-                    // Create fatigue-performance correlation for task sessions
-                    const correlationData = sessionsWithCriteria.map(d => {
-                        const sessionTotal = (d.criteriaCorrect || 0) + (d.criteriaIncorrect || 0);
-                        const sessionAccuracy = sessionTotal > 0 ? (d.criteriaCorrect || 0) / sessionTotal * 100 : 0;
-                        return {
-                            session: d.session,
-                            fatigue: d.fatigue || 0,
-                            accuracy: sessionAccuracy,
-                            name: d.name
-                        };
-                    }).filter(d => d.fatigue > 0);
+                // Create fatigue-performance correlation for task sessions
+                const correlationData = sessionsWithCriteria.map(d => {
+                    const sessionTotal = (d.criteriaCorrect || 0) + (d.criteriaIncorrect || 0);
+                    const sessionAccuracy = sessionTotal > 0 ? (d.criteriaCorrect || 0) / sessionTotal * 100 : 0;
+                    return {
+                        session: d.session,
+                        fatigue: d.fatigue || 0,
+                        accuracy: sessionAccuracy,
+                        name: d.name
+                    };
+                }).filter(d => d.fatigue > 0);
 
-                    if (correlationData.length > 1) {
-                        const correlationTrace = {
-                            x: correlationData.map(d => d.fatigue),
-                            y: correlationData.map(d => d.accuracy),
-                            mode: 'markers+lines',
-                            type: 'scatter',
-                            name: 'Accuracy vs Fatigue',
-                            text: correlationData.map(d => d.name),
-                            marker: {
-                                size: 12,
-                                color: correlationData.map(d => d.session),
-                                colorscale: 'Viridis',
-                                showscale: true,
-                                colorbar: {title: 'Session'}
-                            },
-                            line: {color: '#007bff', width: 2}
-                        };
+                if (correlationData.length > 1) {
+                    const correlationTrace = {
+                        x: correlationData.map(d => d.fatigue),
+                        y: correlationData.map(d => d.accuracy),
+                        mode: 'markers+lines',
+                        type: 'scatter',
+                        name: 'Accuracy vs Fatigue',
+                        text: correlationData.map(d => d.name),
+                        marker: {
+                            size: 12,
+                            color: correlationData.map(d => d.session),
+                            colorscale: 'Viridis',
+                            showscale: true,
+                            colorbar: {title: 'Session'}
+                        },
+                        line: {color: '#007bff', width: 2}
+                    };
 
-                        const correlationLayout = {
-                            xaxis: {title: 'Fatigue Level (1-10)', range: [0, 10]},
-                            yaxis: {title: 'Task Accuracy (%)', range: [0, 100]},
-                            margin: {l: 60, r: 60, t: 40, b: 60}
-                        };
+                    const correlationLayout = {
+                        xaxis: {title: 'Fatigue Level (1-10)', range: [0, 10]},
+                        yaxis: {title: 'Task Accuracy (%)', range: [0, 100]},
+                        margin: {l: 60, r: 60, t: 40, b: 60}
+                    };
 
-                        Plotly.newPlot('correlationChart', [correlationTrace], correlationLayout, {responsive: true});
-                    }
+                    Plotly.newPlot('correlationChart', [correlationTrace], correlationLayout, {responsive: true});
                 }
-            {% endif %}
+            }
         });
     </script>
 
