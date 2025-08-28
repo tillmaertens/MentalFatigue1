@@ -363,7 +363,7 @@ class C(BaseConstants):
     SESSIONS_PER_VACANCY = 1
 
     # Debug mode activated if set to True -- No Video Meeting
-    DEBUG_MODE = True
+    DEBUG_MODE = False
 
 class Subsession(BaseSubsession):
     pass
