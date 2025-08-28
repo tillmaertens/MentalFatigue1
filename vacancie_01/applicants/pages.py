@@ -479,9 +479,9 @@ class CognitiveTestInstructions(Page):
 
     def is_displayed(self):
         """
-        Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
+        Only shown before the first cognitive test.
         """
-        return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND]
+        return self.player.round_number == C.CONSENT_ROUND
 
     def vars_for_template(self):
         """
@@ -530,7 +530,7 @@ class CognitiveTest(Page):
     """
     form_model = 'player'
     form_fields = ['cognitive_test_score', 'cognitive_test_reaction_time', 'cognitive_test_errors']
-    timeout_seconds = 22
+    timeout_seconds = None
 
     def is_displayed(self):
         """
