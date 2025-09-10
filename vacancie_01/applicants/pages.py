@@ -470,6 +470,33 @@ class SelfAssessment(Page):
         }
 
 
+class VideoIntroduction(Page):
+    """
+    Shows introduction videos after consent form.
+    """
+
+    def is_displayed(self):
+        return self.player.round_number == C.CONSENT_ROUND
+
+    def vars_for_template(self):
+        """
+        Assigns role and determines which videos to show.
+        """
+        assign_static_role(self.player)
+
+        role_videos = {
+            1: 'RecruiterVid1.mp4',
+            2: 'HRcoordinator Vid.mp4',
+            3: 'BusinessPartner.mp4'
+        }
+
+        return {
+            'general_video': 'Einleitungsvideo.mp4',
+            'role_video': role_videos.get(self.player.id_in_group, 'RecruiterVid1.mp4'),
+            'static_path': C.STATIC_APPLICANTS_PATH,
+        }
+
+
 class CognitiveTestInstructions(Page):
     """
     Instructions page for cognitive test before actual test execution.
@@ -803,6 +830,7 @@ class FinalResults(Page):
 
 page_sequence = [
     Consent,
+    VideoIntroduction,
     WaitForVacancy,
     Recruiter,
     HRCoordinator,
