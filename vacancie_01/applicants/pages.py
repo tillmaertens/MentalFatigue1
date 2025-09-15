@@ -485,14 +485,15 @@ class VideoIntroduction(Page):
         assign_static_role(self.player)
 
         role_videos = {
-            1: 'RecruiterVid1.mp4',
-            2: 'HRcoordinator Vid.mp4',
-            3: 'BusinessPartner.mp4'
+            1: 'RecruiterVid.mp4',
+            2: 'HR Coordinator Vid.mp4',
+            3: 'Business Partner.mp4',
+
         }
 
         return {
             'general_video': 'Einleitungsvideo.mp4',
-            'role_video': role_videos.get(self.player.id_in_group, 'RecruiterVid1.mp4'),
+            'role_video': role_videos.get(self.player.id_in_group, 'RecruiterVid.mp4'),
             'static_path': C.STATIC_APPLICANTS_PATH,
         }
 
