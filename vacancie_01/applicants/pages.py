@@ -57,7 +57,7 @@ class Recruiter(Page):
             return None  # Unlimited time for Vacancy 1
 
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        return vacancy_info['duration_seconds'] if vacancy_info else 600  # 10 min fallback
+        return vacancy_info['duration_seconds'] if vacancy_info else 720  # 12 min fallback
 
     timeout_seconds = property(get_timeout_seconds)  # Convert method to property for oTree
 
@@ -229,7 +229,7 @@ class HRCoordinator(Page):
             return None  # Unlimited time for Vacancy 1
 
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        return vacancy_info['duration_seconds'] if vacancy_info else 600  # 10 min fallback
+        return vacancy_info['duration_seconds'] if vacancy_info else 720  # 12 min fallback
 
     timeout_seconds = property(get_timeout_seconds)
 
@@ -369,7 +369,7 @@ class BusinessPartner(Page):
             return None  # Unlimited time for Vacancy 1
 
         vacancy_info = get_vacancy_info(self.player.round_number, self.player)
-        return vacancy_info['duration_seconds'] if vacancy_info else 600  # 10 min fallback
+        return vacancy_info['duration_seconds'] if vacancy_info else 720  # 12 min fallback
 
     timeout_seconds = property(get_timeout_seconds)
 

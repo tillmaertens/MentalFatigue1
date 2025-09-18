@@ -1,163 +1,109 @@
 {% block title %}Experiment Introduction{% endblock %}
 
 {% block content %}
-<style>
-    /* Hide oTree header if needed */
-    .otree-title, h1 {
-        display: none !important;
-    }
-
-    .video-container {
-        max-width: 1200px;
-        margin: 40px auto;
-        padding: 20px;
-    }
-
-    .custom-title {
-        text-align: center;
-        font-size: 2rem;
-        margin-bottom: 40px;
-        color: #333;
-        font-weight: 300;
-    }
-
-    .videos-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 40px;
-        margin-bottom: 40px;
-    }
-
-    .video-section {
-        text-align: center;
-    }
-
-    .video-title {
-        font-size: 1.2rem;
-        margin-bottom: 20px;
-        color: #555;
-        font-weight: 500;
-    }
-
-    video {
-        width: 100%;
-        max-width: 500px;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-
-    #nextButton {
-        display: none;
-        margin: 40px auto 0;
-        padding: 12px 30px;
-        font-size: 14px;
-        background-color: #f8f9fa;
-        color: #6c757d;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        cursor: pointer;
-        display: block;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    #nextButton:hover {
-        background-color: #e9ecef;
-        color: #495057;
-    }
-
-    #nextButton.show {
-        opacity: 1;
-    }
-
-    /* Responsive design */
-    @media (max-width: 768px) {
-        .videos-grid {
-            grid-template-columns: 1fr;
-            gap: 30px;
+    <style>
+        /* Hide oTree header if needed */
+        .otree-title, h1 {
+            display: none !important;
         }
-    }
-</style>
 
-<div class="video-container">
-    <h1 class="custom-title">Experiment Introduction</h1>
+        .video-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
 
-    <div class="videos-grid">
-        <!-- General Introduction Video -->
-        <div class="video-section">
-            <div class="video-title">General Introduction</div>
-            <video id="generalVideo" controls>
-                <source src="{{ static_path }}{{ general_video }}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
+        .custom-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 40px;
+            color: #333;
+            font-weight: 300;
+        }
+
+        .videos-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .video-section {
+            text-align: center;
+        }
+
+        .video-title {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        video {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #nextButton {
+            margin: 40px auto 0;
+            padding: 12px 30px;
+            font-size: 14px;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            display: block;
+        }
+
+        #nextButton:hover {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .videos-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+    </style>
+
+    <div class="video-container">
+        <h1 class="custom-title">Experiment Introduction</h1>
+
+        <div class="videos-grid">
+            <!-- General Introduction Video -->
+            <div class="video-section">
+                <div class="video-title">General Introduction</div>
+                <video id="generalVideo" controls>
+                    <source src="{{ static_path }}{{ general_video }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+            <!-- Role-Specific Video -->
+            <div class="video-section">
+                <div class="video-title">Role-Specific Instructions</div>
+                <video id="roleVideo" controls>
+                    <source src="{{ static_path }}{{ role_video }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
         </div>
 
-        <!-- Role-Specific Video -->
-        <div class="video-section">
-            <div class="video-title">Role-Specific Instructions</div>
-            <video id="roleVideo" controls>
-                <source src="{{ static_path }}{{ role_video }}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </div>
+        <button id="nextButton" onclick="submitForm()">Next</button>
     </div>
 
-    <button id="nextButton" onclick="submitForm()">Continue</button>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const generalVideo = document.getElementById('generalVideo');
-    const roleVideo = document.getElementById('roleVideo');
-    const nextButton = document.getElementById('nextButton');
-
-    let generalVideoCompleted = false;
-    let roleVideoCompleted = false;
-
-    // Track video completion
-    generalVideo.addEventListener('ended', function() {
-        generalVideoCompleted = true;
-        checkAllVideosCompleted();
-    });
-
-    roleVideo.addEventListener('ended', function() {
-        roleVideoCompleted = true;
-        checkAllVideosCompleted();
-    });
-
-    function checkAllVideosCompleted() {
-        if (generalVideoCompleted && roleVideoCompleted) {
-            nextButton.classList.add('show');
-
-            // Auto-advance after 3 seconds
-            setTimeout(function() {
-                submitForm();
-            }, 3000);
+    <script>
+        function submitForm() {
+            const form = document.createElement('form');
+            form.method = 'post';
+            document.body.appendChild(form);
+            form.submit();
         }
-    }
-
-    // Prevent major skipping - allow small seeks but not big jumps
-    function preventSkipping(video) {
-        let lastTime = 0;
-
-        video.addEventListener('timeupdate', function() {
-            if (Math.abs(this.currentTime - lastTime) > 2) {
-                // If jumped more than 2 seconds, go back
-                this.currentTime = lastTime;
-            }
-            lastTime = this.currentTime;
-        });
-    }
-
-    preventSkipping(generalVideo);
-    preventSkipping(roleVideo);
-});
-
-function submitForm() {
-    const form = document.createElement('form');
-    form.method = 'post';
-    document.body.appendChild(form);
-    form.submit();
-}
-</script>
+    </script>
 {% endblock %}

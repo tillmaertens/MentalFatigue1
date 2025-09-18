@@ -208,7 +208,7 @@ def get_vacancy_config(vacancy_number):
 
     return {
         'vacancy': vacancy_number,
-        'duration_seconds': None if vacancy_number == 1 else 10 * 60,  # Unlimited for V1, 10min for V2, V3
+        'duration_seconds': None if vacancy_number == 1 else 12 * 60,  # Unlimited for V1, 12min for V2, V3
         'metadata_files': [f'_static/applicants/metadata{vacancy_number}.xlsx'],
         'doc_suffix': str(vacancy_number),
         'job_desc_file': job_desc_file
@@ -315,15 +315,15 @@ class C(BaseConstants):
     # 4-round structure definition
     CONSENT_ROUND = 1
     VACANCY_1_ROUND = 2  # Unlimited time
-    VACANCY_2_ROUND = 3  # 10 minutes
-    VACANCY_3_ROUND = 4  # 10 minutes
+    VACANCY_2_ROUND = 3  # 12 minutes
+    VACANCY_3_ROUND = 4  # 12 minutes
     FINAL_RESULTS_ROUND = 5
 
-    # Only Vacancy 2 adn 3 have time limits
-    VACANCY_2_DURATION_MINUTES = 10
+    # Only Vacancy 2 and 3 have time limits
+    VACANCY_2_DURATION_MINUTES = 12
     VACANCY_2_DURATION_SECONDS = VACANCY_2_DURATION_MINUTES * 60
 
-    VACANCY_3_DURATION_MINUTES = 10
+    VACANCY_3_DURATION_MINUTES = 12
     VACANCY_3_DURATION_SECONDS = VACANCY_2_DURATION_MINUTES * 60
 
     # Data for templates
