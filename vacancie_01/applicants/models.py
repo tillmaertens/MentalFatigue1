@@ -205,7 +205,6 @@ def get_vacancy_config(vacancy_number):
     else:
         job_desc_file = 'job_description_3.pdf'
 
-
     return {
         'vacancy': vacancy_number,
         'duration_seconds': None if vacancy_number == 1 else 12 * 60,  # Unlimited for V1, 12min for V2, V3
@@ -365,11 +364,14 @@ class C(BaseConstants):
     # Debug mode activated if set to True -- No Video Meeting
     DEBUG_MODE = True
 
+
 class Subsession(BaseSubsession):
     pass
 
+
 class Group(BaseGroup):
     pass
+
 
 class Player(BasePlayer):
     """
@@ -395,45 +397,89 @@ class Player(BasePlayer):
 
     validation_data_json = models.LongStringField(
         blank=True,
-        doc="JSON string containing criteria data for validation (hidden from admin)"
+        doc="JSON string containing criteria data for validation"
     )
 
     criteria_correct_this_session = models.IntegerField(
         blank=True,
-        doc="Number of criteria correctly entered (scores and relevance match metadata)"
+        doc="Number of criteria correctly entered"
     )
 
     criteria_incorrect_this_session = models.IntegerField(
         blank=True,
-        doc="Number of criteria incorrectly entered (scores or relevance don't match metadata)"
+        doc="Number of criteria incorrectly entered"
     )
 
-    # Self-assessment measures (collected in all 3 rounds)
+    # Post-Task Self-Assessment (0-100 scale)
     fatigue_level = models.IntegerField(
-        min=1, max=10,
+        min=0, max=100,
         blank=True,
-        doc="Self-reported fatigue level (1=not tired, 10=extremely tired)"
+        doc="Self-reported fatigue level (0=not tired, 100=extremely tired)"
     )
 
     mental_effort = models.IntegerField(
-        min=1, max=10,
+        min=0, max=100,
         blank=True,
-        doc="Self-reported mental effort required (1=very low, 10=very high)"
+        doc="Self-reported mental effort required (0=very low, 100=very high)"
     )
 
     concentration_difficulty = models.IntegerField(
-        min=1, max=10,
+        min=0, max=100,
         blank=True,
-        doc="Difficulty concentrating (1=very easy, 10=very difficult)"
+        doc="Difficulty concentrating (0=very easy, 100=very difficult)"
     )
 
     motivation_level = models.IntegerField(
-        min=1, max=10,
+        min=0, max=100,
         blank=True,
-        doc="Current motivation level (1=very low, 10=very high)"
+        doc="Current motivation level (0=very low, 100=very high)"
     )
 
-    # Cognitive Load Test Results (collected in all 3 rounds)
+    # Baseline-specific measures (0-100 scale)
+    baseline_mfi_wander = models.IntegerField(
+        min=0, max=100,
+        blank=True,
+        doc="Baseline: My thoughts easily wander (0=not at all, 100=extremely)"
+    )
+
+    baseline_mfi_concentration = models.IntegerField(
+        min=0, max=100,
+        blank=True,
+        doc="Baseline: Effort to concentrate (0=not at all, 100=extremely)"
+    )
+
+    baseline_zfe_dread = models.IntegerField(
+        min=0, max=100,
+        blank=True,
+        doc="Baseline: Dread doing things (0=not at all, 100=extremely)"
+    )
+
+    baseline_kss_alertness = models.IntegerField(
+        min=0, max=100,
+        blank=True,
+        doc="Baseline: Alertness level (0=extremely alert, 100=extremely sleepy)"
+    )
+
+    baseline_motivation = models.IntegerField(
+        min=0, max=100,
+        blank=True,
+        doc="Baseline: Motivation for upcoming tasks (0=not motivated, 100=extremely motivated)"
+    )
+
+    baseline_afi_follow = models.IntegerField(
+        min=0, max=100,
+        blank=True,
+        doc="Baseline: Ability to follow through on plans (0=not at all, 100=extremely well)"
+    )
+
+    # Effort-Cost measure
+    effort_cost_worth = models.IntegerField(
+        min=0, max=100,
+        blank=True,
+        doc="Task felt worth the mental energy (0=not worth it, 100=definitely worth it)"
+    )
+
+    # Cognitive Load Test Results
     cognitive_test_score = models.IntegerField(
         blank=True,
         doc="Score on cognitive load test (correct answers)"
@@ -449,6 +495,7 @@ class Player(BasePlayer):
         doc="Number of errors in cognitive test"
     )
 
+    # Methods
     def is_recruiter(self):
         return self.selected_role == C.RECRUITER_ROLE
 
@@ -461,9 +508,6 @@ class Player(BasePlayer):
     def validate_criteria_data(self, criteria_data):
         """
         Validates criteria data against metadata and updates correct/incorrect counters
-        Args:
-        criteria_data (dict): Player's criteria data in format:
-            {criterion_name: {scores: {a: score, b: score, c: score}, relevance: 'low/normal/high'}}
         """
         correct_count = 0
         incorrect_count = 0

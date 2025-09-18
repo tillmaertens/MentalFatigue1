@@ -428,22 +428,30 @@ class WaitForVacancy(WaitPage):
 
 class SelfAssessment(Page):
     """
-    Post-session questionnaire for measuring mental fatigue and subjective workload (on a scale of 1 - 10).
-    Now shown in all 3 rounds: Baseline (Round 1), After V1 (Round 2), After V2 (Round 3).
-
-    Form Fields:
-        - fatigue_level
-        - mental_effort
-        - concentration_difficulty
-        - motivation_level
+    Post-session questionnaire for measuring mental fatigue
     """
     form_model = 'player'
-    form_fields = ['fatigue_level', 'mental_effort', 'concentration_difficulty', 'motivation_level']
+
+    def get_form_fields(self):
+        if self.player.round_number == C.CONSENT_ROUND:
+            return [
+                'baseline_mfi_wander',
+                'baseline_mfi_concentration',
+                'baseline_zfe_dread',
+                'baseline_kss_alertness',
+                'baseline_motivation',
+                'baseline_afi_follow'
+            ]
+        else:
+            return [
+                'fatigue_level',
+                'mental_effort',
+                'concentration_difficulty',
+                'motivation_level',
+                'effort_cost_worth'
+            ]
 
     def is_displayed(self):
-        """
-        Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
-        """
         return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND]
 
     def vars_for_template(self):
@@ -698,17 +706,19 @@ class FinalResults(Page):
         try:
             baseline_player = self.player.in_round(baseline_round)
             baseline_data = {
-                'fatigue_level': baseline_player.fatigue_level or 0,
-                'mental_energy': baseline_player.mental_effort or 0,  # "energy" in baseline
-                'concentration_ability': baseline_player.concentration_difficulty or 0,  # "ability" in baseline
-                'motivation_level': baseline_player.motivation_level or 0,
-                'cognitive_score': baseline_player.cognitive_test_score or 0,
-                'cognitive_reaction_time': baseline_player.cognitive_test_reaction_time or 0
+                'kss_alertness': baseline_player.baseline_kss_alertness or 0,
+                'mfi_concentration': baseline_player.baseline_mfi_concentration or 0,
+                'mfi_wander': baseline_player.baseline_mfi_wander or 0,
+                'zfe_dread': baseline_player.baseline_zfe_dread or 0,
+                'baseline_motivation': baseline_player.baseline_motivation or 0,
+                'afi_follow': baseline_player.baseline_afi_follow or 0,
+                'cognitive_score': baseline_player.cognitive_test_score,
+                'cognitive_reaction_time': baseline_player.cognitive_test_reaction_time
             }
         except:
             baseline_data = {
-                'fatigue_level': 0, 'mental_energy': 0, 'concentration_ability': 0,
-                'motivation_level': 0, 'cognitive_score': 0, 'cognitive_reaction_time': 0
+                'kss_alertness': 0, 'mfi_concentration': 0, 'mfi_wander': 0,
+                'zfe_dread': 0, 'baseline_motivation': 0, 'afi_follow': 0, 'cognitive_score': 0, 'cognitive_reaction_time': 0
             }
 
         # Collect task session data (V1, V2, V3)
@@ -744,6 +754,7 @@ class FinalResults(Page):
                     'mental_effort': safe_get(lambda: round_player.mental_effort),
                     'concentration_difficulty': safe_get(lambda: round_player.concentration_difficulty),
                     'motivation_level': safe_get(lambda: round_player.motivation_level),
+                    'effort_cost_worth': safe_get(lambda: round_player.effort_cost_worth),
                     'cognitive_score': safe_get(lambda: round_player.cognitive_test_score),
                     'cognitive_reaction_time': safe_get(lambda: round_player.cognitive_test_reaction_time),
                     # Criteria data from HR Coordinator (shared across all players)

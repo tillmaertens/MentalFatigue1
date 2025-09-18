@@ -99,7 +99,7 @@
 
         .session-row {
             display: grid;
-            grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+            grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
             padding: 15px 20px;
             border-bottom: 1px solid #e9ecef;
             align-items: center;
@@ -314,47 +314,67 @@
                 <div><strong>Mental Effort/Energy</strong></div>
                 <div><strong>Concentration</strong></div>
                 <div><strong>Motivation</strong></div>
+                <div><strong>Effort Worth</strong></div>
                 <div><strong>Test Score</strong></div>
-                <div><strong>Reaction Time</strong></div>
+                <div><strong>RT (ms)</strong></div>
             </div>
 
-            {# Baseline row #}
+            {# Baseline row with new measurements #}
             <div class="section-divider">Baseline Measurement</div>
             <div class="session-row">
                 <div><strong>Baseline</strong></div>
                 <div><span class="role-badge baseline-badge">Pre-Task</span></div>
-                <div>{{ baseline_data.fatigue_level }}/10</div>
-                <div>{{ baseline_data.mental_energy }}/10</div>
-                <div>{{ baseline_data.concentration_ability }}/10</div>
-                <div>{{ baseline_data.motivation_level }}/10</div>
+                <div title="KSS Alertness (0=alert, 100=sleepy)">
+                    {% if baseline_data.kss_alertness %}{{ baseline_data.kss_alertness }}/100{% else %}-{% endif %}
+                </div>
+                <div title="Mental effort to concentrate">
+                    {% if baseline_data.mfi_concentration %}{{ baseline_data.mfi_concentration }}/100{% else %}
+                        -{% endif %}
+                </div>
+                <div title="Thoughts wander">
+                    {% if baseline_data.mfi_wander %}{{ baseline_data.mfi_wander }}/100{% else %}-{% endif %}
+                </div>
+                <div title="Motivation for upcoming tasks">
+                    {% if baseline_data.baseline_motivation %}{{ baseline_data.baseline_motivation }}/100{% else %}
+                        -{% endif %}
+                </div>
+                <div title="Ability to follow through">
+                    {% if baseline_data.afi_follow %}{{ baseline_data.afi_follow }}/100{% else %}-{% endif %}
+                </div>
                 <div>{% if baseline_data.cognitive_score %}{{ baseline_data.cognitive_score }}/20{% else %}
                     -{% endif %}</div>
-                <div>{% if baseline_data.cognitive_reaction_time %}{{ baseline_data.cognitive_reaction_time }}
-                    ms{% else %}-{% endif %}</div>
+                <div>{% if baseline_data.cognitive_reaction_time %}{{ baseline_data.cognitive_reaction_time }}{% else %}
+                    -{% endif %}</div>
             </div>
 
-            {# Task sessions rows #}
+            {# Task sessions rows with 0-100 scale #}
             <div class="section-divider">Work Task Sessions</div>
             {% for session in task_sessions %}
                 <div class="session-row">
                     <div><strong>{{ session.session_name }}</strong></div>
                     <div><span class="role-badge">{{ session.role }}</span></div>
-                    <div class="session-data"
-                         data-fatigue="{{ session.fatigue_level }}">{{ session.fatigue_level }}/10
+                    <div class="session-data" data-fatigue="{{ session.fatigue_level }}">
+                        {{ session.fatigue_level }}/100
                     </div>
-                    <div class="session-data" data-effort="{{ session.mental_effort }}">{{ session.mental_effort }}/10
+                    <div class="session-data" data-effort="{{ session.mental_effort }}">
+                        {{ session.mental_effort }}/100
                     </div>
-                    <div class="session-data"
-                         data-concentration="{{ session.concentration_difficulty }}">{{ session.concentration_difficulty }}/10
+                    <div class="session-data" data-concentration="{{ session.concentration_difficulty }}">
+                        {{ session.concentration_difficulty }}/100
                     </div>
-                    <div class="session-data"
-                         data-motivation="{{ session.motivation_level }}">{{ session.motivation_level }}/10
+                    <div class="session-data" data-motivation="{{ session.motivation_level }}">
+                        {{ session.motivation_level }}/100
+                    </div>
+                    <div class="session-data" data-effort-cost="{{ session.effort_cost_worth }}">
+                        {% if session.effort_cost_worth %}{{ session.effort_cost_worth }}/100{% else %}-{% endif %}
                     </div>
                     <div class="session-data">
-                        {% if session.cognitive_score %}{{ session.cognitive_score }}/20{% else %}-{% endif %}</div>
+                        {% if session.cognitive_score %}{{ session.cognitive_score }}/20{% else %}-{% endif %}
+                    </div>
                     <div class="session-data" data-reaction-time="{{ session.cognitive_reaction_time }}">
-                        {% if session.cognitive_reaction_time %}{{ session.cognitive_reaction_time }}ms{% else %}
-                            -{% endif %}</div>
+                        {% if session.cognitive_reaction_time %}{{ session.cognitive_reaction_time }}{% else %}
+                            -{% endif %}
+                    </div>
                 </div>
             {% endfor %}
         </div>
@@ -363,13 +383,13 @@
         <div class="trend-analysis">
             <div class="trend-card">
                 <div class="trend-title">Fatigue Progression</div>
-                {% if task_fatigue_increase > 1 %}
+                {% if task_fatigue_increase > 10 %}
                     <div class="trend-indicator trend-negative">
                         Significant Increase<br>
                         <small id="taskFatigueIncrease1">+{{ task_fatigue_increase }} points</small>
                     </div>
-                    <p>Your fatigue levels increased across the work sessions.</p>
-                {% elif task_fatigue_increase > -1 %}
+                    <p>Your fatigue levels increased substantially across the work sessions.</p>
+                {% elif task_fatigue_increase > -10 %}
                     <div class="trend-indicator trend-stable">
                         Stable<br>
                         <small id="taskFatigueIncrease2">{{ task_fatigue_increase }} points</small>
@@ -386,13 +406,13 @@
 
             <div class="trend-card">
                 <div class="trend-title">Cognitive Performance</div>
-                {% if task_cognitive_decline > 1 %}
+                {% if task_cognitive_decline > 2 %}
                     <div class="trend-indicator trend-negative">
                         Performance Decline<br>
                         <small id="taskCognitiveDecline1">-{{ task_cognitive_decline }} points</small>
                     </div>
                     <p>Your cognitive performance declined across work sessions.</p>
-                {% elif task_cognitive_decline > -1 %}
+                {% elif task_cognitive_decline > -2 %}
                     <div class="trend-indicator trend-stable">
                         Stable Performance<br>
                         <small id="taskCognitiveDecline2">{{ task_cognitive_decline }} points</small>
@@ -401,7 +421,8 @@
                 {% else %}
                     <div class="trend-indicator trend-positive">
                         Performance Improved<br>
-                        <small id="taskCognitiveDecline3">+{{ task_cognitive_decline }} points</small>
+                        <small id="taskCognitiveDecline3">+<span
+                                id="cognitiveDeclineAbs">{{ task_cognitive_decline }}</span> points</small>
                     </div>
                     <p>Your cognitive performance improved across work sessions.</p>
                 {% endif %}
@@ -435,18 +456,19 @@
                 <li>How fatigue accumulates during digital collaboration across multiple work sessions</li>
                 <li>The relationship between subjective fatigue and objective cognitive performance</li>
                 <li>Individual differences in fatigue susceptibility and recovery</li>
+                <li>The impact of effort-cost perception on task performance</li>
             </ul>
 
             <p><strong>Key Findings from Your Sessions:</strong></p>
             <ul>
                 <li>You completed {{ total_task_sessions }} full collaborative work sessions</li>
-                <li>Your task fatigue levels {% if task_fatigue_increase > 0 %}
-                    increased{% elif task_fatigue_increase < 0 %}decreased{% else %}remained stable{% endif %} across
-                    work sessions
+                <li>Your task fatigue levels {% if task_fatigue_increase > 10 %}increased
+                    significantly{% elif task_fatigue_increase < -10 %}decreased{% else %}remained stable{% endif %}
+                    across work sessions
                 </li>
-                <li>Your cognitive performance {% if task_cognitive_decline > 0 %}
-                    declined{% elif task_cognitive_decline < 0 %}improved{% else %}remained stable{% endif %} during the
-                    experiment
+                <li>Your cognitive performance {% if task_cognitive_decline > 2 %}
+                    declined{% elif task_cognitive_decline < -2 %}improved{% else %}remained stable{% endif %} during
+                    the experiment
                 </li>
             </ul>
         </div>
@@ -475,7 +497,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Format summary statistics with proper decimal places
+            // Format summary statistics (now on 0-100 scale)
             const avgTaskFatigue = {{ average_task_fatigue }};
             const taskFatigueIncrease = {{ task_fatigue_increase }};
             const taskCognitiveDecline = {{ task_cognitive_decline }};
@@ -483,20 +505,24 @@
             const avgTaskMotivation = {{ average_task_motivation }};
 
             // Update summary statistics
-            document.getElementById('avgTaskFatigue').textContent = avgTaskFatigue.toFixed(1);
+            document.getElementById('avgTaskFatigue').textContent = avgTaskFatigue.toFixed(0) + '/100';
             document.getElementById('taskFatigueChange').textContent =
-                (taskFatigueIncrease > 0 ? '+' : '') + taskFatigueIncrease.toFixed(1);
+                (taskFatigueIncrease > 0 ? '+' : '') + taskFatigueIncrease.toFixed(0);
             document.getElementById('taskCognitiveChange').textContent =
-                (taskCognitiveDecline > 0 ? '-' : '') + taskCognitiveDecline.toFixed(1);
-            document.getElementById('avgTaskEffort').textContent = avgTaskEffort.toFixed(1);
-            document.getElementById('avgTaskMotivation').textContent = avgTaskMotivation.toFixed(1);
+                (taskCognitiveDecline > 0 ? '-' : '+') + Math.abs(taskCognitiveDecline).toFixed(0);
+            document.getElementById('avgTaskEffort').textContent = avgTaskEffort.toFixed(0) + '/100';
+
+            if (document.getElementById('cognitiveDeclineAbs')) {
+                const cognitiveDeclineAbs = Math.abs(taskCognitiveDecline);
+                document.getElementById('cognitiveDeclineAbs').textContent = cognitiveDeclineAbs.toFixed(0);
+            }
 
             // Display current completion timestamp
             const now = new Date();
             const dateString = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
             document.getElementById('completionDate').textContent = dateString;
 
-            // Generate task session data for visualization (excluding baseline)
+            // Generate task session data for visualization
             const taskSessionData = [
                 {% for session in task_sessions %}
                     {
@@ -506,6 +532,7 @@
                         effort: {% if session.mental_effort %}{{ session.mental_effort }}{% else %}null{% endif %},
                         concentration: {% if session.concentration_difficulty %}{{ session.concentration_difficulty }}{% else %}null{% endif %},
                         motivation: {% if session.motivation_level %}{{ session.motivation_level }}{% else %}null{% endif %},
+                        effortCost: {% if session.effort_cost_worth %}{{ session.effort_cost_worth }}{% else %}null{% endif %},
                         score: {% if session.cognitive_score %}{{ session.cognitive_score }}{% else %}null{% endif %},
                         reactionTime: {% if session.cognitive_reaction_time %}{{ session.cognitive_reaction_time }}{% else %}null{% endif %},
                         criteriaCorrect: {% if session.criteria_correct %}{{ session.criteria_correct }}{% else %}0{% endif %},
@@ -557,9 +584,21 @@
                     }
                 ];
 
+                // Add effort-cost
+                if (validTaskData.some(d => d.effortCost !== null)) {
+                    traces.push({
+                        x: validTaskData.map(d => d.name),
+                        y: validTaskData.map(d => d.effortCost),
+                        mode: 'lines+markers',
+                        name: 'Effort Worth It',
+                        line: {color: '#17a2b8', width: 3, dash: 'dash'},
+                        marker: {size: 8}
+                    });
+                }
+
                 const layout = {
                     xaxis: {title: 'Work Session'},
-                    yaxis: {title: 'Rating (1-10)', range: [0, 10]},
+                    yaxis: {title: 'Rating (0-100)', range: [0, 100]},
                     legend: {orientation: 'h', y: -0.2},
                     margin: {l: 60, r: 40, t: 40, b: 80}
                 };
@@ -615,7 +654,7 @@
                     };
 
                     const correlationLayout = {
-                        xaxis: {title: 'Fatigue Level (1-10)', range: [0, 10]},
+                        xaxis: {title: 'Fatigue Level (0-100)', range: [0, 100]},
                         yaxis: {title: 'Task Accuracy (%)', range: [0, 100]},
                         margin: {l: 60, r: 60, t: 40, b: 60}
                     };

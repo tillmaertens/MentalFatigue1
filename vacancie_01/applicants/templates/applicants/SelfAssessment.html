@@ -43,42 +43,95 @@
             font-size: 18px;
             font-weight: bold;
             color: #333;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: block;
         }
 
-        .scale-labels {
+        .slider-wrapper {
             display: flex;
-            justify-content: space-between;
-            width: 100%;
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .scale-inputs {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-        }
-
-        .scale-item {
-            display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 5px;
+            width: 100%;
+            position: relative;
         }
 
-        .scale-item input[type="radio"] {
-            transform: scale(1.2);
-            margin: 0;
+        .slider-label {
+            width: 120px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
         }
 
-        .scale-item label {
-            font-size: 14px;
-            font-weight: bold;
-            color: #333;
-            margin: 0;
+        .slider-label.left {
+            text-align: right;
+            padding-right: 15px;
+        }
+
+        .slider-label.right {
+            text-align: left;
+            padding-left: 15px;
+        }
+
+        .slider-container {
+            position: relative;
+            flex-grow: 1;
+            padding: 10px 0;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            height: 8px;
+            position: relative;
+            z-index: 2;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            background: #dee2e6;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            background: #007bff;
+            border-radius: 50%;
+            margin-top: -8px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input[type=range]::-moz-range-track {
+            background: #dee2e6;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        input[type=range]::-moz-range-thumb {
+            height: 24px;
+            width: 24px;
+            background: #007bff;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input[type=range]::-ms-track {
+            background: #dee2e6;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        input[type=range]::-ms-thumb {
+            height: 24px;
+            width: 24px;
+            background: #007bff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .submit-section {
@@ -114,133 +167,167 @@
 
     <div class="assessment-form">
 
-        {# Fatigue Level Assessment: Conditional questions based on session type #}
-        <div class="question-group">
-            <label class="question-label">
-                {% if session_number == 0 %}
-                    How tired/fatigued do you feel right now? <span class="required">*</span>
-                {% else %}
-                    How tired/fatigued did you feel during this session? <span class="required">*</span>
-                {% endif %}
-            </label>
-            <div class="scale-labels">
-                <span>Not tired at all</span>
-                <span>Extremely tired</span>
-            </div>
-            <div class="scale-inputs">
-                {% for i in "1234567890" %}
-                    {% if i != "0" %}
-                        <div class="scale-item">
-                            <input type="radio" name="fatigue_level" value="{{ i }}" id="fatigue_{{ i }}" required>
-                            <label for="fatigue_{{ i }}">{{ i }}</label>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-                <div class="scale-item">
-                    <input type="radio" name="fatigue_level" value="10" id="fatigue_10" required>
-                    <label for="fatigue_10">10</label>
+        {% if session_number == 0 %}
+            {# BASELINE QUESTIONS #}
+
+            {# MFI Mental 1 - Wandering thoughts #}
+            <div class="question-group">
+                <label class="question-label">
+                    My thoughts easily wander <span class="required">*</span>
+                </label>
+                <div class="slider-wrapper">
+                    <span class="slider-label left">Not at all</span>
+                    <div class="slider-container">
+                        <input type="range" name="mfi_mental_wander" min="0" max="100" step="1" required>
+                    </div>
+                    <span class="slider-label right">Extremely</span>
                 </div>
             </div>
-        </div>
 
-        {# Mental Effort Assessment: Baseline vs Task-specific wording #}
-        <div class="question-group">
-            <label class="question-label">
-                {% if session_number == 0 %}
-                    What is your current mental energy level? <span class="required">*</span>
-                {% else %}
-                    How much mental effort did the task require? <span class="required">*</span>
-                {% endif %}
-            </label>
-            <div class="scale-labels">
-                {% if session_number == 0 %}
-                    <span>Very low energy</span>
-                    <span>Very high energy</span>
-                {% else %}
-                    <span>Very low effort</span>
-                    <span>Very high effort</span>
-                {% endif %}
-            </div>
-            <div class="scale-inputs">
-                {% for i in "1234567890" %}
-                    {% if i != "0" %}
-                        <div class="scale-item">
-                            <input type="radio" name="mental_effort" value="{{ i }}" id="effort_{{ i }}" required>
-                            <label for="effort_{{ i }}">{{ i }}</label>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-                <div class="scale-item">
-                    <input type="radio" name="mental_effort" value="10" id="effort_10" required>
-                    <label for="effort_10">10</label>
+            {# MFI Mental 2 - Concentration effort #}
+            <div class="question-group">
+                <label class="question-label">
+                    It takes a lot of effort to concentrate on things <span class="required">*</span>
+                </label>
+                <div class="slider-wrapper">
+                    <span class="slider-label left">Not at all</span>
+                    <div class="slider-container">
+                        <input type="range" name="mfi_concentration_effort" min="0" max="100" step="1" required>
+                    </div>
+                    <span class="slider-label right">Extremely</span>
                 </div>
             </div>
-        </div>
 
-        {# Concentration Assessment: General ability vs Task-specific difficulty #}
-        <div class="question-group">
-            <label class="question-label">
-                {% if session_number == 0 %}
-                    How is your general ability to concentrate today? <span class="required">*</span>
-                {% else %}
-                    How difficult was it to concentrate during the task? <span class="required">*</span>
-                {% endif %}
-            </label>
-            <div class="scale-labels">
-                {% if session_number == 0 %}
-                    <span>Very poor concentration</span>
-                    <span>Excellent concentration</span>
-                {% else %}
-                    <span>Very easy</span>
-                    <span>Very difficult</span>
-                {% endif %}
-            </div>
-            <div class="scale-inputs">
-                {% for i in "1234567890" %}
-                    {% if i != "0" %}
-                        <div class="scale-item">
-                            <input type="radio" name="concentration_difficulty" value="{{ i }}"
-                                   id="concentration_{{ i }}" required>
-                            <label for="concentration_{{ i }}">{{ i }}</label>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-                <div class="scale-item">
-                    <input type="radio" name="concentration_difficulty" value="10" id="concentration_10" required>
-                    <label for="concentration_10">10</label>
+            {# ZFE - Dread #}
+            <div class="question-group">
+                <label class="question-label">
+                    How much do you dread having to do things right now? <span class="required">*</span>
+                </label>
+                <div class="slider-wrapper">
+                    <span class="slider-label left">Not at all</span>
+                    <div class="slider-container">
+                        <input type="range" name="zfe_dread" min="0" max="100" step="1" required>
+                    </div>
+                    <span class="slider-label right">Extremely</span>
                 </div>
             </div>
-        </div>
 
-        {# Motivation Level Assessment: Current state vs Task-specific motivation #}
-        <div class="question-group">
-            <label class="question-label">
-                {% if session_number == 0 %}
+            {# KSS - Alertness/Sleepiness #}
+            <div class="question-group">
+                <label class="question-label">
+                    How alert/sleepy do you feel right now? <span class="required">*</span>
+                </label>
+                <div class="slider-wrapper">
+                    <span class="slider-label left">Extremely alert</span>
+                    <div class="slider-container">
+                        <input type="range" name="kss_alertness" min="0" max="100" step="1" required>
+                    </div>
+                    <span class="slider-label right">Extremely sleepy</span>
+                </div>
+            </div>
+
+            {# Motivation for upcoming tasks #}
+            <div class="question-group">
+                <label class="question-label">
                     How motivated do you feel for the upcoming tasks? <span class="required">*</span>
-                {% else %}
-                    How motivated did you feel during this session? <span class="required">*</span>
-                {% endif %}
-            </label>
-            <div class="scale-labels">
-                <span>Very low motivation</span>
-                <span>Very high motivation</span>
-            </div>
-            <div class="scale-inputs">
-                {% for i in "1234567890" %}
-                    {% if i != "0" %}
-                        <div class="scale-item">
-                            <input type="radio" name="motivation_level" value="{{ i }}" id="motivation_{{ i }}"
-                                   required>
-                            <label for="motivation_{{ i }}">{{ i }}</label>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-                <div class="scale-item">
-                    <input type="radio" name="motivation_level" value="10" id="motivation_10" required>
-                    <label for="motivation_10">10</label>
+                </label>
+                <div class="slider-wrapper">
+                    <span class="slider-label left">Not motivated at all</span>
+                    <div class="slider-container">
+                        <input type="range" name="motivation_baseline" min="0" max="100" step="1" required>
+                    </div>
+                    <span class="slider-label right">Extremely motivated</span>
                 </div>
             </div>
-        </div>
+
+            {# AFI - Follow through on plans #}
+            <div class="question-group">
+                <label class="question-label">
+                    How well can you follow through on your plans right now? <span class="required">*</span>
+                </label>
+                <div class="slider-wrapper">
+                    <span class="slider-label left">Not at all</span>
+                    <div class="slider-container">
+                        <input type="range" name="afi_follow_through" min="0" max="100" step="1" required>
+                    </div>
+                    <span class="slider-label right">Extremely well</span>
+                </div>
+            </div>
+
+        {% else %}
+            {# POST-TASK QUESTIONS #}
+
+            {# Fatigue Level Assessment #}
+            <div class="question-group">
+                <label class="question-label">
+                    How tired/fatigued did you feel during this session? <span class="required">*</span>
+                </label>
+                <div class="slider-wrapper">
+                    <span class="slider-label left">Not tired at all</span>
+                    <div class="slider-container">
+                        <input type="range" name="fatigue_level" min="0" max="100" step="1" required>
+                    </div>
+                    <span class="slider-label right">Extremely tired</span>
+                </div>
+            </div>
+
+            {# Mental Effort Assessment #}
+            <div class="question-group">
+                <label class="question-label">
+                    How much mental effort did the task require? <span class="required">*</span>
+                </label>
+                <div class="slider-wrapper">
+                    <span class="slider-label left">Very low effort</span>
+                    <div class="slider-container">
+                        <input type="range" name="mental_effort" min="0" max="100" step="1" required>
+                    </div>
+                    <span class="slider-label right">Very high effort</span>
+                </div>
+            </div>
+
+            {# Concentration Assessment #}
+            <div class="question-group">
+                <label class="question-label">
+                    How difficult was it to concentrate during the task? <span class="required">*</span>
+                </label>
+                <div class="slider-wrapper">
+                    <span class="slider-label left">Very easy</span>
+                    <div class="slider-container">
+                        <input type="range" name="concentration_difficulty" min="0" max="100" step="1" required>
+                    </div>
+                    <span class="slider-label right">Very difficult</span>
+                </div>
+            </div>
+
+            {# Motivation Level Assessment #}
+            <div class="question-group">
+                <label class="question-label">
+                    How motivated did you feel during this session? <span class="required">*</span>
+                </label>
+                <div class="slider-wrapper">
+                    <span class="slider-label left">Very low motivation</span>
+                    <div class="slider-container">
+                        <input type="range" name="motivation_level" min="0" max="100" step="1" required>
+                    </div>
+                    <span class="slider-label right">Very high motivation</span>
+                </div>
+            </div>
+
+            {# Effort-Cost Assessment #}
+            <div class="question-group">
+                <label class="question-label">
+                    Did the task feel worth the mental energy invested? <span class="required">*</span>
+                </label>
+                <div class="slider-wrapper">
+                    <span class="slider-label left">Not worth it at all</span>
+                    <div class="slider-container">
+                        <input type="range" name="effort_cost_worth" min="0" max="100" step="1" required>
+                    </div>
+                    <span class="slider-label right">Definitely worth it</span>
+                </div>
+            </div>
+
+        {% endif %}
     </div>
 
     {# Form submission area with contextual instructions #}
@@ -252,5 +339,18 @@
         {% endif %}
         {% next_button %}
     </div>
+
+    <script>
+        // Optional: Add value display on slider change
+        document.querySelectorAll('input[type="range"]').forEach(function(slider) {
+            slider.addEventListener('input', function() {
+                // Store value in data attribute for backend processing
+                this.setAttribute('data-value', this.value);
+            });
+
+            // Set initial middle value
+            slider.value = 50;
+        });
+    </script>
 
 {% endblock %}
