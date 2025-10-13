@@ -455,6 +455,57 @@ class SelfAssessment(Page):
         return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND,
                                             C.VACANCY_4_ROUND, C.VACANCY_5_ROUND]
 
+    def before_next_page(self):
+        """
+        Rounds all Self-Assessment values to whole numbers.
+        """
+        if self.player.round_number == C.CONSENT_ROUND:
+            # Round baseline values
+            value = self.player.field_maybe_none('baseline_mfi_wander')
+            if value is not None:
+                self.player.baseline_mfi_wander = round(value)
+
+            value = self.player.field_maybe_none('baseline_mfi_concentration')
+            if value is not None:
+                self.player.baseline_mfi_concentration = round(value)
+
+            value = self.player.field_maybe_none('baseline_zfe_dread')
+            if value is not None:
+                self.player.baseline_zfe_dread = round(value)
+
+            value = self.player.field_maybe_none('baseline_kss_alertness')
+            if value is not None:
+                self.player.baseline_kss_alertness = round(value)
+
+            value = self.player.field_maybe_none('baseline_motivation')
+            if value is not None:
+                self.player.baseline_motivation = round(value)
+
+            value = self.player.field_maybe_none('baseline_afi_follow')
+            if value is not None:
+                self.player.baseline_afi_follow = round(value)
+        else:
+            # Round task session values
+            value = self.player.field_maybe_none('fatigue_level')
+            if value is not None:
+                self.player.fatigue_level = round(value)
+
+            value = self.player.field_maybe_none('mental_effort')
+            if value is not None:
+                self.player.mental_effort = round(value)
+
+            value = self.player.field_maybe_none('concentration_difficulty')
+            if value is not None:
+                self.player.concentration_difficulty = round(value)
+
+            value = self.player.field_maybe_none('motivation_level')
+            if value is not None:
+                self.player.motivation_level = round(value)
+
+            value = self.player.field_maybe_none('effort_cost_worth')
+            if value is not None:
+                self.player.effort_cost_worth = round(value)
+
     def vars_for_template(self):
         """
         Prepares session information for self-assessment form.
