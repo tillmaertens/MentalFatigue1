@@ -182,6 +182,8 @@ def get_vacancy_info(round_number, player):
         return get_vacancy_config(4)
     elif round_number == models.C.VACANCY_5_ROUND:
         return get_vacancy_config(5)
+    elif round_number == models.C.VACANCY_6_ROUND:
+        return get_vacancy_config(6)
     else:
         return None
 
@@ -209,8 +211,10 @@ def get_vacancy_config(vacancy_number):
         job_desc_file = 'job_description_3.pdf'
     elif vacancy_number == 4:
         job_desc_file = 'job_description_4.pdf'
-    else:  # vacancy_number == 5
+    elif vacancy_number == 5:
         job_desc_file = 'job_description_5.pdf'
+    else:  # vacancy_number == 6
+        job_desc_file = 'job_description_6.pdf'
 
     return {
         'vacancy': vacancy_number,
@@ -280,7 +284,7 @@ def should_show_vacancy_session(round_number):
     from . import models  # Import to avoid circular import
 
     return round_number in [models.C.VACANCY_1_ROUND, models.C.VACANCY_2_ROUND, models.C.VACANCY_3_ROUND,
-                            models.C.VACANCY_4_ROUND, models.C.VACANCY_5_ROUND]
+                            models.C.VACANCY_4_ROUND, models.C.VACANCY_5_ROUND, models.C.VACANCY_6_ROUND]
 
 
 def assign_static_role(player):
@@ -317,7 +321,7 @@ class C(BaseConstants):
 
     NAME_IN_URL = 'mental_fatigue'
     PLAYERS_PER_GROUP = 3
-    NUM_ROUNDS = 7
+    NUM_ROUNDS = 8
 
     # 4-round structure definition
     CONSENT_ROUND = 1
@@ -326,7 +330,8 @@ class C(BaseConstants):
     VACANCY_3_ROUND = 4
     VACANCY_4_ROUND = 5
     VACANCY_5_ROUND = 6
-    FINAL_RESULTS_ROUND = 7
+    VACANCY_6_ROUND = 7
+    FINAL_RESULTS_ROUND = 8
 
     VACANCY_2_DURATION_MINUTES = 12
     VACANCY_2_DURATION_SECONDS = VACANCY_2_DURATION_MINUTES * 60
@@ -339,6 +344,9 @@ class C(BaseConstants):
 
     VACANCY_5_DURATION_MINUTES = 12
     VACANCY_5_DURATION_SECONDS = VACANCY_5_DURATION_MINUTES * 60
+
+    VACANCY_6_DURATION_MINUTES = 12
+    VACANCY_6_DURATION_SECONDS = VACANCY_6_DURATION_MINUTES * 60
 
     # Data for templates
     APPLICANTS = get_applicants_data_for_vacancy()

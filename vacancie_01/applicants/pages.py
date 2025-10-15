@@ -85,7 +85,7 @@ class Recruiter(Page):
             'vacancy_number': vacancy_number,
             'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else 600,
             'static_path': C.STATIC_APPLICANTS_PATH,
-            'total_sessions': 5
+            'total_sessions': 6
         }
 
     def get_word_content(self, applicant_id, doc_suffix='1'):
@@ -223,7 +223,7 @@ class HRCoordinator(Page):
 
     def get_timeout_seconds(self):
         """
-        Returns timeout based on vacancy: None for V1 (unlimited), 600s for V2.
+        Returns timeout based on vacancy: None for V1 (unlimited), 720s for V2.
         """
         if self.player.round_number == C.VACANCY_1_ROUND:
             return None  # Unlimited time for Vacancy 1
@@ -329,7 +329,7 @@ class HRCoordinator(Page):
             'static_path': C.STATIC_APPLICANTS_PATH,
             'applicant_colors': C.APPLICANT_COLORS,
             'applicant_ids': get_applicant_ids(),
-            'total_sessions': 5
+            'total_sessions': 6
         }
 
 
@@ -389,14 +389,14 @@ class BusinessPartner(Page):
             'applicants': applicants_data,
             'session_number': vacancy_number,
             'vacancy_number': vacancy_number,
-            'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else 600,
+            'remaining_time': vacancy_info['duration_seconds'] if vacancy_info else 720,
             'criteria_data': metadata['criteria'],
             'categories': metadata['categories'],
             'criteria_by_category': metadata['criteria_by_category'],
             'static_path': C.STATIC_APPLICANTS_PATH,
             'min_score': C.MIN_SCORE,
             'max_score': C.MAX_SCORE,
-            'total_sessions': 5,
+            'total_sessions': 6,
             'email_file': f'Email_{vacancy_number}.pdf',
             'sticky_notes_file': f'StickyNotes_{vacancy_number}.jpg'
         }
@@ -453,7 +453,7 @@ class SelfAssessment(Page):
 
     def is_displayed(self):
         return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND,
-                                            C.VACANCY_4_ROUND, C.VACANCY_5_ROUND]
+                                            C.VACANCY_4_ROUND, C.VACANCY_5_ROUND, C.VACANCY_6_ROUND]
 
     def before_next_page(self):
         """
@@ -526,7 +526,7 @@ class SelfAssessment(Page):
             'session_name': session_name,
             'vacancy_number': vacancy_number,
             'role_played': self.player.selected_role,
-            'total_sessions': 5
+            'total_sessions': 6
         }
 
 
@@ -590,7 +590,7 @@ class CognitiveTestInstructions(Page):
             'session_number': session_number,
             'session_name': session_name,
             'vacancy_number': vacancy_number,
-            'total_sessions': 5
+            'total_sessions': 6
         }
 
 
@@ -625,7 +625,7 @@ class CognitiveTest(Page):
         Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
         """
         return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND,
-                                            C.VACANCY_4_ROUND, C.VACANCY_5_ROUND]
+                                            C.VACANCY_4_ROUND, C.VACANCY_5_ROUND, C.VACANCY_6_ROUND]
 
     def vars_for_template(self):
         """
@@ -668,7 +668,7 @@ class CognitiveTest(Page):
             'session_number': session_number,
             'session_name': session_name,
             'vacancy_number': vacancy_number,
-            'total_sessions': 5
+            'total_sessions': 6
         }
 
 
@@ -691,7 +691,7 @@ class CognitiveTestResults(Page):
         Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
         """
         return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND,
-                                            C.VACANCY_4_ROUND, C.VACANCY_5_ROUND]
+                                            C.VACANCY_4_ROUND, C.VACANCY_5_ROUND, C.VACANCY_6_ROUND]
 
     def vars_for_template(self):
         """
@@ -716,7 +716,7 @@ class CognitiveTestResults(Page):
             'reaction_time': self.player.field_maybe_none('cognitive_test_reaction_time') or 0,
             'errors': self.player.field_maybe_none('cognitive_test_errors') or 0,
             'total_questions': C.COGNITIVE_TEST_TOTAL_QUESTIONS,
-            'total_sessions': 5
+            'total_sessions': 6
         }
 
 
@@ -754,7 +754,7 @@ class FinalResults(Page):
 
         # Separate baseline from task sessions
         baseline_round = C.CONSENT_ROUND
-        task_rounds = [C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND, C.VACANCY_4_ROUND, C.VACANCY_5_ROUND]
+        task_rounds = [C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND, C.VACANCY_4_ROUND, C.VACANCY_5_ROUND, C.VACANCY_6_ROUND]
 
         # Extract baseline data separately
         try:
@@ -778,7 +778,7 @@ class FinalResults(Page):
 
         # Collect task session data (V1, V2, V3)
         task_sessions_data = []
-        task_names = ['Vacancy 1', 'Vacancy 2', 'Vacancy 3', 'Vacancy 4', 'Vacancy 5']
+        task_names = ['Vacancy 1', 'Vacancy 2', 'Vacancy 3', 'Vacancy 4', 'Vacancy 5', 'Vacancy 6']
 
         for i, round_num in enumerate(task_rounds):
             try:
@@ -876,23 +876,27 @@ class FinalResults(Page):
             'v3_fatigue': fatigue_values[2] if len(fatigue_values) >= 3 else 0,
             'v4_fatigue': fatigue_values[3] if len(fatigue_values) >= 4 else 0,
             'v5_fatigue': fatigue_values[4] if len(fatigue_values) >= 5 else 0,
+            'v6_fatigue': fatigue_values[5] if len(fatigue_values) >= 6 else 0,
 
             'v1_cognitive': cognitive_values[0] if len(cognitive_values) >= 1 else 0,
             'v2_cognitive': cognitive_values[1] if len(cognitive_values) >= 2 else 0,
             'v3_cognitive': cognitive_values[2] if len(cognitive_values) >= 3 else 0,
             'v4_cognitive': cognitive_values[3] if len(cognitive_values) >= 4 else 0,
             'v5_cognitive': cognitive_values[4] if len(cognitive_values) >= 5 else 0,
+            'v6_cognitive': cognitive_values[5] if len(cognitive_values) >= 6 else 0,
 
             # Inter-vacancy changes
             'v1_to_v2_fatigue_change': fatigue_values[1] - fatigue_values[0] if len(fatigue_values) >= 2 else 0,
             'v2_to_v3_fatigue_change': fatigue_values[2] - fatigue_values[1] if len(fatigue_values) >= 3 else 0,
             'v3_to_v4_fatigue_change': fatigue_values[3] - fatigue_values[2] if len(fatigue_values) >= 4 else 0,
             'v4_to_v5_fatigue_change': fatigue_values[4] - fatigue_values[3] if len(fatigue_values) >= 5 else 0,
+            'v5_to_v6_fatigue_change': fatigue_values[5] - fatigue_values[4] if len(fatigue_values) >= 6 else 0,
 
             'v1_to_v2_cognitive_change': cognitive_values[0] - cognitive_values[1] if len(cognitive_values) >= 2 else 0,
             'v2_to_v3_cognitive_change': cognitive_values[1] - cognitive_values[2] if len(cognitive_values) >= 3 else 0,
             'v3_to_v4_cognitive_change': cognitive_values[2] - cognitive_values[3] if len(cognitive_values) >= 4 else 0,
             'v4_to_v5_cognitive_change': cognitive_values[3] - cognitive_values[4] if len(cognitive_values) >= 5 else 0,
+            'v5_to_v6_cognitive_change': cognitive_values[4] - cognitive_values[3] if len(cognitive_values) >= 6 else 0,
 
             # Role-specific flag
             'is_hr_coordinator': is_hr_coordinator,
