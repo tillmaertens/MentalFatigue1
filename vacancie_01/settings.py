@@ -31,4 +31,6 @@ SECRET_KEY = '12345678abcde'
 LANGUAGE_CODE = 'en-us'
 INSTALLED_APPS = ['otree']
 
+ADMIN_USERNAME = 'admin'
+
 DEBUG = False   # Hides sensitive error information
