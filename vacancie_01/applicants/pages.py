@@ -19,7 +19,6 @@ class Consent(Page):
 class Recruiter(Page):
     """
     Reviews applicant information including CVs, job references, and cover letters.
-    Now used in the 5-round structure for all vacancies
 
     Data Processing Flow:
     1. Get current vacancy configuration
@@ -35,7 +34,7 @@ class Recruiter(Page):
         - vacancy_number: Which vacancy is active
         - remaining_time: Session timeout in seconds
         - static_path: Path to static files (PDFs, images)
-        - total_sessions: Total number of working sessions (3)
+        - total_sessions: Total number of working sessions (6)
     """
 
     def is_displayed(self):
@@ -180,8 +179,7 @@ class Recruiter(Page):
 
 class HRCoordinator(Page):
     """
-    Prepares all data needed for HR Coordinator interface.
-    Now used in the 5-round structure with predefined criteria auto-loading.
+    Prepares all data needed for HR Coordinator interface with predefined criteria auto-loading.
 
     Data Processing Flow:
     1. Get current vacancy configuration
@@ -223,7 +221,7 @@ class HRCoordinator(Page):
 
     def get_timeout_seconds(self):
         """
-        Returns timeout based on vacancy: None for V1 (unlimited), 720s for V2.
+        Returns timeout based on vacancy: None for V1 (unlimited), 720s for V2-V6.
         """
         if self.player.round_number == C.VACANCY_1_ROUND:
             return None  # Unlimited time for Vacancy 1
@@ -363,7 +361,7 @@ class BusinessPartner(Page):
 
     def get_timeout_seconds(self):
         """
-        Returns timeout based on vacancy: None for V1 (unlimited), 600s for V2 and V3.
+        Returns timeout based on vacancy: None for V1 (unlimited), 720s for V2-V6.
         """
         if self.player.round_number == C.VACANCY_1_ROUND:
             return None  # Unlimited time for Vacancy 1
@@ -411,7 +409,7 @@ class WaitForVacancy(WaitPage):
 
     def is_displayed(self):
         """
-        Only displayed before main work sessions (Vacancy 1, 2, 3).
+        Only displayed before main work sessions
         """
         return should_show_vacancy_session(self.player.round_number)
 
@@ -597,7 +595,7 @@ class CognitiveTestInstructions(Page):
 class CognitiveTest(Page):
     """
     Stroop test for measuring cognitive load and performance changes over sessions.
-    Now executed in all 3 measurement rounds for baseline comparison.
+    Executed in all measurement rounds.
 
     Data Processing Flow:
     1. Get current vacancy configuration
@@ -622,7 +620,7 @@ class CognitiveTest(Page):
 
     def is_displayed(self):
         """
-        Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
+        Shown in all 7 measurement rounds: Baseline (Round 1) and after each vacancy (Rounds 2-7).
         """
         return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND,
                                             C.VACANCY_4_ROUND, C.VACANCY_5_ROUND, C.VACANCY_6_ROUND]
@@ -674,8 +672,7 @@ class CognitiveTest(Page):
 
 class CognitiveTestResults(Page):
     """
-    Displays results of the completed Stroop test to participants.
-    Now shown in all 3 measurement rounds.
+    Displays results of the completed Stroop test to participants after each measurement.
 
     Returns:
         dict: Template variables containing:
@@ -688,7 +685,7 @@ class CognitiveTestResults(Page):
 
     def is_displayed(self):
         """
-        Shown in all 3 measurement rounds: Baseline (1), After V1 (2), After V2 (3).
+        Shown in all 7 measurement rounds
         """
         return self.player.round_number in [C.CONSENT_ROUND, C.VACANCY_1_ROUND, C.VACANCY_2_ROUND, C.VACANCY_3_ROUND,
                                             C.VACANCY_4_ROUND, C.VACANCY_5_ROUND, C.VACANCY_6_ROUND]
@@ -722,27 +719,23 @@ class CognitiveTestResults(Page):
 
 class FinalResults(Page):
     """
-    Comprehensive results analysis comparing Baseline, Vacancy 1, and Vacancy 2.
+    Comprehensive results analysis of all measurement points.
 
-    Analyzes 4 measurement points:
+    Analyzes 7 measurement points:
     - Baseline (Round 1): Before any work tasks
-    - Vacancy 1 (Round 2): After unlimited time session
-    - Vacancy 2 (Round 3): After time-limited session
-    - Vacancy 3 (Round 4): After time-limited session
+    - Vacancy 1-6 (Rounds 2-7): Six consecutive work sessions
 
     Returns:
         dict: Template variables containing:
-            - all_sessions: Complete session-by-session data (3 points)
-            - baseline_* : Baseline measurements
-            - v1_*_change: Changes from baseline to V1
-            - v2_*_change: Changes from baseline to V2
-            - trend data and statistical summaries
-            - is_hr_coordinator: Boolean flag for role-specific content
+            - baseline_data: Baseline measurements (pre-task)
+            - task_sessions: Complete session-by-session data (6 vacancy sessions)
+            - task progression metrics: Fatigue and performance changes across sessions
+            - is_hr_coordinator: Boolean flag for role-specific content display
     """
 
     def is_displayed(self):
         """
-        Shown only in final round (Round 5).
+        Shown only in final round (Round 8).
         """
         return self.player.round_number == C.FINAL_RESULTS_ROUND
 

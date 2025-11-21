@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 doc = """
-Mental Fatigue Experiment - 4 rounds: Baseline + 2 Vacancies + Results
+Mental Fatigue Experiment: 8 rounds: Baseline + 6 Vacancies + Final Results
 """
 
 
@@ -193,15 +193,15 @@ def get_vacancy_config(vacancy_number):
     Provides vacancy-specific settings with unlimited time for Vacancy 1.
 
     Args:
-    vacancy_number (int): Vacancy identifier (1,2 or 3)
+        vacancy_number (int): Vacancy identifier (1-6)
 
     Returns:
-    dict: Vacancy configuration containing:
-        - vacancy: Vacancy number (1,2 or 3)
-        - duration_seconds: None for vacancy 1 (unlimited), 600 for vacancy 2 and 3
-        - metadata_files: List with Excel metadata file path
-        - doc_suffix: String suffix for document versioning ('1' or '2' or '3')
-        - job_desc_file: PDF filename for job description
+        dict: Vacancy configuration containing:
+            - vacancy: Vacancy number (1-6)
+            - duration_seconds: None for vacancy 1 (unlimited), 720s (12 minutes) for vacancies 2-6
+            - metadata_files: List with Excel metadata file path
+            - doc_suffix: String suffix for document versioning ('1' to '6')
+            - job_desc_file: PDF filename for job description
     """
     if vacancy_number == 1:
         job_desc_file = 'job_description_1.pdf'
@@ -273,13 +273,11 @@ def should_show_vacancy_session(round_number):
     """
     Determines if current round should display vacancy task sessions.
 
-    Only rounds 2, 3, 4 are vacancy sessions in the 5-round structure.
-
     Args:
-    round_number (int): Current round number to check (1-5)
+        round_number (int): Current round number to check (1-8)
 
     Returns:
-    bool: True if round is a vacancy session (2, 3, 4), False otherwise
+        bool: True if round is a vacancy session (rounds 2-7), False otherwise
     """
     from . import models  # Import to avoid circular import
 
@@ -291,7 +289,7 @@ def assign_static_role(player):
     """
     Assigns static roles per player based on player ID.
 
-    Each player keeps the same role for both vacancies:
+    Each player keeps the same role across all six vacancies:
     - Player 1: Always Recruiter
     - Player 2: Always HR-Coordinator
     - Player 3: Always Business-Partner
@@ -323,7 +321,7 @@ class C(BaseConstants):
     PLAYERS_PER_GROUP = 3
     NUM_ROUNDS = 8
 
-    # 4-round structure definition
+    # 8-round structure definition
     CONSENT_ROUND = 1
     VACANCY_1_ROUND = 2
     VACANCY_2_ROUND = 3
@@ -399,7 +397,7 @@ class Group(BaseGroup):
 class Player(BasePlayer):
     """
     Stores role assignments, performance metrics, self-assessments, and cognitive test results
-    for each player across all rounds in the 5-round structure.
+    for each player across all rounds in the 8-round structure.
     """
     # Role assignment
     selected_role = models.StringField(
