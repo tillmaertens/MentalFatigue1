@@ -2,7 +2,7 @@
 
 {% block content %}
     <style>
-        /* Hide oTree header if needed */
+        /* Hides oTree header */
         .otree-title, h1 {
             display: none !important;
         }
@@ -75,8 +75,8 @@
     <div class="video-container">
         <h1 class="custom-title">Experiment Introduction</h1>
 
+        {# Two-column layout for general and role-specific instructions #}
         <div class="videos-grid">
-            <!-- General Introduction Video -->
             <div class="video-section">
                 <div class="video-title">General Introduction</div>
                 <video id="generalVideo" controls>
@@ -85,7 +85,7 @@
                 </video>
             </div>
 
-            <!-- Role-Specific Video -->
+            {# Role-specific video detailing assigned role tasks and interface #}
             <div class="video-section">
                 <div class="video-title">Role-Specific Instructions</div>
                 <video id="roleVideo" controls>
@@ -100,6 +100,7 @@
 
     <script>
         function submitForm() {
+            // Manual form submission to proceed to baseline assessment
             const form = document.createElement('form');
             form.method = 'post';
             document.body.appendChild(form);
