@@ -382,7 +382,7 @@ class C(BaseConstants):
     # Sessions configurations
     SESSIONS_PER_VACANCY = 1
 
-    # Debug mode activated if set to True -- No Video Meeting
+    # Debug mode activated if set to True: No Video Meeting
     DEBUG_MODE = False
 
 
@@ -574,36 +574,3 @@ class Player(BasePlayer):
         # Update player's performance counters
         self.criteria_correct_this_session = correct_count
         self.criteria_incorrect_this_session = incorrect_count
-
-    def get_cumulative_fatigue_trend(self):
-        """
-        Iterates through previous rounds to build trend data for analysis
-        and visualization. Handles missing data gracefully.
-
-        Returns:
-        list: List of dictionaries containing round-by-round data:
-            - round: Round number
-            - fatigue: Fatigue level (1-10)
-            - mental_effort: Mental effort level (1-10)
-            - concentration: Concentration difficulty (1-10)
-            - motivation: Motivation level (1-10)
-            - cognitive_score: Cognitive test score
-            - cognitive_rt: Cognitive reaction time
-        """
-        fatigue_data = []
-        for round_num in range(1, self.round_number + 1):
-            try:
-                round_player = self.in_round(round_num)
-                fatigue_data.append({
-                    'round': round_num,
-                    'fatigue': round_player.fatigue_level,
-                    'mental_effort': round_player.mental_effort,
-                    'concentration': round_player.concentration_difficulty,
-                    'motivation': round_player.motivation_level,
-                    'cognitive_score': round_player.cognitive_test_score,
-                    'cognitive_rt': round_player.cognitive_test_reaction_time
-                })
-            except:
-                # Skip rounds with missing data
-                continue
-        return fatigue_data
